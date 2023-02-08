@@ -4,9 +4,8 @@ import math
 import numpy as np
 
 import sys
-
 sys.path.append('../../')
-from hippycontrol.modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
+from soupy.modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 def poisson_control_settings():
     settings = {}

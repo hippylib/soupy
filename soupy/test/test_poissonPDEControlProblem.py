@@ -1,24 +1,23 @@
 import unittest
-import os
-import sys
-import math
-import pickle
 
-import ufl
 import numpy as np
 import matplotlib.pyplot as plt
 import dolfin as dl
+
+import sys, os
 sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
+
 import logging
 logging.getLogger('FFC').setLevel(logging.WARNING)
 logging.getLogger('UFL').setLevel(logging.WARNING)
 dl.set_log_active(False)
 
 sys.path.append('../../')
-from hippycontrol import *
+from soupy import PDEVariationalControlProblem, UniformDistribution, \
+    STATE, ADJOINT, PARAMETER, CONTROL
 
-from poissonControlProblem import *
+from poissonControlProblem import poisson_control_settings, PoissonVarfHandler 
 
 
 def u_boundary(x, on_boundary):

@@ -1,17 +1,18 @@
 import unittest
-import os
-import sys
-import math
 
 import numpy as np
 import dolfin as dl
+
+import sys, os 
 sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
+
 import logging
 logging.getLogger('FFC').setLevel(logging.WARNING)
 
 sys.path.append('../../')
-from hippycontrol import STATE, PARAMETER, ADJOINT, CONTROL, SteepestDescent, SteepestDescent_ParameterList, InnerProductEqualityConstraint
+from soupy import STATE, PARAMETER, ADJOINT, CONTROL, \
+    SteepestDescent, SteepestDescent_ParameterList, InnerProductEqualityConstraint
 
 class QuadraticCost:
     def __init__(self, Vz, dim):

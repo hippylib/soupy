@@ -13,7 +13,7 @@ sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
 
 sys.path.append('../../')
-from hippycontrol import VariationalControlQoI, ControlModel, \
+from soupy import VariationalControlQoI, ControlModel, \
                         meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA,\
                         PDEVariationalControlProblem, UniformDistribution
 

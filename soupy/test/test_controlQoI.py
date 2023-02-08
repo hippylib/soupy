@@ -1,20 +1,21 @@
 import unittest
-import os
-import sys
 import math 
 
 import numpy as np
 import dolfin as dl
+
+import os, sys
 sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
+
 import logging
 logging.getLogger('FFC').setLevel(logging.WARNING)
 logging.getLogger('UFL').setLevel(logging.WARNING)
 dl.set_log_active(False)
 
 sys.path.append('../../')
-from hippycontrol import controlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI, \
-                                     STATE, PARAMETER, ADJOINT, CONTROL
+from soupy import controlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI, \
+                    STATE, PARAMETER, ADJOINT, CONTROL
 
 
 

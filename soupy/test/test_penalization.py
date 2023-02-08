@@ -1,17 +1,17 @@
 import unittest
-import os
-import sys
-import math
 
 import numpy as np
 import dolfin as dl
+
+import sys, os 
 sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
+
 import logging
 logging.getLogger('FFC').setLevel(logging.WARNING)
 
 sys.path.append('../../')
-from hippycontrol import STATE, PARAMETER, ADJOINT, CONTROL, L2Penalization
+from soupy import STATE, PARAMETER, ADJOINT, CONTROL, L2Penalization
 
 class TestPenalization(unittest.TestCase):
     def setUp(self):

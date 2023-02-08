@@ -4,7 +4,7 @@ import numpy as np
 
 import sys
 sys.path.append('../../')
-from hippycontrol import AugmentedVector
+from soupy import AugmentedVector
 
 class TestAugmentedVector(unittest.TestCase):
     def setUp(self):
