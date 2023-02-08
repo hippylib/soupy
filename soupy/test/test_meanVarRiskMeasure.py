@@ -1,4 +1,16 @@
-from statistics import mean
+# Copyright (c) 2023, The University of Texas at Austin 
+# & Georgia Institute of Technology
+#
+# All Rights reserved.
+# See file COPYRIGHT for details.
+#
+# This file is part of the SOUPy package. For more information see
+# https://github.com/hippylib/soupy/
+#
+# SOUPy is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (as published by the Free
+# Software Foundation) version 3.0 dated June 1991.
+
 import unittest
 import dolfin as dl
 import numpy as np 
@@ -14,9 +26,10 @@ sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
 
 sys.path.append('../../')
-from soupy import VariationalControlQoI, ControlModel, meanVarRiskMeasureSettings, MeanVarRiskMeasure,\
-                        PDEVariationalControlProblem, UniformDistribution, \
-                        STATE, PARAMETER, ADJOINT, CONTROL
+from soupy import VariationalControlQoI, ControlModel, \
+    meanVarRiskMeasureSettings, MeanVarRiskMeasure,\
+    PDEVariationalControlProblem, UniformDistribution, \
+    STATE, PARAMETER, ADJOINT, CONTROL
 
 from poissonControlProblem import poisson_control_settings, PoissonVarfHandler 
 
