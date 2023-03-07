@@ -98,7 +98,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
         """
 
         # Check if a new control variable is used 
-        new_forward_solve = False 
+        # new_forward_solve = False 
         self.diff_helper.zero()
         self.diff_helper.axpy(1.0, self.z)
         self.diff_helper.axpy(-1.0, z)
@@ -111,7 +111,8 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
             self.z.zero()
             self.z.axpy(1.0, z)
             # new_forward_solve = True
-            logging.info("Using new forward solve")
+            # logging.info("Using new forward solve")
+            print("Using new forward solve")
             self.model.solveFwd(self.u, self.x) 
             
             if order >= 1: 
@@ -127,6 +128,8 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
             self.model.solveAdj(self.p, self.x)
             self.model.evalGradientControl(self.x, self.grad_objective)
             self.has_adjoint_solve = True
+
+        self.has_forward_solve = True
 
 
     def cost(self, z, order=0, **kwargs):
