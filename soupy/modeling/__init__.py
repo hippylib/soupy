@@ -17,7 +17,7 @@ from .augmentedVector import AugmentedVector
 
 from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional
 
-from .controlDistribution import UniformDistribution
+from .controlDistribution import UniformDistribution, FiniteIndependentGaussian
 
 from .controlModel import ControlModel
 
