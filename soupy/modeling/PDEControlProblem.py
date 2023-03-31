@@ -27,7 +27,7 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         # assert for class assumptions here
         assert id(Vh[STATE]) == id(Vh[ADJOINT]), print('Need to have same STATE and ADJOINT spaces')
         assert len(Vh) == 4
-        assert Vh[STATE].mesh().mpi_comm().size == 1, print('Only worked out for serial codes')
+        # assert Vh[STATE].mesh().mpi_comm().size == 1, print('Only worked out for serial codes')
 
         self.Vh = Vh
         self.varf_handler = varf_handler
