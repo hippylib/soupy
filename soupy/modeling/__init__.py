@@ -35,7 +35,7 @@ from .penalization import Penalization, L2Penalization, WeightedL2Penalization, 
 
 from . smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
 
-from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA_MPI, superquantileRiskMeasureSAASettings, sampleSuperquantile
+from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA_MPI, superquantileRiskMeasureSAASettings, sampleSuperquantile, sampleSuperquantileByMinimization
 
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 

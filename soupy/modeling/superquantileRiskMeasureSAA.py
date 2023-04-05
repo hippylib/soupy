@@ -15,6 +15,7 @@ import logging
 import numpy as np 
 import dolfin as dl 
 import mpi4py
+import scipy.optimize
 
 import sys, os
 sys.path.append( os.environ.get('HIPPYLIB_PATH'))
@@ -36,6 +37,18 @@ def sampleSuperquantile(samples, beta):
     quantile = np.quantile(samples, beta) 
     return quantile + np.mean(np.maximum(samples - quantile, 0))/(1-beta)
     
+
+def sampleSuperquantileByMinimization(samples, beta):
+    """
+    Evaluate superquantile from samples 
+    """ 
+    quantile = np.quantile(samples, beta) 
+    smoothPlus = SmoothPlusApproximationQuartic()
+    cvar_obj = lambda t : t + np.mean(smoothPlus(samples - t))/(1-beta)
+    minimum = scipy.optimize.fmin(cvar_obj, quantile)
+    quantile = minimum[0]
+    superquantile = cvar_obj(quantile)
+    return quantile, superquantile
 
 
 def superquantileRiskMeasureSAASettings(data = {}):
@@ -165,6 +178,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         new_forward_solve = False 
 
         self.s_bar = 0 
+        self.sprime_bar = 0 
+        self.sprime_g_bar.zero()
 
         # Check if a new control variable is used 
         self.diff_helper.zero()
@@ -189,17 +204,17 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             # Make sure previous adjoint solve is no longer valid 
             self.has_adjoint_solve = False 
             new_adjoint_solve = True 
-            self.sprime_bar = 0 
-            self.sprime_g_bar.zero()
 
         elif self.has_adjoint_solve:
             # If it's not a new forward solve, check if we already have an adjoint 
             new_adjoint_solve = False 
+            # self.sprime_bar = 0 
+            # self.sprime_g_bar.zero()
         else:
             # If we don't already have an adjoint, compute a new one 
             new_adjoint_solve = True 
-            self.sprime_bar = 0 
-            self.sprime_g_bar.zero()
+            # self.sprime_bar = 0 
+            # self.sprime_g_bar.zero()
             # In this case, self.has_adjoint_solve is already False
 
         # Now actually compute the solves
@@ -215,15 +230,17 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             self.q_samples[i] = qi 
             self.s_bar += self.smoothplus(qi - t)/self.sample_size
 
-            if order >= 1 and new_adjoint_solve:
-                self.model.solveAdj(x[ADJOINT], x)
+            if order >= 1:
+                if new_adjoint_solve:
+                    self.model.solveAdj(x[ADJOINT], x)
                 self.model.evalGradientControl(x, self.g)
                 self.sprime_bar += self.smoothplus.grad(qi - t)/self.sample_size
                 self.sprime_g_bar.axpy(self.smoothplus.grad(qi - t)/self.sample_size, self.g)
         
         self.s_bar = self.collective.allReduce(self.s_bar, "SUM")
         
-        if order >= 1 and new_adjoint_solve:
+        # if order >= 1 and new_adjoint_solve:
+        if order >= 1:
             self.collective.allReduce(self.sprime_g_bar, "SUM")
             self.sprime_bar = self.collective.allReduce(self.sprime_bar, "SUM")
 
