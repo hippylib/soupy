@@ -35,10 +35,12 @@ class AugmentedVector:
 
     def add_local(self, vt_array):
         self.v.add_local(vt_array[:-1])
+        self.v.apply("")
         self.t += vt_array[-1]
 
     def set_local(self, vt_array):
         self.v.set_local(vt_array[:-1])
+        self.v.apply("")
         self.t = vt_array[-1]
 
     def get_local(self):
@@ -67,7 +69,9 @@ class AugmentedVector:
     def inner(self, vt):
         value = self.get_vector().inner(vt.get_vector()) + self.get_scalar() * vt.get_scalar() 
         return value 
-        
+    
+    def apply(self, method):
+        self.v.apply(method)
 
 if __name__ == "__main__":
     dim = 5
