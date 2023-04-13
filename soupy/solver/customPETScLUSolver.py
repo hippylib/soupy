@@ -3,8 +3,8 @@ from petsc4py import PETSc
 from mpi4py import MPI
 
 
-class CustomPETScLuSolver:
-    def __init__(self, mpi_comm=MPI.COMM_WORLD, method="mumps"):
+class CustomPETScLUSolver:
+    def __init__(self, mpi_comm=MPI.COMM_WORLD, method="mumps", reuse=False):
         self.mpi_comm = mpi_comm 
         self.ksp = PETSc.KSP().create(comm=self.mpi_comm)
         self.ksp.setType('preonly')
@@ -13,16 +13,28 @@ class CustomPETScLuSolver:
         opts = PETSc.Options()
         opts['pc_factor_mat_solver_type'] = method
         self.pc.setFromOptions()
+        if reuse:
+            self.pc.setReusePreconditioner(True)
+        self.verbose = False
 
     def set_operator(self, A):
-        A_mat = A.mat()
+        A_mat = dl.as_backend_type(A).mat()
         self.ksp.setOperators(A_mat, A_mat) 
 
+
+    def setReuseFactorization(self, flag):
+        self.pc.setReusePreconditioner(flag)
+
+
     def solve(self, x, b):
-        print("Calling custom solve")
-        b_vec = b.vec()
-        x_vec = x.vec()
+        if self.verbose:
+            print("Calling custom solve")
+        b_vec = dl.as_backend_type(b).vec()
+        x_petsc = dl.as_backend_type(x)
+        x_vec = x_petsc.vec()
         self.ksp.solve(b_vec, x_vec) 
+        x.set_local(x_petsc.get_local())
+        x.apply("")
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt 

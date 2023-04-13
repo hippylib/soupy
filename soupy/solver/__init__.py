@@ -12,3 +12,5 @@
 # Software Foundation) version 3.0 dated June 1991.
 
 from .newtonBacktrack import NewtonBacktrack
+
+from .customPETScLUSolver import CustomPETScLUSolver
