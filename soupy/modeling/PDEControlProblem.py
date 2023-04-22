@@ -23,7 +23,7 @@ from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 
 class PDEVariationalControlProblem(hp.PDEVariationalProblem):
-    def __init__(self, Vh, varf_handler, bc, bc0, is_fwd_linear = False):
+    def __init__(self, Vh, varf_handler, bc, bc0, is_fwd_linear = False, lu_method="mumps"):
         # assert for class assumptions here
         assert id(Vh[STATE]) == id(Vh[ADJOINT]), print('Need to have same STATE and ADJOINT spaces')
         assert len(Vh) == 4
@@ -53,6 +53,7 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         self.solver = None
         self.solver_fwd_inc = None
         self.solver_adj_inc = None
+        self.lu_method = lu_method
         
         self.is_fwd_linear = is_fwd_linear
         self.n_calls = {"forward": 0,
@@ -290,4 +291,4 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             [bc.apply(out) for bc in self.bc0]
                    
     def _createLUSolver(self):   
-        return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method="mumps")
+        return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method=self.lu_method)
