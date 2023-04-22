@@ -2,7 +2,7 @@ import unittest
 import dolfin as dl
 import sys 
 sys.path.append("../solver")
-from customPETScLUSolver import CustomPETScLuSolver
+from customPETScLUSolver import CustomPETScLUSolver
 
 class TestCustomPETScLUSolver(unittest.TestCase):
     def setUp(self):
@@ -31,7 +31,7 @@ class TestCustomPETScLUSolver(unittest.TestCase):
 
         diff = dl.Function(V).vector()
 
-        A_solver_custom = CustomPETScLuSolver(method=self.method)
+        A_solver_custom = CustomPETScLUSolver(method=self.method)
         A_solver_custom.set_operator(A)
         A_solver_custom.solve(u_custom, b)
 

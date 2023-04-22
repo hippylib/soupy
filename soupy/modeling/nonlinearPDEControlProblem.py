@@ -22,7 +22,7 @@ from .PDEControlProblem import PDEVariationalControlProblem
 from .nonlinearStateProblem import NonlinearStateProblem
 
 class NonlinearPDEControlProblem(PDEVariationalControlProblem):
-    def __init__(self, Vh, nonlinear_residual, bc, bc0, state_solver):
+    def __init__(self, Vh, nonlinear_residual, bc, bc0, state_solver, lu_method="default"):
         # assert for class assumptions here
         assert id(Vh[hp.STATE]) == id(Vh[hp.ADJOINT]), print('Need to have same STATE and ADJOINT spaces')
         assert len(Vh) == 4
@@ -31,6 +31,7 @@ class NonlinearPDEControlProblem(PDEVariationalControlProblem):
         self.nonlinear_residual = nonlinear_residual 
         self.state_solver = state_solver
         self.nonlinear_problem = NonlinearStateProblem(Vh[hp.STATE], nonlinear_residual, bc, bc0)
+        self.lu_method = lu_method
 
         self.Vh = Vh
         if type(bc) is dl.DirichletBC:
