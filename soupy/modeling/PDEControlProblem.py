@@ -291,4 +291,7 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             [bc.apply(out) for bc in self.bc0]
                    
     def _createLUSolver(self):   
-        return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method=self.lu_method)
+        if hasattr(self, 'lu_method'):
+            return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method=self.lu_method)
+        else:
+            return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method="default")
