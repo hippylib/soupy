@@ -17,8 +17,6 @@ from .augmentedVector import AugmentedVector
 
 from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional
 
-from .controlDistribution import UniformDistribution, FiniteIndependentGaussian
-
 from .controlModel import ControlModel
 
 from .controlQoI import ControlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI
