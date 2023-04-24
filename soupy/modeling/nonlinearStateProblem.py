@@ -45,7 +45,7 @@ class NonlinearStateProblem:
     This class provides methods to assemble the jacobian and residual of a steady-state nonlinear problem.
     It can be passed to any of the non-linear solvers implemented in hippylib.
     """
-    def __init__(self, Vh_STATE, residual_handler, bcs, bcs0):
+    def __init__(self, Vh_STATE, residual_handler, bcs, bcs0, fcp={}):
         """
         Constructor:
         - Vh_STATE: the finite element space for the state
@@ -56,6 +56,7 @@ class NonlinearStateProblem:
                  - stiffness: return the stiffness weak form
         - bcs: list of Dirichlet B.C. for the forward problem.
         - bcs0: list of homogeneus Dirichlet B.C. for the adjoint problem
+        - fcp: optional dictionary of form compiler parameters
         """
         self.Vh_STATE = Vh_STATE
         self.residual_handler = residual_handler
@@ -63,8 +64,7 @@ class NonlinearStateProblem:
         self.x_test = dl.TestFunction(Vh_STATE)
         self.bcs = bcs
         self.bcs0 = bcs0
-        self.fcp = {}
-        self.fcp["quadrature_degree"] = 6
+        self.fcp = fcp
         
         self.xdummy = dl.Function(Vh_STATE)        
         self.dummyform = dl.inner( self.xdummy, self.x_test)*dl.dx
