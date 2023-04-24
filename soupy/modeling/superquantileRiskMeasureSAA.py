@@ -17,8 +17,6 @@ import dolfin as dl
 import mpi4py
 import scipy.optimize
 
-import sys, os
-sys.path.append( os.environ.get('HIPPYLIB_PATH'))
 from hippylib import ParameterList, Random
 
 from .riskMeasure import RiskMeasure
