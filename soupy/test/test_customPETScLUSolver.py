@@ -1,6 +1,10 @@
 import unittest 
 import dolfin as dl
 import sys 
+import os 
+
+sys.path.append(os.environ.get('HIPPYLIB_PATH'))
+
 sys.path.append("../solver")
 from customPETScLUSolver import CustomPETScLUSolver
 
