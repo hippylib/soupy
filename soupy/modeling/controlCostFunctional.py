@@ -53,6 +53,15 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
     """
 
     def __init__(self, model, prior, penalization=None):
+        """
+        Code implements the deterministic approximation of an optimal control problem
+        where the random parameter is taken as its mean value 
+            min J(z) := Q(\bar{m}) + P(z) 
+        - :code: `model` an instance of `soupy.ControlModel`, which contains 
+            the PDE problem and qoi
+        - :code: `prior` a prior for the random parameter.
+        - :code: `penalization` an optional Penalization object 
+        """
         self.model = model
         self.prior = prior
         self.penalization = penalization

@@ -78,8 +78,8 @@ def _allocate_sample_sizes(sample_size, comm_sampler):
 
 class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     """
-    Class for memory efficient evaluation of the Mean + Variance risk measure 
-    E[X] + beta Var[X]. 
+    Class for the a sample average approximation of the superquantile risk measure (CVaR) 
+    with optional sample parallelism with MPI 
     """
 
     def __init__(self, control_model, prior, settings = superquantileRiskMeasureSAASettings(), comm_sampler=mpi4py.MPI.COMM_WORLD):

@@ -51,8 +51,9 @@ def _allocate_sample_sizes(sample_size, comm_sampler):
 
 class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
     """
-    Class for memory efficient evaluation of the Mean + Variance risk measure 
-    E[X] + beta Var[X]. 
+    Class for the mean + variance risk measure using sample average approximation
+        E[X] + beta Var[X]
+    with optional sample parallelism using MPI
     """
 
     def __init__(self, control_model, prior, settings = meanVarRiskMeasureSAASettings(), comm_sampler=mpi4py.MPI.COMM_WORLD):
