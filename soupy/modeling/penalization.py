@@ -31,35 +31,60 @@ class Penalization:
 
 
 class MultiPenalization(Penalization):
-    def __init__(self, Vh, penalization_list):
+    """
+    Class for a sum of penalization terms 
+    """
+    def __init__(self, Vh, penalization_list, alpha_list=None):
         """
-        List of penalizations 
+        - :code: `Vh` function space for STATE, PARAMETER, ADJOINT, CONTROL
+        - :code: `penalization_list` a list of Penalization objects
+        - :code: `alpha_list` optional list of weights, assumed to all be 1 
+            if None is given
         """
         self.Vh = Vh 
         self.helper = dl.Function(Vh[CONTROL]).vector()
         self.penalization_list = penalization_list
+
+        if alpha_list is not None:
+            assert len(alpha_list) == len(penalization_list)
+            self.alpha_list = alpha_list
+        else:
+            self.alpha_list = [1.0] * len(self.penalization_list)
+
     
     def cost(self, z):
         cost = 0
-        for penalization in self.penalization_list:
-            cost += penalization.cost(z)
+        for alpha, penalization in zip(self.alpha_list, self.penalization_list):
+            cost += alpha * penalization.cost(z)
         return cost 
 
     def grad(self, z, out):
         out.zero()
-        for penalization in self.penalization_list:
+        for alpha, penalization in zip(self.alpha_list, self.penalization_list):
             penalization.grad(z, self.helper)
-            out.axpy(1.0, self.helper)
+            out.axpy(alpha, self.helper)
 
     def hessian(self, z, zhat, out):
         out.zero()
-        for penalization in self.penalization_list:
+        for alpha, penalization in zip(self.alpha_list, self.penalization_list):
             penalization.hessian(z, zhat, self.helper)
-            out.axpy(1.0, self.helper)
+            out.axpy(alpha, self.helper)
 
 
 class L2Penalization(Penalization):
+    """
+    L2 integral over the domain
+        P(z) = \alpha \int_{\Omega) |z|^2 dx 
+
+    For finite dimensional controls `z`, this amounts to a little \ell_2 norm
+    In this case, `Vh[soupy.CONTROL]` needs to be a 
+    `dolfin.VectorFunctionSpace` of reals
+    """
     def __init__(self, Vh, alpha):
+        """
+        - :code: `Vh` function space for STATE, PARAMETER, ADJOINT, CONTROL
+        - :code: `alpha` weighting factor
+        """
         self.Vh = Vh
         self.alpha = alpha
 
@@ -111,7 +136,17 @@ class L2Penalization(Penalization):
 
 
 class WeightedL2Penalization(Penalization):
+    """
+    A weighted L2 norm penalization 
+        P(z) = z^T M z 
+    where M is some symmetric positive definite weight matrix
+    """
     def __init__(self, Vh, M, alpha):
+        """
+        - :code: `Vh` function space for STATE, PARAMETER, ADJOINT, CONTROL
+        - :code: `M` weighting matrix with method `mult`
+        - :code: `alpha` weighting factor
+        """
         self.Vh = Vh
         self.M = M 
         self.alpha = alpha
