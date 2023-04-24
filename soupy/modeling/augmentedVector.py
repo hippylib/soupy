@@ -57,7 +57,8 @@ class AugmentedVector:
         return self.v
 
     def set_vector(self, v):
-        self.v = v
+        self.v.set_local(v.get_local())
+        self.v.apply("")
 
     def get_scalar(self):
         return self.t
