@@ -21,6 +21,8 @@ class AugmentedVector:
     Assumes the last element in the array is the t variable
     """
     def __init__(self, v, copy_vector=True):
+        # Currently worked out only for serial mesh (allow sample parallel)
+        assert v.mpi_comm().Get_size() == 1
         if copy_vector:
             self.v = v.copy()
         else:
