@@ -26,9 +26,11 @@ dl.set_log_active(False)
 
 sys.path.append('../../')
 from soupy import PDEVariationalControlProblem, NewtonBacktrack, NonlinearPDEControlProblem, \
-    UniformDistribution, STATE, PARAMETER, ADJOINT, CONTROL
+    STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import PoissonVarfHandler, NonlinearPoissonVarfHandler, poisson_control_settings
+from poissonControlProblem import PoissonVarfHandler, NonlinearPoissonVarfHandler, poisson_control_settings, \
+    UniformDistribution
+
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)

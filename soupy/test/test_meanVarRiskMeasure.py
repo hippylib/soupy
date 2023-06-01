@@ -28,10 +28,10 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
     meanVarRiskMeasureSettings, MeanVarRiskMeasure,\
-    PDEVariationalControlProblem, UniformDistribution, \
+    PDEVariationalControlProblem, \
     STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import poisson_control_settings, PoissonVarfHandler 
+from poissonControlProblem import poisson_control_settings, PoissonVarfHandler, UniformDistribution
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)

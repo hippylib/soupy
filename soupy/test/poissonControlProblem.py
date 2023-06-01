@@ -20,6 +20,35 @@ import sys
 sys.path.append('../../')
 from soupy.modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
 
+
+class UniformDistribution:
+    """
+    Class for sampling from a uniform distribution to `dl.Vector`
+    """
+    def __init__(self, Vh, a, b):
+        """ 
+        Constructor:
+            :code: `Vh`: Function space for sample vectors
+            :code: `a`: Lower bound
+            :code: `b`: Upper bound
+            :code: `ndim`: Dimension of sample vectors
+        """
+        self.Vh = Vh
+        self.a = a
+        self.b = b
+        self.ndim = self.Vh.dim()
+        self._dummy = dl.Function(Vh).vector()
+
+    def init_vector(self, v):
+        v.init( self._dummy.local_range() )
+
+    def sample(self, out):
+        assert out.mpi_comm().Get_size() == 1
+        v = np.random.rand(self.ndim) * (self.b-self.a) + self.a
+        out.set_local(v)
+
+
+
 def poisson_control_settings():
     settings = {}
     settings['nx'] = 32

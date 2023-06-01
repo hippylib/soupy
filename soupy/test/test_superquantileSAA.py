@@ -30,7 +30,7 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
                         superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA_MPI, \
-                        PDEVariationalControlProblem, UniformDistribution, \
+                        PDEVariationalControlProblem, \
                         STATE, PARAMETER, ADJOINT, CONTROL
 
 from poissonControlProblem import poisson_control_settings, PoissonVarfHandler

@@ -27,10 +27,10 @@ logging.getLogger('UFL').setLevel(logging.WARNING)
 dl.set_log_active(False)
 
 sys.path.append('../../')
-from soupy import PDEVariationalControlProblem, UniformDistribution, \
+from soupy import PDEVariationalControlProblem, \
     STATE, ADJOINT, PARAMETER, CONTROL
 
-from poissonControlProblem import poisson_control_settings, PoissonVarfHandler 
+from poissonControlProblem import poisson_control_settings, PoissonVarfHandler, UniformDistribution
 
 
 def u_boundary(x, on_boundary):
