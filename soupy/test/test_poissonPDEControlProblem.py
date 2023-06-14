@@ -31,7 +31,7 @@ from soupy import PDEVariationalControlProblem, \
     STATE, ADJOINT, PARAMETER, CONTROL
 
 from poissonControlProblem import poisson_control_settings, \
-    PoissonVarfHandler, UniformDistribution, setupPDEProblem
+    PoissonVarfHandler, UniformDistribution, setupPoissonPDEProblem
 
 
 def u_boundary(x, on_boundary):
@@ -100,7 +100,7 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        _, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        _, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
 
         noise = dl.Vector()
         prior.init_vector(noise, "noise")
@@ -152,7 +152,7 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
 
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
         
         u0 = dl.Function(self.Vh[STATE]).vector()
         m0 = dl.Function(self.Vh[PARAMETER]).vector()

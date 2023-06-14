@@ -52,7 +52,7 @@ def u_boundary(x, on_boundary):
 
 
 
-def setupPDEProblem(Vh, settings):
+def setupPoissonPDEProblem(Vh, settings):
     anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
     anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
     m_mean_fun = dl.Function(Vh[PARAMETER])

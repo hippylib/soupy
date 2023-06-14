@@ -32,7 +32,7 @@ from soupy import VariationalControlQoI, ControlModel, \
                         superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA_MPI, \
                         STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPDEProblem
+from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 
 def standardNormalSuperquantile(beta):
@@ -67,7 +67,7 @@ class TestSuperquantileSAA(unittest.TestCase):
         settings['LINEAR'] = False
         
         # 2. Setting up problem
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
     
         # 3. Setting up QoI, model, and risk measure
         def l2norm(u,m,z):
@@ -147,7 +147,7 @@ class TestSuperquantileSAA(unittest.TestCase):
         settings['LINEAR'] = is_fwd_linear
 
         # 2. Setting up problem
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
     
         # 3. Setting up QoI, model, and risk measure
         def l2norm(u,m,z):
@@ -219,7 +219,7 @@ class TestSuperquantileSAA(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
 
         # 2. Setting up problem
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
     
         # 3. Setting up QoI, model, and risk measure
         def l2norm(u,m,z):
@@ -268,7 +268,7 @@ class TestSuperquantileSAA(unittest.TestCase):
             rm_settings['smoothplus_type'] = smoothplus_type
             rm_settings['epsilon'] = epsilon
 
-            pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+            pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
             qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
             model = ControlModel(pde, qoi)
             risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings)

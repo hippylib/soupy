@@ -33,7 +33,7 @@ from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     RiskMeasureControlCostFunctional, \
     STATE, PARAMETER, ADJOINT, CONTROL
     
-from poissonControlProblem import poisson_control_settings, setupPDEProblem
+from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 class TestControlCostFunctional(unittest.TestCase):
     def setUp(self):
@@ -60,7 +60,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
 
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx
@@ -118,7 +118,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
 
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
 
         # 4. Setting up QoI, model, and risk measure
         def l2norm(u,m,z):

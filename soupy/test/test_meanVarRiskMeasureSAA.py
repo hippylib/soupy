@@ -31,7 +31,7 @@ from soupy import VariationalControlQoI, ControlModel, \
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPDEProblem
+from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 
 
@@ -60,7 +60,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        pde, prior, _ = setupPDEProblem(self.Vh, settings)
+        pde, prior, _ = setupPoissonPDEProblem(self.Vh, settings)
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
 
@@ -84,7 +84,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['LINEAR'] = False
         
         # 2. Setup problem
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
         noise = dl.Vector()
         prior.init_vector(noise, "noise")
     
@@ -161,7 +161,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['LINEAR'] = is_fwd_linear
 
         # 2. Setting up problem
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
         noise = dl.Vector()
         prior.init_vector(noise, "noise")
     

@@ -30,7 +30,7 @@ from soupy import VariationalControlQoI, ControlModel, DeterministicControlCostF
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPDEProblem
+from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)
@@ -60,7 +60,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings) 
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings) 
 
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(2.0))**2*dl.dx 
@@ -85,7 +85,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
 
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings) 
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings) 
 
         def l2norm(u,m,z):
             return u**2*dl.dx
@@ -141,7 +141,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = False
 
-        pde, prior, control_dist = setupPDEProblem(self.Vh, settings) 
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings) 
 
         def l2norm(u,m,z):
             return u**2*dl.dx
