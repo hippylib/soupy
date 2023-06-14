@@ -30,7 +30,7 @@ from soupy import VariationalControlQoI, ControlModel, DeterministicControlCostF
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import poisson_control_settings, PoissonVarfHandler, UniformDistribution
+from poissonControlProblem import poisson_control_settings, setupPDEProblem
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)
@@ -57,27 +57,13 @@ class TestControlCostFunctional(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        # 2. Setting up prior
-        anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
-        anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
-        m_mean_fun = dl.Function(self.Vh[PARAMETER])
-        m_mean_fun.interpolate(dl.Constant(0.0))
-        prior = hp.BiLaplacianPrior(self.Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
-                                    anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
-
-        bc = dl.DirichletBC(self.Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
-        bc0 = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
-        poisson_varf = PoissonVarfHandler(self.Vh, settings=settings)
-        pde = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
-                is_fwd_linear=settings["LINEAR"])
+        pde, prior, control_dist = setupPDEProblem(self.Vh, settings) 
 
         def l2norm(u,m,z):
-            return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
+            return u**2*dl.dx + (m - dl.Constant(2.0))**2*dl.dx 
 
         qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
         model = ControlModel(pde, qoi)
@@ -95,32 +81,12 @@ class TestControlCostFunctional(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
+
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
 
-        # 2. Setting up prior
-        anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
-        anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
-        m_mean_fun = dl.Function(self.Vh[PARAMETER])
-        m_mean_fun.interpolate(dl.Constant(0.0))
-        prior = hp.BiLaplacianPrior(self.Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
-                                    anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
+        pde, prior, control_dist = setupPDEProblem(self.Vh, settings) 
 
-        noise = dl.Vector()
-        prior.init_vector(noise, "noise")
-
-        control_dist = UniformDistribution(self.Vh[CONTROL], 
-                settings['STRENGTH_LOWER'],
-                settings['STRENGTH_UPPER'])
-            
-        bc = dl.DirichletBC(self.Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
-        bc0 = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
-        poisson_varf = PoissonVarfHandler(self.Vh, settings=settings)
-        pde = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
-                is_fwd_linear=settings["LINEAR"])
-    
         def l2norm(u,m,z):
             return u**2*dl.dx
 
@@ -172,31 +138,11 @@ class TestControlCostFunctional(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = False
 
-        # 2. Setting up prior
-        anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
-        anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
-        m_mean_fun = dl.Function(self.Vh[PARAMETER])
-        m_mean_fun.interpolate(dl.Constant(0.0))
-        prior = hp.BiLaplacianPrior(self.Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
-                                    anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
+        pde, prior, control_dist = setupPDEProblem(self.Vh, settings) 
 
-        noise = dl.Vector()
-        prior.init_vector(noise, "noise")
-        control_dist = UniformDistribution(self.Vh[CONTROL], 
-                settings['STRENGTH_LOWER'],
-                settings['STRENGTH_UPPER'])
-            
-        bc = dl.DirichletBC(self.Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
-        bc0 = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
-        poisson_varf = PoissonVarfHandler(self.Vh, settings=settings)
-        pde = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
-                is_fwd_linear=settings["LINEAR"])
-    
         def l2norm(u,m,z):
             return u**2*dl.dx
 

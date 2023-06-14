@@ -40,8 +40,6 @@ def setupNonlinearPDEProblem(nx, ny, n_wells_per_side):
     settings = poisson_control_settings()
     settings['nx'] = nx
     settings['ny'] = ny
-    settings['STRENGTH_LOWER'] = -1.
-    settings['STRENGTH_UPPER'] = 2.
     settings['N_WELLS_PER_SIDE'] = n_wells_per_side
     settings['LINEAR'] = False
     n_control = n_wells_per_side ** 2 
@@ -82,8 +80,6 @@ def setupVariationalPDEControlProblem(nx, ny, n_wells_per_side, is_fwd_linear):
     settings = poisson_control_settings()
     settings['nx'] = nx
     settings['ny'] = ny
-    settings['STRENGTH_LOWER'] = -1.
-    settings['STRENGTH_UPPER'] = 2.
     settings['N_WELLS_PER_SIDE'] = n_wells_per_side
     settings['LINEAR'] = is_fwd_linear
     n_control = n_wells_per_side ** 2 
