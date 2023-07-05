@@ -27,10 +27,11 @@ logging.getLogger('UFL').setLevel(logging.WARNING)
 dl.set_log_active(False)
 
 sys.path.append('../../')
-from soupy import PDEVariationalControlProblem, UniformDistribution, \
+from soupy import PDEVariationalControlProblem, \
     STATE, ADJOINT, PARAMETER, CONTROL
 
-from poissonControlProblem import poisson_control_settings, PoissonVarfHandler 
+from poissonControlProblem import poisson_control_settings, \
+    PoissonVarfHandler, UniformDistribution, setupPoissonPDEProblem
 
 
 def u_boundary(x, on_boundary):
@@ -58,10 +59,7 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-
 
         control_dist = UniformDistribution(self.Vh[CONTROL], 
                 settings['STRENGTH_LOWER'],
@@ -74,6 +72,7 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         self.assertTrue(np.max(z_vec) <= settings['STRENGTH_UPPER']) 
         self.assertTrue(np.min(z_vec) >= settings['STRENGTH_LOWER']) 
         self.assertEqual(len(z_vec), self.n_control)
+
 
     def testPDEGenerateVector(self):
         settings = poisson_control_settings()
@@ -98,46 +97,37 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        # 2. Setting up prior
-        anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
-        anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
-        m_mean_fun = dl.Function(self.Vh[PARAMETER])
-        m_mean_fun.interpolate(dl.Constant(0.0))
-        prior = hp.BiLaplacianPrior(self.Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
-                                    anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
+        _, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
 
         noise = dl.Vector()
         prior.init_vector(noise, "noise")
+        hp.parRandom.normal(1.0, noise)
 
-        control_dist = UniformDistribution(self.Vh[CONTROL], 
-                settings['STRENGTH_LOWER'],
-                settings['STRENGTH_UPPER'])
-            
         bc = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
         bc0 = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
         poisson_varf = PoissonVarfHandler(self.Vh, settings=settings)
         pde = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
-                is_fwd_linear=settings["LINEAR"])
-        
+                is_fwd_linear=settings["LINEAR"])        
+
 
         u_fun = dl.Function(self.Vh[STATE])
         p_fun = dl.Function(self.Vh[ADJOINT])
         z_fun = dl.Function(self.Vh[CONTROL])
         f_fun = dl.Function(self.Vh[STATE])
+        m_fun = dl.Function(self.Vh[PARAMETER])
         zero_fun = dl.Function(self.Vh[STATE])
-        
 
-        x = [u_fun.vector(), m_mean_fun.vector(), p_fun.vector(), z_fun.vector()]
+        prior.sample(noise, m_fun.vector()) 
+
+        x = [u_fun.vector(), m_fun.vector(), p_fun.vector(), z_fun.vector()]
         control_dist.sample(z_fun.vector()) 
 
         u_trial = dl.TrialFunction(self.Vh[STATE])
         u_test = dl.TestFunction(self.Vh[STATE])
-        b = dl.assemble(poisson_varf(zero_fun, m_mean_fun, u_test, z_fun))
+        b = dl.assemble(poisson_varf(zero_fun, m_fun, u_test, z_fun))
         M = dl.assemble(u_trial*u_test*dl.dx)
         M_solver = hp.PETScLUSolver(dl.MPI.comm_world)
         M_solver.set_operator(M)
@@ -159,31 +149,10 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
 
-        # 2. Setting up prior
-        anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
-        anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
-        m_mean_fun = dl.Function(self.Vh[PARAMETER])
-        m_mean_fun.interpolate(dl.Constant(0.0))
-        prior = hp.BiLaplacianPrior(self.Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
-                                    anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
-
-        noise = dl.Vector()
-        prior.init_vector(noise, "noise")
-
-        control_dist = UniformDistribution(self.Vh[CONTROL], 
-                settings['STRENGTH_LOWER'],
-                settings['STRENGTH_UPPER'])
-            
-        bc = dl.DirichletBC(self.Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
-        bc0 = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
-        poisson_varf = PoissonVarfHandler(self.Vh, settings=settings)
-        pde = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
-                is_fwd_linear=settings["LINEAR"])
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
         
         u0 = dl.Function(self.Vh[STATE]).vector()
         m0 = dl.Function(self.Vh[PARAMETER]).vector()
@@ -203,7 +172,12 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         # Base point 
         x = [u0, m0, p0, z0]
         control_dist.sample(z0)
-        m0.axpy(1.0, m_mean_fun.vector())
+
+        noise = dl.Vector()
+        prior.init_vector(noise, "noise")
+        hp.parRandom.normal(1.0, noise)
+        prior.sample(noise, m0)
+
         pde.solveFwd(u0, x)
         pde.setLinearizationPoint(x, False)
         

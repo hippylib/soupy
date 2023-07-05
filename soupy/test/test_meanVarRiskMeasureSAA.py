@@ -28,33 +28,10 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
                         meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA,\
-                        PDEVariationalControlProblem, UniformDistribution
+                        PDEVariationalControlProblem, \
+                        STATE, PARAMETER, CONTROL
 
-from poissonControlProblem import *
-
-def u_boundary(x, on_boundary):
-    return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)
-
-
-def setupProblem(Vh, settings):
-    # 2. Setting up prior
-    anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
-    anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
-    m_mean_fun = dl.Function(Vh[PARAMETER])
-    m_mean_fun.interpolate(dl.Constant(1.0))
-    prior = hp.BiLaplacianPrior(Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
-                                anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
-
-    bc = dl.DirichletBC(Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
-    bc0 = dl.DirichletBC(Vh[STATE], dl.Constant(0.0), u_boundary)
-    poisson_varf = PoissonVarfHandler(Vh, settings=settings)
-    pde = PDEVariationalControlProblem(Vh, poisson_varf, bc, bc0, 
-            is_fwd_linear=settings["LINEAR"])
-    
-    control_dist = UniformDistribution(Vh[CONTROL], 
-            settings['STRENGTH_LOWER'],
-            settings['STRENGTH_UPPER'])
-    return pde, prior, control_dist
+from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 
 
@@ -80,12 +57,10 @@ class TestControlCostFunctional(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = True
 
-        pde, prior, _ = setupProblem(self.Vh, settings)
+        pde, prior, _ = setupPoissonPDEProblem(self.Vh, settings)
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
 
@@ -105,18 +80,11 @@ class TestControlCostFunctional(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = False
-        settings['GAMMA'] = 10
-        settings['DELTA'] = 20
         
         # 2. Setup problem
-        pde, prior, control_dist = setupProblem(self.Vh, settings)
-
-        # 3. Setting up problem
-        pde, prior, control_dist = setupProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
         noise = dl.Vector()
         prior.init_vector(noise, "noise")
     
@@ -189,15 +157,11 @@ class TestControlCostFunctional(unittest.TestCase):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
-        settings['STRENGTH_LOWER'] = -1.
-        settings['STRENGTH_UPPER'] = 2.
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
-        settings['GAMMA'] = 10
-        settings['DELTA'] = 20
 
         # 2. Setting up problem
-        pde, prior, control_dist = setupProblem(self.Vh, settings)
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
         noise = dl.Vector()
         prior.init_vector(noise, "noise")
     

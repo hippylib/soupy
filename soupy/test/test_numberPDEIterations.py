@@ -26,9 +26,11 @@ dl.set_log_active(False)
 
 sys.path.append('../../')
 from soupy import PDEVariationalControlProblem, NewtonBacktrack, NonlinearPDEControlProblem, \
-    UniformDistribution, STATE, PARAMETER, ADJOINT, CONTROL
+    STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import PoissonVarfHandler, NonlinearPoissonVarfHandler, poisson_control_settings
+from poissonControlProblem import PoissonVarfHandler, NonlinearPoissonVarfHandler, poisson_control_settings, \
+    UniformDistribution
+
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)
@@ -38,8 +40,6 @@ def setupNonlinearPDEProblem(nx, ny, n_wells_per_side):
     settings = poisson_control_settings()
     settings['nx'] = nx
     settings['ny'] = ny
-    settings['STRENGTH_LOWER'] = -1.
-    settings['STRENGTH_UPPER'] = 2.
     settings['N_WELLS_PER_SIDE'] = n_wells_per_side
     settings['LINEAR'] = False
     n_control = n_wells_per_side ** 2 
@@ -80,8 +80,6 @@ def setupVariationalPDEControlProblem(nx, ny, n_wells_per_side, is_fwd_linear):
     settings = poisson_control_settings()
     settings['nx'] = nx
     settings['ny'] = ny
-    settings['STRENGTH_LOWER'] = -1.
-    settings['STRENGTH_UPPER'] = 2.
     settings['N_WELLS_PER_SIDE'] = n_wells_per_side
     settings['LINEAR'] = is_fwd_linear
     n_control = n_wells_per_side ** 2 

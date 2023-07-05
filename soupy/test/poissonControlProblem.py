@@ -15,18 +15,72 @@
 import dolfin as dl
 import math
 import numpy as np
+import hippylib as hp 
+from soupy import STATE, PARAMETER, ADJOINT, CONTROL, PDEVariationalControlProblem
 
-import sys
-sys.path.append('../../')
-from soupy.modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
+
+class UniformDistribution:
+    """
+    Class for sampling from a uniform distribution to `dl.Vector`
+    Used only for tests 
+    """
+    def __init__(self, Vh, a, b):
+        """ 
+        Constructor:
+            :code: `Vh`: Function space for sample vectors
+            :code: `a`: Lower bound
+            :code: `b`: Upper bound
+            :code: `ndim`: Dimension of sample vectors
+        """
+        assert Vh.mesh().mpi_comm().size == 1
+        self.Vh = Vh
+        self.a = a
+        self.b = b
+        self.ndim = self.Vh.dim()
+        self._dummy = dl.Function(Vh).vector()
+
+    def init_vector(self, v):
+        v.init( self._dummy.local_range() )
+
+    def sample(self, out):
+        v = np.random.rand(self.ndim) * (self.b-self.a) + self.a
+        out.set_local(v)
+        
+
+def u_boundary(x, on_boundary):
+    return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)
+
+
+
+def setupPoissonPDEProblem(Vh, settings):
+    anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
+    anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
+    m_mean_fun = dl.Function(Vh[PARAMETER])
+    m_mean_fun.interpolate(dl.Constant(1.0))
+    prior = hp.BiLaplacianPrior(Vh[PARAMETER], settings['GAMMA'], settings['DELTA'],\
+                                anis_diff, mean=m_mean_fun.vector(), robin_bc=True)
+
+    bc = dl.DirichletBC(Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
+    bc0 = dl.DirichletBC(Vh[STATE], dl.Constant(0.0), u_boundary)
+    poisson_varf = PoissonVarfHandler(Vh, settings=settings)
+    pde = PDEVariationalControlProblem(Vh, poisson_varf, bc, bc0, 
+            is_fwd_linear=settings["LINEAR"])
+
+    control_dist = UniformDistribution(Vh[CONTROL], 
+            settings['STRENGTH_LOWER'],
+            settings['STRENGTH_UPPER'])
+
+    return pde, prior, control_dist
+
+
 
 def poisson_control_settings():
     settings = {}
-    settings['nx'] = 32
-    settings['ny'] = 32
+    settings['nx'] = 20
+    settings['ny'] = 20
 
-    settings['STRENGTH_UPPER'] = 10.
-    settings['STRENGTH_LOWER'] = -10.
+    settings['STRENGTH_UPPER'] = 1.
+    settings['STRENGTH_LOWER'] = -1.
     settings['LINEAR'] = True
 
 
@@ -35,8 +89,8 @@ def poisson_control_settings():
     settings['LOC_UPPER'] = 0.75
     settings['WELL_WIDTH'] = 0.1
 
-    settings['GAMMA'] = 0.1
-    settings['DELTA'] = 0.5
+    settings['GAMMA'] = 1.0
+    settings['DELTA'] = 20.0
     settings['THETA0'] = 2.0
     settings['THETA1'] = 0.5
     settings['ALPHA'] = math.pi/4
@@ -70,11 +124,6 @@ class PoissonVarfHandler:
 
         self.mollifiers = dl.as_vector(mollifier_list)
 
-        # The only reason I am passing Vh in now is in order to do an assertion sanity check
-        # on the control variable. Vh[CONTROL] needs to be accessed outside of the varf_handler
-        # because it needs to be passed into the PDEVariationalControlProblem constructor
-        # so it doesn't make sense to me to define Vh[CONTROL] here..
-
         assert Vh[CONTROL].dim() == len(mollifier_list)
 
 
@@ -83,7 +132,8 @@ class PoissonVarfHandler:
             return dl.exp(m)*dl.inner(dl.grad(u),dl.grad(p))*dl.dx - dl.inner(self.mollifiers,z)*p*dl.dx
         else:
             return dl.exp(m)*dl.inner(dl.grad(u),dl.grad(p))*dl.dx + u**3*p*dl.dx  - dl.inner(self.mollifiers,z)*p*dl.dx
-    
+
+
 
 class NonlinearPoissonVarfHandler:
     """

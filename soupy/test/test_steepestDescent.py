@@ -85,7 +85,8 @@ class TestSteepesetDescent(unittest.TestCase):
         steepestDescent_solver = SteepestDescent(self.cost, steepestDescent_param)
 
         z0 = dl.Function(self.Vz).vector()
-        z0.set_local(np.random.randn(self.dim)*10)
+        np.random.seed(1)
+        z0.set_local(np.random.randn(self.dim))
         if box_bounds is not None:
             param_min = box_bounds[0]
             param_max = box_bounds[1]
