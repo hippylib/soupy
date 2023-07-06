@@ -32,7 +32,7 @@ def sampleSuperquantile(samples, beta):
     """
     Evaluate superquantile from samples 
     """ 
-    quantile = np.quantile(samples, beta) 
+    quantile = np.percentile(samples, beta * 100) 
     return quantile + np.mean(np.maximum(samples - quantile, 0))/(1-beta)
     
 
@@ -40,7 +40,7 @@ def sampleSuperquantileByMinimization(samples, beta, epsilon=1e-2):
     """
     Evaluate superquantile from samples 
     """ 
-    quantile = np.quantile(samples, beta) 
+    quantile = np.percentile(samples, beta * 100) 
     smoothPlus = SmoothPlusApproximationQuartic(epsilon=epsilon)
     cvar_obj = lambda t : t + np.mean(smoothPlus(samples - t))/(1-beta)
     minimum = scipy.optimize.fmin(cvar_obj, quantile)
