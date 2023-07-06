@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+   style:
+     runs-on: ubuntu-20.04
+     container:
+       image: quay.io/fenicsproject/stable:2019.1.0.r3
+       options: --user 1001 --privileged
+     name: SOUPy Unit Tests
+
+     steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+        - name: Checkout hippylib
+          run: git clone https://github.com/hippylib/hippylib.git
+        - name: See directory
+          run: pwd && ls
+        - name: Run unit tests 
+          run: source .github/workflows/run_tests.sh
