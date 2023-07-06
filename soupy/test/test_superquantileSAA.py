@@ -279,7 +279,7 @@ class TestSuperquantileSAA(unittest.TestCase):
             # z.set_local(np.random.randn(len(z.get_local())))
 
             risk.computeComponents(zt, order=0)
-            quantile = np.quantile(risk.q_samples, beta)
+            quantile = np.percentile(risk.q_samples, beta * 100)
             zt.set_scalar(quantile)
 
             risk.computeComponents(zt, order=0)
