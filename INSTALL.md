@@ -1,7 +1,7 @@
 # Installation 
 
 ## Dependencies
-`SOUPy` depends on [FEniCS](http://fenicsproject.org/) version 2019.1. and [hIPPYlib](https://hippylib.github.io/)
+`SOUPy` depends on [FEniCS](http://fenicsproject.org/) version 2019.1. and [hIPPYlib](https://hippylib.github.io/) version 3.0.0 or above.
 
 `FEniCS` needs to be built with the following dependencies enabled:
 
@@ -16,7 +16,6 @@
 ```
 conda create -n soupy -c conda-forge fenics==2019.1.0 matplotlib scipy jupyter
 ```
-We refer to the full `FEniCS` [installation instructions](https://hippylib.readthedocs.io/en/3.0.0/installation.html) from `hIPPYlib` for more detail. 
 
 2. Clone the `hIPPYlib` [repository](https://github.com/hippylib/hippylib). 
 ```
@@ -35,12 +34,11 @@ conda env config vars set HIPPYLIB_PATH=path/to/hippylib
 conda env config vars set SOUPY_PATH=path/to/soupy
 ```
 
-Examples in the `applications` directory can now be run
-
+Examples in the `applications` directory can now be run. We refer to the full `FEniCS` [installation instructions](https://hippylib.readthedocs.io/en/3.0.0/installation.html) from `hIPPYlib` for more detail. 
  
 ## Build the SOUPy documentation using Sphinx
 
 Documentation for `SOUPy` can be built using `sphinx`, along with extensions
-`myst_parser` and `sphinx_rtd_theme`. These can be installed via `pip`
+`myst_parser` and `sphinx_rtd_theme`. These can be installed via `pip`.
 
 To build simply run `make html` from `doc` folder.

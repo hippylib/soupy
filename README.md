@@ -9,8 +9,7 @@ implements scalable algorithms to solve problems of PDE-constrained optimization
 Sample based approximations of risk measures are supported in `SOUPy`, which leverages MPI for rapid parallel sampling.
 Numerical optimization algorithms can be called from `SciPy` or using the built-in optimization algorithms. 
 
-`SOUPy` has been developed and in active development to incorporate advanced approximation algorithms and capabilities, including
-
+`SOUPy` has been developed and in active development to incorporate advanced approximation algorithms and capabilities, including:
 - PDE-constrained operator/tensor/matrix products,
 - symbolic differentiation (of appropriate Lagrangians) for the derivation of high order mixed derivatives (via the `FEniCS` interface),
 - randomized algorithms for matrix and high order tensor decomposition,
