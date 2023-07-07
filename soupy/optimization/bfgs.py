@@ -237,6 +237,8 @@ class BFGS:
         :type constraint_projection: :py:class:`ProjectableConstraint`
 
         :return: The optimization solution :code:`z` and a dictionary of information
+
+        .. note:: The input :code:`z` will be overwritten 
         """
         
         if box_bounds is not None:

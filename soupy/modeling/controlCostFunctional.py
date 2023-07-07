@@ -259,6 +259,7 @@ class RiskMeasureControlCostFunctional:
         :param order: Order of the derivatives needed after evaluation
             :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
         :type order: int 
+        :param kwargs: additional arguments, e.g. :code:`rng` for the risk measure computation
 
         :return: Value of the cost functional
         """

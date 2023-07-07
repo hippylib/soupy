@@ -42,3 +42,9 @@ source_suffix = ['.rst', '.md']
 
 html_theme = 'sphinxdoc'
 html_static_path = []
+html_theme_options = {
+    "nosidebar": True
+}
+# html_theme_options = {
+#     "nosidebar": False, "sidebarwidth": "40em"
+# }

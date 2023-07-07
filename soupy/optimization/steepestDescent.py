@@ -62,7 +62,7 @@ class SteepestDescent:
         :param cost_functional: The cost functional object
         :type cost_functional: :py:class:`soupy.ControlCostFunctional` or similar
         :param parameters: The parameters of the solver.
-            Type :code:`SGD_ParameterList().showMe()` for list of default parameters
+            Type :code:`SteepestDescent_ParameterList().showMe()` for list of default parameters
             and their descriptions.
         :type parameters: :py:class:`hippylib.ParameterList`.
         """
@@ -89,6 +89,8 @@ class SteepestDescent:
         :type constraint_projection: :py:class:`ProjectableConstraint`
 
         :return: The optimization solution :code:`z` and a dictionary of information
+
+        .. note:: The input :code:`z` is overwritten
         """
         rel_tol = self.parameters["rel_tolerance"]
         abs_tol = self.parameters["abs_tolerance"]
