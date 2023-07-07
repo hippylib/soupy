@@ -26,3 +26,13 @@ soupy.modeling.controlQoI
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+
+soupy.modeling.controlCostFunctional
+---------------------------------------
+
+.. automodule:: soupy.modeling.controlCostFunctional
+    :members:
+    :undoc-members:
+    :show-inheritance:
