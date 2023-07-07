@@ -21,12 +21,14 @@ class ProjectableConstraint:
 
 class InnerProductEqualityConstraint(ProjectableConstraint):
     """
-    Class implements the constraint c^T x - a = 0
+    Class implements the constraint :math:`c^T x - a = 0`
     """
     def __init__(self, c, a):
         """
-        - :code: `c` is constraint `dolfin.Vector()`
-        - :code: `a` value of the constraint 
+        :param c: Constraint vector 
+        :type c: :py:class:`dolfin.Vector`
+        :param a: Value of the constraint 
+        :type a: float 
         """
         self.c = c
         self.a = a 
@@ -34,11 +36,20 @@ class InnerProductEqualityConstraint(ProjectableConstraint):
 
 
     def project(self, z):
+        """
+        Projects the vector :code:`z` onto the constraint set
+
+        :param z: 
+        :type z: :py:class:`dolfin.Vector`
+        """
         factor = (self.c.inner(z) - self.a)/self.c_norm2
         z.axpy(-factor, self.c)
 
     def cost(self, z):
         """
-        returns the amount of violation of the constraint 
+        Returns the amount of violation of the constraint by :code:`z`
+
+        :param z: 
+        :type z: :py:class:`dolfin.Vector`
         """
         return self.c.inner(z) - self.a
