@@ -1,8 +1,6 @@
 soupy.utils module
 =========================
 
-Submodules
-----------
 
 soupy.utils.scipyCostWrapper module
 ---------------------------------------

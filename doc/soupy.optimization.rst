@@ -1,11 +1,7 @@
-
-soupy.optimization module
+soupy.optimization 
 ==========================
 
-Submodules
-----------
-
-soupy.optimization.bfgs module
+soupy.optimization.bfgs 
 -----------------------------------
 
 .. automodule:: soupy.optimization.bfgs
