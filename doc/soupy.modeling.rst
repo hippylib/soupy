@@ -36,3 +36,45 @@ soupy.modeling.controlCostFunctional
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+soupy.modeling.meanVarRiskMeasureSAA
+---------------------------------------
+
+.. automodule:: soupy.modeling.meanVarRiskMeasureSAA
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+soupy.modeling.variables
+-------------------------------------------
+
+.. automodule:: soupy.modeling.variables
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+soupy.modeling.augmentedVector
+-------------------------------------------
+
+.. automodule:: soupy.modeling.augmentedVector
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+soupy.modeling.superquantileRiskMeasureSAA
+-------------------------------------------
+
+.. automodule:: soupy.modeling.superquantileRiskMeasureSAA
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+soupy.modeling.penalization
+---------------------------------------
+
+.. automodule:: soupy.modeling.penalization
+    :members:
+    :undoc-members:
+    :show-inheritance:

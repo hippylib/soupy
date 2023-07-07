@@ -23,8 +23,6 @@ from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 
 def meanVarRiskMeasureSettings(data = {}):
-	# This should be a Parameter
-	# data['nsamples'] = [100,'Number of Monte Carlo samples']
 	data['beta'] = [0,'Weighting factor for variance']
 
 	return ParameterList(data)

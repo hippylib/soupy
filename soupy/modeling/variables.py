@@ -13,7 +13,10 @@
 
 """
 Enumerator for the variables of the inverse problem:
-- the STATE, PARAMETER, and ADJOINT variables.
+ - :code:`STATE = 0` for the state variable
+ - :code:`PARAMETER = 1` for the parameter variable
+ - :code:`ADJOINT = 2` for the adjoint variable
+ - :code:`CONTROL = 3` for the control variable
 """
 STATE= 0
 PARAMETER = 1

@@ -234,6 +234,14 @@ class RiskMeasureControlCostFunctional:
 
     """
     def __init__(self, risk_measure, penalization=None):
+        """
+        Constructor
+
+        :param risk_measure: Class implementing the risk measure :math:`\\rho(m,z)`
+        :type risk_measure: :py:class:`soupy.RiskMeasure`
+        :param penalization: An optional penalization object for the cost of control
+        :type penalization: :py:class:`soupy.Penalization`
+        """
         self.risk_measure = risk_measure
         self.penalization = penalization
         self.grad_risk = self.risk_measure.generate_vector(CONTROL)
@@ -243,6 +251,17 @@ class RiskMeasureControlCostFunctional:
         return self.risk_measure.generate_vector(component)
 
     def cost(self, z, order=0, **kwargs):
+        """
+        Computes the value of the cost functional at given control :math:`z`
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed after evaluation
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+
+        :return: Value of the cost functional
+        """
         self.risk_measure.computeComponents(z, order=order, **kwargs)
         cost_risk = self.risk_measure.cost()
         if self.penalization is not None:
@@ -254,7 +273,16 @@ class RiskMeasureControlCostFunctional:
 
     def costGrad(self, z, out):
         """
-        First calls cost with order = 1
+        Computes the value of the cost functional at given control :math:`z`
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param out: (Dual of) the gradient of the cost functional
+        :type out: :py:class:`dolfin.Vector`
+
+        :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
+
+        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 1`
         """
         out.zero()
         self.risk_measure.computeComponents(z, order=1)

@@ -16,12 +16,18 @@ import numpy as np
 
 class AugmentedVector:
     """
-    Class representing an augmented optimization variable (z, t), where t
-    is a real number. Methods mirror that of dl.Vector()
-    Assumes the last element in the array is the t variable
+    Class representing an augmented optimization variable :math:`(z, t)`, \
+        where :math:`t` is a real number. \
+        Methods mirror that of :code:`dolfin.Vector`. \
+        Assumes the last element in the array is the :code:`t` variable
+
+    .. note:: Currently supports only sample parallelism (i.e. serial mesh)
     """
     def __init__(self, v, copy_vector=True):
-        # Currently worked out only for serial mesh (allow sample parallel)
+        """
+        :param v: :code:`dolfin.Vector` to be augmented
+        :param copy_vector: If :code:`True`, copy the vector, otherwise use the same memory
+        """
         assert v.mpi_comm().Get_size() == 1
         if copy_vector:
             self.v = v.copy()

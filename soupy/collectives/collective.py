@@ -46,7 +46,9 @@ class MultipleSamePartitioningPDEsCollective:
     """
     def __init__(self, comm, is_serial_check=False):
         """
-        :code:`comm` is :code:`mpi4py.MPI` comm
+        Constructor: 
+        :param comm: MPI communicator
+        :type comm : :py:class:`mpi4py.MPI.Comm`
         """
         self.comm = comm
         self.is_serial_check = is_serial_check

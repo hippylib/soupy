@@ -33,13 +33,20 @@ class Penalization:
 class MultiPenalization(Penalization):
     """
     Class for a sum of penalization terms 
+
+        .. math:: P(z) = \sum_{i=1}^{n} \\alpha_i P_i(z)
+
     """
     def __init__(self, Vh, penalization_list, alpha_list=None):
         """
-        - :code: `Vh` function space for STATE, PARAMETER, ADJOINT, CONTROL
-        - :code: `penalization_list` a list of Penalization objects
-        - :code: `alpha_list` optional list of weights, assumed to all be 1 
-            if None is given
+        Constructor 
+
+        :param Vh: List of function spaces the state, parameter, adjoint, and control
+        :type Vh: list of :py:class:`dolfin.FunctionSpace`        
+        :param penalization_list: List of penalization objects
+        :type penalization_list: list of :py:class:`Penalization` 
+        :param alpha_list: List of weights for each penalization term
+        :type alpha_list: list of floats
         """
         self.Vh = Vh 
         self.helper = dl.Function(Vh[CONTROL]).vector()
@@ -53,18 +60,42 @@ class MultiPenalization(Penalization):
 
     
     def cost(self, z):
+        """
+        Compute the penalization at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         cost = 0
         for alpha, penalization in zip(self.alpha_list, self.penalization_list):
             cost += alpha * penalization.cost(z)
         return cost 
 
     def grad(self, z, out):
+        """
+        Compute the gradient of the penalty at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param out: The assembled gradient vector
+        :type out: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         out.zero()
         for alpha, penalization in zip(self.alpha_list, self.penalization_list):
             penalization.grad(z, self.helper)
             out.axpy(alpha, self.helper)
 
     def hessian(self, z, zhat, out):
+        """
+        Compute the Hessian of the penalty at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param zhat: The direction for Hessian action
+        :type zhat: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param out: The assembled Hessian action vector
+        :type out: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         out.zero()
         for alpha, penalization in zip(self.alpha_list, self.penalization_list):
             penalization.hessian(z, zhat, self.helper)
@@ -73,17 +104,23 @@ class MultiPenalization(Penalization):
 
 class L2Penalization(Penalization):
     """
-    L2 integral over the domain
-        P(z) = \alpha \int_{\Omega) |z|^2 dx 
+    :math:`L^2(\Omega)` integral over the domain
 
-    For finite dimensional controls `z`, this amounts to a little \ell_2 norm
-    In this case, `Vh[soupy.CONTROL]` needs to be a 
-    `dolfin.VectorFunctionSpace` of reals
+        .. math:: P(z) = \\alpha \int_{\Omega} |z|^2 dx 
+
+    For finite dimensional controls `z`, this amounts to a little \
+        :math:`\ell_2` norm \
+        In this case, :code:`Vh[soupy.CONTROL]` needs to be a \
+        :code:`dolfin.VectorFunctionSpace` of reals
     """
     def __init__(self, Vh, alpha):
         """
-        - :code: `Vh` function space for STATE, PARAMETER, ADJOINT, CONTROL
-        - :code: `alpha` weighting factor
+        Constructor 
+
+        :param Vh: List of function spaces the state, parameter, adjoint, and control
+        :type Vh: list of :py:class:`dolfin.FunctionSpace`        
+        :param alpha: Weight for the penalization term
+        :type alpha: float
         """
         self.Vh = Vh
         self.alpha = alpha
@@ -103,6 +140,12 @@ class L2Penalization(Penalization):
 
 
     def cost(self, z):
+        """
+        Compute the penalization at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`AugmentedVector`
+        """
         if isinstance(z, AugmentedVector):
             z_sub = z.get_vector()
             self.M.mult(z_sub, self.Mz)
@@ -112,6 +155,14 @@ class L2Penalization(Penalization):
             return self.alpha * z.inner(self.Mz)
 
     def grad(self, z, out):
+        """
+        Compute the gradient of the penalty at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`AugmentedVector`
+        :param out: The assembled gradient vector
+        :type out: :py:class:`dolfin.Vector` or :py:class:`AugmentedVector`
+        """
         out.zero()
         if isinstance(z, AugmentedVector):
             out_sub = out.get_vector()
@@ -123,6 +174,16 @@ class L2Penalization(Penalization):
             out.axpy(2.0*self.alpha, self.Mz)
 
     def hessian(self, z, zhat, out):
+        """
+        Compute the Hessian of the penalty at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param zhat: The direction for Hessian action
+        :type zhat: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param out: The assembled Hessian action vector
+        :type out: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         out.zero()
         if isinstance(z, AugmentedVector):
             out_sub = out.get_vector()
@@ -138,15 +199,21 @@ class L2Penalization(Penalization):
 class WeightedL2Penalization(Penalization):
     """
     A weighted L2 norm penalization 
-        P(z) = z^T M z 
-    where M is some symmetric positive definite weight matrix
+        .. math:: P(z) = z^T M z 
+
+    where :math:`M` is a symmetric positive definite weight matrix
     """
     def __init__(self, Vh, M, alpha):
         """
-        - :code: `Vh` function space for STATE, PARAMETER, ADJOINT, CONTROL
-        - :code: `M` weighting matrix with method `mult`
-        - :code: `alpha` weighting factor
-        """
+        Constructor: 
+
+        :param Vh: List of function spaces the state, parameter, adjoint, and control
+        :type Vh: list of :py:class:`dolfin.FunctionSpace`        
+        :param M: Weighting matrix with method :code:`mult`
+        :type M: :py:class:`dolfin.Matrix` like
+        :param alpha: Weight for the penalization term
+        :type alpha: float
+        """        
         self.Vh = Vh
         self.M = M 
         self.alpha = alpha
@@ -160,6 +227,12 @@ class WeightedL2Penalization(Penalization):
 
 
     def cost(self, z):
+        """
+        Compute the penalization at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         if isinstance(z, AugmentedVector):
             z_sub = z.get_vector()
             self.M.mult(z_sub, self.Mz)
@@ -169,6 +242,14 @@ class WeightedL2Penalization(Penalization):
             return self.alpha * z.inner(self.Mz)
 
     def grad(self, z, out):
+        """
+        Compute the gradient of the penalty at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param out: The assembled gradient vector
+        :type out: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         out.zero()
         if isinstance(z, AugmentedVector):
             out_sub = out.get_vector()
@@ -180,6 +261,16 @@ class WeightedL2Penalization(Penalization):
             out.axpy(2.0*self.alpha, self.Mz)
 
     def hessian(self, z, zhat, out):
+        """
+        Compute the Hessian of the penalty at given control :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param zhat: The direction for Hessian action
+        :type zhat: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        :param out: The assembled Hessian action vector
+        :type out: :py:class:`dolfin.Vector` or :py:class:`soupy.AugmentedVector`
+        """
         out.zero()
         if isinstance(z, AugmentedVector):
             out_sub = out.get_vector()
