@@ -45,7 +45,7 @@ class MeanVarRiskMeasure(RiskMeasure):
         :type control_model: :py:class:`soupy.ControlModel`
         :param prior: The prior distribution for the random parameter
         :type prior: :py:class:`hippylib.Prior`
-        :code settings: additional settings
+        :param settings: additional settings
         :type settings: :py:class:`hippylib.ParameterList`
         """
         self.model = control_model

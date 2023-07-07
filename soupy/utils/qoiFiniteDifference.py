@@ -22,8 +22,23 @@ except:
 
 def qoiFiniteDifference(Vh, qoi, x, du, order=1, delta=1e-4, plotting=False):
     """
-    Finite difference checks the gradient, mainly for the state variable 
-    Also computes the gradients for remaining variables --- most of the time will be zero 
+    Finite difference checks the gradient of the quantity of interest with respect to
+    the state variable, as well as the parameter and control variables
+
+    :param Vh: List of function spaces for the state, parameter, adjoint, and control variables
+    :type Vh: list of :py:class:`dolfin.FunctionSpace`
+    :param qoi: Quantity of interest to check
+    :type qoi: :py:class:`soupy.ControlQoI`
+    :param x: The list of state, parameter, adjoint, and control variables
+    :type x: list of :py:class:`dolfin.Vector` or similar
+    :param du: The perturbation to the state variable
+    :type du: :py:class:`dolfin.Vector` or similar
+    :param order: Order of derivative to check. 1 for gradient, 2 for Hessian
+    :type order: int
+    :param delta: The finite difference step size
+    :type delta: float
+    :plotting: If :code:`true`, plots the finite difference Hessian and analytic Hessian
+    :type plotting: bool
     """
     x2 = [None, None, None, None]
     x2[STATE] = dl.Vector(x[STATE])

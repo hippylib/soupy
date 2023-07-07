@@ -88,7 +88,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         :type control_model: :py:class:`soupy.ControlModel`
         :param prior: The prior distribution for the random parameter
         :type prior: :py:class:`hippylib.Prior`
-        :code settings: additional settings given in :code:`superquantileRiskMeasureSAASettings()`
+        :param settings: additional settings given in :code:`superquantileRiskMeasureSAASettings()`
         :type settings: :py:class:`hippylib.ParameterList`
         :param comm_sampler: MPI communicator for sample parallelism 
         :type comm_sampler: :py:class:`mpi4py.MPI.Comm`
