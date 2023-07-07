@@ -40,11 +40,11 @@ master_doc = 'index'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinxdoc'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = []
-html_theme_options = {
-    "nosidebar": True
-}
+# html_theme_options = {
+    # "nosidebar": True
+# }
 # html_theme_options = {
 #     "nosidebar": False, "sidebarwidth": "40em"
 # }

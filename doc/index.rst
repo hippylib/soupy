@@ -8,8 +8,12 @@ Welcome to SOUPy's documentation!
 .. include:: ../README.md
    :parser: myst_parser.sphinx_
 
+Documentation
+---------------------
+
 .. toctree::
    :titlesonly:
    :maxdepth: 1
-
+   
+   install
    Complete API reference <soupy>
