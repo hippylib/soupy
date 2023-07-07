@@ -56,20 +56,15 @@ class ControlModel:
                 
     def generate_vector(self, component = "ALL"):
         """
-        By default, return the list :code:`[u,m,p,z]` where:
-         * :code:`u` is any object that describes the state variable
-         * :code:`m` is a :code:`dolfin.Vector` object that describes the parameter variable. \
-            (Needs to support linear algebra operations)
-         * :code:`p` is any object that describes the adjoint variable
-         * :code:`z` is any object that describes the control variable
-        
-        If :code:`component = STATE` return only :code:`u`
-            
-        If :code:`component = PARAMETER` return only :code:`m`
-            
-        If :code:`component = ADJOINT` return only :code:`p`
+        :param component: The component of the vector to generate (:code:`soupy.STATE`, \
+            :code:`soupy.PARAMETER`, :code:`soupy.ADJOINT`, :code:`soupy.CONTROL`, or :code:`"ALL"`)
 
-        If :code:`component = CONTROL` return only :code:`z`
+        :return: By default, :code:`component == "ALL"` will return the list :code:`[u,m,p,z]` 
+            where each element is a :py:class:`dolfin.Vector` object of the appropriate size
+            If :code:`component = soupy.STATE` return only :code:`u`.
+            If :code:`component = soupy.PARAMETER` return only :code:`m`.
+            If :code:`component = soupy.ADJOINT` return only :code:`p`.
+            If :code:`component = soupy.CONTROL` return only :code:`z`.
         """ 
         if component == "ALL":
             x = [self.problem.generate_state(),
@@ -163,7 +158,7 @@ class ControlModel:
             the state, parameter, adjoint, and control variables :code:`u`, :code:`m`, :code:`p`,
             and :code:`z` for the assembling the gradient action.
             Vector :code:`u` is also used to assemble the adjoint right hand side.
-        :type: list of :py:class:`dolfin.Vector` objects
+        :type x: list of :py:class:`dolfin.Vector` objects
         :param mg: Dual of the gradient with respect to the parameter i.e. :math:`(g_m, m_{\mathrm{test}})_{M}`
         :type mg: :py:class:`dolfin.Vector`
 
@@ -184,7 +179,7 @@ class ControlModel:
             the state, parameter, adjoint, and control variables :code:`u`, :code:`m`, :code:`p`,
             and :code:`z` for the assembling the gradient action
             Vector :code:`u` is also used to assemble the adjoint right hand side.
-        :type: list of :py:class:`dolfin.Vector` objects
+        :type x: list of :py:class:`dolfin.Vector` objects
         :param mg: Dual of the gradient with respect to the control i.e. :math:`(g_z, z_{\mathrm{test}})_{Z}`
         :type mg: :py:class:`dolfin.Vector`
 
@@ -202,11 +197,11 @@ class ControlModel:
     
     def setPointForHessianEvaluations(self, x, gauss_newton_approx=False):
         """
-        Specify the point :code:`x = [u,m,p,z]` at which the Hessian operator 
+        Specify the point :code:`x = [u,m,p,z]` at which the Hessian operator \
             (or the Gauss-Newton approximation) needs to be evaluated.
 
         :param x: The point :code:`x = [u,m,p,z]` for which the Hessian needs to be evaluated
-        :type: list of :py:class:`dolfin.Vector` objects
+        :type xk: list of :py:class:`dolfin.Vector` objects
         :param gauss_newton_approx: whether to use the Gauss-Newton approximation (default: use Newton)
         :type gauss_newton_approx: bool
             
@@ -450,9 +445,11 @@ class ControlModel:
         """
         Apply the :math:`(i,j)` block of the Hessian to a vector :code:`d`
 
-        :param i: The output variable index (0, 1, 2, 3)
+        :param i: The output variable index :code:`soupy.STATE`, :code:`soupy.PARAMETER`, 
+            :code:`soupy.ADJOINT`, or :code:`soupy.CONTROL`
         :type i: int
-        :param j: The input variable index (0, 1, 2, 3)
+        :param j: The input variable index :code:`soupy.STATE`, :code:`soupy.PARAMETER`, 
+            :code:`soupy.ADJOINT`, or :code:`soupy.CONTROL`
         :type j: int
         :param d: The vector to which the Hessian is applied
         :type d: :py:class:`dolfin.Vector`

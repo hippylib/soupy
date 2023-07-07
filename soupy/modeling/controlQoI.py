@@ -21,25 +21,29 @@ from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 class ControlQoI(object):
     """
-    Abstract class to model the control quantity of a control problem
-    In the following :code:`x` will denote the variable :code:`[u, m, p, z]`, denoting respectively 
-    the state :code:`u`, the parameter :code:`m`, the adjoint variable :code:`p`, and the control variable :code:`z`
+    Abstract class to define the optimization quantity of interest for the \
+        optimal control problem under uncertainty \
+        In the following :code:`x` will denote the variable :code:`[u, m, p, z]`, \
+        denoting respectively the state :code:`u`, the parameter :code:`m`, \
+        the adjoint variable :code:`p`, and the control variable :code:`z`
     
-    The methods in the class ControlQoI will usually access the state :code:`u` and possibly the
-    parameter :code:`m` and control :code: `z`. The adjoint variables will never be accessed. 
+    The methods in the class ControlQoI will usually access the state :code:`u` and possibly the \
+        parameter :code:`m` and control :code:`z`. The adjoint variables will never be accessed. 
     """
     
     def cost(self,x):
         """
-        Given x evaluate the cost functional.
-        Only the state u and (possibly) the parameter m are accessed. """
+        Given :code:`x` evaluate the cost functional. Only the state :code:`u` \
+            and (possibly) the parameter :code:`m` are accessed. """
         
         raise NotImplementedError("Child class should implement method cost")
         
     def grad(self, i, x, out):
         """
-        Given the state and the paramter in :code:`x`, compute the partial gradient of the misfit
-        functional in with respect to the state (:code:`i == STATE`) or with respect to the parameter (:code:`i == PARAMETER`).
+        Given the state and the paramter in :code:`x`, compute the partial gradient \
+            of the QoI in with respect to the state (:code:`i == soupy.STATE`), \
+            parameter (:code:`i == soupy.PARAMETER`), or \
+            control (:code:`i == soupy.CONTROL`).
         """
 
         raise NotImplementedError("Child class should implement method grad")
@@ -47,16 +51,14 @@ class ControlQoI(object):
     def setLinearizationPoint(self,x, gauss_newton_approx=False):
         """
         Set the point for linearization.
-        Inputs:
-        
-            :code:`x=[u, m, p]` - linearization point
-            :code:`gauss_newton_approx (bool)` - whether to use Gauss Newton approximation 
         """
         raise NotImplementedError("Child class should implement method setLinearizationPoint")
         
     def apply_ij(self,i,j, dir, out):
         """
-        Apply the second variation :math:`\delta_{ij}` (:code:`i,j = STATE,PARAMETER`) of the cost in direction :code:`dir`.
+        Apply the second variation :math:`\delta_{ij}` (:code:`i,j` = :code:`soupy.STATE`, \
+            :code:`soupy.PARAMETER`, :code:`soupy.CONTROL`) \
+            of the cost in direction :code:`dir`.
         """
 
         raise NotImplementedError("Child class should implement method apply_ij")
@@ -69,8 +71,8 @@ class L2MisfitVarfHandler:
 
      .. math:: \int_{\Omega} \chi (u - u_d)^2 dx
 
-    where :math:`u_d` is the reference state 
-        and :code:`\chi` is the characteristic function 
+    where :math:`u_d` is the reference state \
+        and :math:`\chi` is the characteristic function \
         defining the region of integration
     """
 
@@ -136,7 +138,7 @@ class VariationalControlQoI(ControlQoI):
 
     def adj_rhs(self, x, rhs):
         """
-        The right hand for the adjoint problem (i.e. the derivative of the Lagrangian funtional
+        The right hand for the adjoint problem (i.e. the derivative of the Lagrangian functional \
             with respect to the state u).
 
         :param x: List of vectors :code:`[u, m, p, z]` representing the state, 
@@ -150,8 +152,9 @@ class VariationalControlQoI(ControlQoI):
 
     def grad(self, i, x, out):
         """
-        First variation of the QoI with respect to the :code:`i` th variable
-            where :code:`i` is either :code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`.
+        First variation of the QoI with respect to the :code:`i` th variable \
+            where :code:`i` is either :code:`soupy.STATE`, :code:`soupy.PARAMETER`, \
+            or :code:`soupy.CONTROL`.
 
         :param i: Index of the variable with respect to which the first variation is taken
         :type i: int
@@ -173,7 +176,8 @@ class VariationalControlQoI(ControlQoI):
 
     def apply_ij(self,i,j, dir, out):
         """
-        Apply the second variation :math:`\\delta_ij` (:code:`i,j` = STATE, PARAMETER, CONTROL) 
+        Apply the second variation :math:`\\delta_ij` (:code:`i,j` = :code:`soupy.STATE`, \
+            :code:`soupy.PARAMETER`, :code:`soupy.CONTROL`) \
             of the QoI in direction :code:`dir`.
 
         :param i: Index of the output variable
@@ -201,15 +205,15 @@ class VariationalControlQoI(ControlQoI):
 
     def apply_ijk(self,i,j,k,dir1,dir2, out):
         """
-        Apply the third order variation of the QoI in the 
-            :code:`i`th, :code:`j`th, and :code:`k`th variables in directions 
+        Apply the third order variation of the QoI in the \
+            :code:`i` th, :code:`j` th, and :code:`k` th variables in directions \
             :code:`dir1` and :code:`dir2`.
 
-        :param i: First variable index (:code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`)
+        :param i: First variable index (:code:`soupy.STATE`, :code:`soupy.PARAMETER`, or :code:`soupy.CONTROL`)
         :type i: int
-        :param j: Second variable index (:code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`)
+        :param j: Second variable index (:code:`soupy.STATE`, :code:`soupy.PARAMETER`, or :code:`soupy.CONTROL`)
         :type j: int
-        :param k: Third variable index (:code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`)
+        :param k: Third variable index (:code:`soupy.STATE`, :code:`soupy.PARAMETER`, or :code:`soupy.CONTROL`)
         :type k: int
         :param dir1: Direction for variable :code:`j`
         :type dir1: :py:class:`dolfin.Vector`
@@ -294,7 +298,7 @@ class L2MisfitControlQoI(ControlQoI):
 
     def adj_rhs(self, x, rhs):
         """
-        The right hand for the adjoint problem (i.e. the derivative of the Lagrangian funtional
+        The right hand for the adjoint problem (i.e. the derivative of the Lagrangian functional \
             with respect to the state u).
 
         :param x: List of vectors :code:`[u, m, p, z]` representing the state, 
@@ -308,8 +312,9 @@ class L2MisfitControlQoI(ControlQoI):
 
     def grad(self, i, x, out):
         """
-        First variation of the QoI with respect to the :code:`i` th variable
-            where :code:`i` is either :code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`.
+        First variation of the QoI with respect to the :code:`i` th variable \
+            where :code:`i` is either :code:`soupy.STATE`, :code:`soupy.PARAMETER`, \
+            or :code:`soupy.CONTROL`.
 
         :param i: Index of the variable with respect to which the first variation is taken
         :type i: int
@@ -332,7 +337,8 @@ class L2MisfitControlQoI(ControlQoI):
 
     def apply_ij(self,i,j, dir, out):
         """
-        Apply the second variation :math:`\\delta_ij` (:code:`i,j` = STATE, PARAMETER, CONTROL) 
+        Apply the second variation :math:`\\delta_ij` (:code:`i,j` = :code:`soupy.STATE`, \
+            :code:`soupy.PARAMETER`, :code:`soupy.CONTROL`) \
             of the QoI in direction :code:`dir`.
 
         :param i: Index of the output variable
@@ -357,15 +363,15 @@ class L2MisfitControlQoI(ControlQoI):
 
     def apply_ijk(self,i,j,k,dir1,dir2, out):
         """
-        Apply the third order variation of the QoI in the 
-            :code:`i`th, :code:`j`th, and :code:`k`th variables in directions 
+        Apply the third order variation of the QoI in the \
+            :code:`i` th, :code:`j` th, and :code:`k` th variables in directions \
             :code:`dir1` and :code:`dir2`.
 
-        :param i: First variable index (:code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`)
+        :param i: First variable index (:code:`soupy.STATE`, :code:`soupy.PARAMETER`, or :code:`soupy.CONTROL`)
         :type i: int
-        :param j: Second variable index (:code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`)
+        :param j: Second variable index (:code:`soupy.STATE`, :code:`soupy.PARAMETER`, or :code:`soupy.CONTROL`)
         :type j: int
-        :param k: Third variable index (:code:`STATE`, :code:`PARAMETER`, or :code:`CONTROL`)
+        :param k: Third variable index (:code:`soupy.STATE`, :code:`soupy.PARAMETER`, or :code:`soupy.CONTROL`)
         :type k: int
         :param dir1: Direction for variable :code:`j`
         :type dir1: :py:class:`dolfin.Vector`
@@ -380,8 +386,10 @@ class L2MisfitControlQoI(ControlQoI):
     def setLinearizationPoint(self, x, gauss_newton_approx=False):
         """
         Specify the linearization point for computation of the second variations in method apply_ij.
-        INPUTS:
-        - x = [u,m,p,z] is a list of the state u, parameter m, and adjoint variable p
+
+        :param x: List of vectors :code:`[u, m, p, z]` representing the state,
+            parameter, adjoint, and control variables
+        :type x: list of :py:class:`dolfin.Vector`
         """
         for i in range(len(x)):
             self.x[i].zero()
