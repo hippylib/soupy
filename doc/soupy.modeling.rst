@@ -37,6 +37,13 @@ soupy.modeling.controlCostFunctional
     :undoc-members:
     :show-inheritance:
 
+soupy.modeling.meanVarRiskMeasure
+---------------------------------------
+
+.. automodule:: soupy.modeling.meanVarRiskMeasure
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 soupy.modeling.meanVarRiskMeasureSAA
 ---------------------------------------

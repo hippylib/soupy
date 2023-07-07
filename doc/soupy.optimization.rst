@@ -24,3 +24,11 @@ soupy.optimization.steepestDescent
     :members:
     :undoc-members:
     :show-inheritance:
+
+soupy.optimization.sgd 
+-----------------------------------
+
+.. automodule:: soupy.optimization.sgd
+    :members:
+    :undoc-members:
+    :show-inheritance:
