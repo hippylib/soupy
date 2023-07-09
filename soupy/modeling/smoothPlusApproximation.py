@@ -14,6 +14,10 @@
 import numpy as np 
 
 class SmoothPlusApproximationSoftplus:
+    """
+    Implements the smooth approximation to the maximum function \
+        :math:`\\max(0, t)` using the softplus function 
+    """
     def __init__(self, epsilon=1e-2):
         self.epsilon = epsilon 
 
@@ -28,6 +32,11 @@ class SmoothPlusApproximationSoftplus:
 
 
 class SmoothPlusApproximationQuartic:
+    """
+    Implements the smooth approximation to the maximum function \
+        :math:`\\max(0, t)` a piecewise quartic function
+    """
+
     def __init__(self, epsilon=1e-2):
         self.epsilon = epsilon 
 

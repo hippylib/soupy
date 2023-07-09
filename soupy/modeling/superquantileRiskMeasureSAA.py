@@ -38,7 +38,7 @@ def sampleSuperquantile(samples, beta):
 
 def sampleSuperquantileByMinimization(samples, beta, epsilon=1e-2):
     """
-    Evaluate superquantile from samples 
+    Evaluate superquantile from samples by minimization 
     """ 
     quantile = np.percentile(samples, beta * 100) 
     smoothPlus = SmoothPlusApproximationQuartic(epsilon=epsilon)
@@ -50,7 +50,6 @@ def sampleSuperquantileByMinimization(samples, beta, epsilon=1e-2):
 
 
 def superquantileRiskMeasureSAASettings(data = {}):
-    # This should be a Parameter
     data['sample_size'] = [100,'Number of Monte Carlo samples']
     data['beta'] = [0.95, 'Quantile value for superquantile']
     data['epsilon'] = [0.01, 'Sharpness of smooth plus approximation']
@@ -77,16 +76,22 @@ def _allocate_sample_sizes(sample_size, comm_sampler):
 class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     """
     Class for the a sample average approximation of the superquantile risk measure (CVaR) 
-    with optional sample parallelism with MPI 
+    with sample parallelism using MPI 
     """
 
     def __init__(self, control_model, prior, settings = superquantileRiskMeasureSAASettings(), comm_sampler=mpi4py.MPI.COMM_WORLD):
         """
-        Parameters
-            - :code: `control_model` control model of problem 
-            - :code: `prior` prior for uncertain parameter
-            - :code: `settings` additional settings
-            - :code: `comm_sampler` MPI communicator for the sampling parallelism 
+        Constructor:
+
+        :param control_model: control model containing the :code:`soupy.PDEVariationalControlProblem`
+            and :code:`soupy.ControlQoI`
+        :type control_model: :py:class:`soupy.ControlModel`
+        :param prior: The prior distribution for the random parameter
+        :type prior: :py:class:`hippylib.Prior`
+        :param settings: additional settings given in :code:`superquantileRiskMeasureSAASettings()`
+        :type settings: :py:class:`hippylib.ParameterList`
+        :param comm_sampler: MPI communicator for sample parallelism 
+        :type comm_sampler: :py:class:`mpi4py.MPI.Comm`
         """
         self.model = control_model
         self.prior = prior
@@ -164,12 +169,14 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
 
     def computeComponents(self, zt, order=0, **kwargs):
         """
-        Computes the components for the stochastic approximation of the cost
-        Parameters:
-            - :code: `z` the control variable 
-            - :code: `order` the order of derivatives needed. 
-                    0 for cost. 1 for grad. 2 for Hessian
-            - :code: `**kwargs` dummy keyword arguments for compatibility 
+        Computes the components for the evaluation of the risk measure
+
+        :param zt: the control variable with the scalar :code:`t` appended
+        :type zt: :py:class:`soupy.AugmentedVector`
+        :param order: Order of the derivatives needed.
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+        :param kwargs: dummy keyword arguments for compatibility 
         """
         z = zt.get_vector()
         t = zt.get_scalar()
@@ -251,18 +258,23 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     
     def cost(self):
         """
-        Evaluates the cost given by the risk measure
-        Assumes :code: `computeComponents` has been called
+        Evaluates the value of the risk measure once components have been computed
+
+        :return: Value of the cost functional
+
+        .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
         t = self.zt.get_scalar()
         return  t + 1/(1-self.beta) * self.s_bar
 
     def costGrad(self, gt):
         """
-        Evaluates the gradient by the risk measure
-        Assumes :code: `computeComponents` has been called with :code: `order>=1`
-        Parameters
-            - :code: `g` output vector as an augmented vector 
+        Evaluates the value of the risk measure once components have been computed
+
+        :param g: (Dual of) the gradient of the risk measure to store result in
+        :type g: :py:class:`dolfin.Vector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order>=1`
         """
         # print("(proc %d) q_bar = %g" %(self.comm_sampler.Get_rank(), self.q_bar))
         dzJ_np = self.sprime_g_bar.get_local()/(1-self.beta)
@@ -275,6 +287,15 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         return 
 
     def gatherSamples(self, root=0):
+        """
+        Gather the QoI samples on the root process
+
+        :param root: Rank of the process to gather the samples on
+        :type root: int
+        
+        :return: An array of the sample QoI values
+        :return type: :py:class:`numpy.ndarray`
+        """
         q_all = None 
         if self.comm_sampler.Get_rank() == 0:
             q_all = np.zeros(self.sample_size)
@@ -284,6 +305,10 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     def superquantile(self):
         """ 
         Evaluate the superquantile using the computed samples 
+
+        :return: Value of the superquantile by sampling
+    
+        .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
         q_all = self.gatherSamples(root=0)
         value = 0.0

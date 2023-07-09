@@ -26,7 +26,6 @@ from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective
 
 
 def meanVarRiskMeasureSAASettings(data = {}):
-    # This should be a Parameter
     data['sample_size'] = [100,'Number of Monte Carlo samples']
     data['beta'] = [0,'Weighting factor for variance']
     data['seed'] = [1, 'rng seed for sampling']
@@ -52,17 +51,27 @@ def _allocate_sample_sizes(sample_size, comm_sampler):
 class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
     """
     Class for the mean + variance risk measure using sample average approximation
-        E[X] + beta Var[X]
-    with optional sample parallelism using MPI
+        
+        .. math:: \\rho[Q](z) = \mathbb{E}_m[Q(m,z)] + \\beta \mathbb{V}_m[Q(m,z)]
+
+    with sample parallelism using MPI
+
+    .. note:: currently does not support simultaneous sample and mesh partition parallelism 
     """
 
     def __init__(self, control_model, prior, settings = meanVarRiskMeasureSAASettings(), comm_sampler=mpi4py.MPI.COMM_WORLD):
         """
-        Parameters
-            - :code: `control_model` control model of problem 
-            - :code: `prior` prior for uncertain parameter
-            - :code: `settings` additional settings
-            - :code: `comm_sampler` MPI communicator for the sampling parallelism 
+        Constructor:
+
+        :param control_model: control model containing the :code:`soupy.PDEVariationalControlProblem`
+            and :code:`soupy.ControlQoI`
+        :type control_model: :py:class:`soupy.ControlModel`
+        :param prior: The prior distribution for the random parameter
+        :type prior: :py:class:`hippylib.Prior`
+        :param settings: additional settings
+        :type settings: :py:class:`hippylib.ParameterList`
+        :param comm_sampler: MPI communicator for sample parallelism 
+        :type comm_sampler: :py:class:`mpi4py.MPI.Comm`
         """
         self.model = control_model
         self.prior = prior
@@ -134,12 +143,14 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
     def computeComponents(self, z, order=0, **kwargs):
         """
-        Computes the components for the stochastic approximation of the cost
-        Parameters:
-            - :code: `z` the control variable 
-            - :code: `order` the order of derivatives needed. 
-                    0 for cost. 1 for grad. 2 for Hessian
-            - :code: `**kwargs` dummy keyword arguments for compatibility 
+        Computes the components for the evaluation of the risk measure
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed.
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+        :param kwargs: dummy keyword arguments for compatibility 
         """
         # Check if a new control variable is used 
         new_forward_solve = False 
@@ -219,17 +230,22 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
     
     def cost(self):
         """
-        Evaluates the cost given by the risk measure
-        Assumes :code: `computeComponents` has been called
+        Evaluates the value of the risk measure once components have been computed
+
+        :return: Value of the cost functional
+
+        .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
         return self.q_bar + self.beta * (self.q2_bar - self.q_bar**2)
 
     def costGrad(self, g):
         """
-        Evaluates the gradient by the risk measure
-        Assumes :code: `computeComponents` has been called with :code: `order>=1`
-        Parameters
-            - :code: `g` output vector for the gradient
+        Evaluates the value of the risk measure once components have been computed
+
+        :param g: (Dual of) the gradient of the risk measure to store result in
+        :type g: :py:class:`dolfin.Vector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
         # print("(proc %d) q_bar = %g" %(self.comm_sampler.Get_rank(), self.q_bar))
         g.zero()
@@ -256,6 +272,15 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         # Hzhat.axpy(-1., self.zhelp)
 
     def gatherSamples(self, root=0):
+        """
+        Gather the QoI samples on the root process
+
+        :param root: Rank of the process to gather the samples on
+        :type root: int
+        
+        :return: An array of the sample QoI values
+        :return type: :py:class:`numpy.ndarray`
+        """
         q_all = None 
         if self.comm_sampler.Get_rank() == 0:
             q_all = np.zeros(self.sample_size)
@@ -265,16 +290,22 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
 class MeanVarRiskMeasureSAA(RiskMeasure):
     """
-    Class for memory efficient evaluation of the Mean + Variance risk measure 
-    E[X] + beta Var[X]. 
+    Class for the mean + variance risk measure using sample average approximation
+        
+        .. math:: \\rho[Q](z) = \mathbb{E}_m[Q(m,z)] + \\beta \mathbb{V}_m[Q(m,z)]
     """
 
     def __init__(self, control_model, prior, settings = meanVarRiskMeasureSAASettings()):
         """
-        Parameters
-            - :code: `control_model` control model of problem 
-            - :code: `prior` prior for uncertain parameter
-            - :code: `settings` additional settings
+        Constructor:
+
+        :param control_model: control model containing the :code:`soupy.PDEVariationalControlProblem`
+            and :code:`soupy.ControlQoI`
+        :type control_model: :py:class:`soupy.ControlModel`
+        :param prior: The prior distribution for the random parameter
+        :type prior: :py:class:`hippylib.Prior`
+        :param settings: additional settings
+        :type settings: :py:class:`hippylib.ParameterList`
         """
         self.model = control_model
         self.prior = prior
@@ -318,13 +349,17 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
     def computeComponents(self, z, order=0, **kwargs):
         """
-        Computes the components for the stochastic approximation of the cost
-        Parameters:
-            - :code: `z` the control variable 
-            - :code: `order` the order of derivatives needed. 
-                    0 for cost. 1 for grad. 2 for Hessian
-            - :code: `**kwargs` dummy keyword arguments for compatibility 
+
+        Computes the components for the evaluation of the risk measure
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed.
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+        :param kwargs: dummy keyword arguments for compatibility 
         """
+
         # Check if a new control variable is used 
         new_forward_solve = False 
         self.diff_helper.zero()
@@ -387,17 +422,22 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
     
     def cost(self):
         """
-        Evaluates the cost given by the risk measure
-        Assumes :code: `computeComponents` has been called
+        Computes the value of the risk measure once components have been computed
+
+        :return: Value of the cost functional
+
+        .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
         return self.q_bar + self.beta * np.std(self.q_samples)**2
 
     def costGrad(self, g):
         """
-        Evaluates the gradient by the risk measure
-        Assumes :code: `computeComponents` has been called with :code: `order>=1`
-        Parameters
-            - :code: `g` output vector for the gradient
+        Computes the value of the risk measure once components have been computed
+
+        :param g: (Dual of) the gradient of the risk measure to store the result in
+        :type g: :py:class:`dolfin.Vector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
         g.zero()
         g.axpy(1.0, self.g_bar)

@@ -22,8 +22,20 @@ except:
 
 def penalizationFiniteDifference(Vh, penalization, z, dz, order=1, delta=1e-4, plotting=False):
     """
-    Finite difference checks the gradient, mainly for the state variable 
-    Also computes the gradients for remaining variables --- most of the time will be zero 
+    Finite difference checks the gradient of the penalization 
+
+    :param Vh: List of function spaces for the state, parameter, adjoint, and control variables
+    :type Vh: list of :py:class:`dolfin.FunctionSpace`
+    :param penalization: Penalization term to check
+    :type penalization: :py:class:`soupy.Penalization`
+    :param z: The control variable
+    :type z: :py:class:`dolfin.Vector` or similar 
+    :param dz: The perturbation to the control variable
+    :type dz: :py:class:`dolfin.Vector` or similar 
+    :param delta: The finite difference step size
+    :type delta: float
+    :plotting: If :code:`true`, plots the finite difference Hessian and analytic Hessian
+    :type plotting: bool
     """
 
     z1 = dl.Vector(z)

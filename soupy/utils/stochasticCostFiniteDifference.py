@@ -20,6 +20,9 @@ from ..modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
 from ..modeling.augmentedVector import AugmentedVector
 
 def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
+    """
+    Finite difference check for a stochastic cost function by fixing the random number generator seed
+    """
     gz = pde_cost.generate_vector(CONTROL)
 
     if isinstance(z, AugmentedVector):
@@ -49,6 +52,9 @@ def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
     print("Finite diff gradient: %g" %fd_grad)
 
 def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
+    """
+    Finite difference check for a deterministic/SAA cost functional
+    """
     gz = pde_cost.generate_vector(CONTROL)
 
     if isinstance(z, AugmentedVector):

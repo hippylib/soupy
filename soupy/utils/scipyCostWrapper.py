@@ -16,11 +16,17 @@ from ..modeling import STATE, PARAMETER, ADJOINT, CONTROL
 
 class ScipyCostWrapper:
     """
-    Class to interface the controlCostFunctional with a
-    scipy optimizer. Converts inputs to functions taking
-    and returning numpy arrays
+    Class to interface the controlCostFunctional with a \
+        scipy optimizer. Converts inputs to functions taking \
+        and returning :code:`numpy` arrays
     """
     def __init__(self, controlCostFunctional, verbose=False):
+        """
+        Constructor
+
+        :param controlCostFunctional: The cost functional to wrap
+        :type controlCostFunctional: :py:class:`ControlCostFunctional`
+        """
         self.cost_functional = controlCostFunctional
         self.z_help = self.cost_functional.generate_vector(CONTROL)
         self.g_help = self.cost_functional.generate_vector(CONTROL)
@@ -29,6 +35,15 @@ class ScipyCostWrapper:
         self.n_grad = 0
 
     def cost(self, z_np):
+        """
+        Evaluates the cost functional at given control 
+
+        :param z_np: The control as a numpy array
+        :type z_np: :py:class:`numpy.ndarray`
+
+        :returns: The value of the cost functional
+        :return type: float
+        """
         self.z_help.set_local(z_np)
         self.z_help.apply("")
         cost_value = self.cost_functional.cost(self.z_help, order=0)
@@ -40,6 +55,16 @@ class ScipyCostWrapper:
         return cost_value
 
     def grad(self, z_np):
+        """
+        Evaluates the gradient of the cost functional at given control 
+
+        :param z_np: The control as a numpy array
+        :type z_np: :py:class:`numpy.ndarray`
+
+        :returns: The gradient 
+        :return type: :py:class:`numpy.ndarray`
+        """
+
         self.z_help.set_local(z_np)
         self.z_help.apply("")
         self.cost_functional.cost(self.z_help, order=1)
@@ -54,9 +79,16 @@ class ScipyCostWrapper:
         pass
 
     def function(self):
+        """
+        :returns: A function that evaluates the cost functional at a given control
+        """
         return lambda x : self.cost(x)
 
     def jac(self):
+        """
+        :returns: A function that evaluates the gradient of the \
+            cost functional at a given control
+        """
         return lambda x : self.grad(x)
 
 

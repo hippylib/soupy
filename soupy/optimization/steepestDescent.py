@@ -41,18 +41,12 @@ class SteepestDescent:
     Globalization is performed using the Armijo sufficient reduction condition (backtracking).
     The stopping criterion is based on a control on the norm of the gradient.
 
-    The user must provide a model that describes the forward problem, cost functionals, and all the
-    derivatives for the gradient.
+    The user must provide a cost functional that provides the evaluation and gradient
 
-    More specifically the model object should implement following methods:
-       - :code:`generate_vector()` -> generate the object containing state, parameter, adjoint.
-       - :code:`cost(x)` -> evaluate the cost functional, report regularization part and misfit separately.
-       - :code:`solveFwd(out, x)` -> solve the possibly non linear forward problem.
-       - :code:`solveAdj(out, x)` -> solve the linear adjoint problem.
-       - :code:`evalGradientParameter(x, out)` -> evaluate the gradient of the parameter and compute its norm.
-       - :code:`Rsolver()`          --> A solver for the regularization term.
-
-    Type :code:`help(Model)` for additional information.
+    More specifically the cost functional object should implement following methods:
+       - :code:`generate_vector()` -> generate the object containing state, parameter, adjoint, and control.
+       - :code:`cost(z)` -> evaluate the cost functional
+       - :code:`costGrad(z, g)` -> evaluate the gradient of the cost functional
     """
     termination_reasons = [
                            "Maximum number of Iteration reached",      #0
@@ -63,8 +57,14 @@ class SteepestDescent:
 
     def __init__(self, cost_functional, parameters = SteepestDescent_ParameterList()):
         """
-        Initialize the Stochastic Gradient Descent solver. Type :code:`SGD_ParameterList().showMe()` for list of default parameters
-        and their descriptions.
+        Constructor for the Steepest Descent solver.
+
+        :param cost_functional: The cost functional object
+        :type cost_functional: :py:class:`soupy.ControlCostFunctional` or similar
+        :param parameters: The parameters of the solver.
+            Type :code:`SteepestDescent_ParameterList().showMe()` for list of default parameters
+            and their descriptions.
+        :type parameters: :py:class:`hippylib.ParameterList`.
         """
         self.cost_functional = cost_functional
         self.parameters = parameters
@@ -78,9 +78,19 @@ class SteepestDescent:
 
     def solve(self, z, box_bounds=None, constraint_projection=None):
         """
-        Solve the constrained optimization problem with initial guess :code:`x = [u,a,p]`. Return the solution :code:`[u,a,p]`.
-        .. note:: :code:`x` will be overwritten.
+        Solve the constrained optimization problem using steepest descent with initial guess :code:`z`
 
+        :param z: The initial guess
+        :type z: :py:class:`dolfin.Vector` 
+        :param box_bounds: Bound constraint. A list with two entries (min and max). 
+            Can be either a scalar value or a :code:`dolfin.Vector` of the same size as :code:`z`
+        :type box_bounds: list 
+        :param constraint_projection: Alternative projectable constraint
+        :type constraint_projection: :py:class:`ProjectableConstraint`
+
+        :return: The optimization solution :code:`z` and a dictionary of information
+
+        .. note:: The input :code:`z` is overwritten
         """
         rel_tol = self.parameters["rel_tolerance"]
         abs_tol = self.parameters["abs_tolerance"]

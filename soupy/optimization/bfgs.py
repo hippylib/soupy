@@ -54,6 +54,15 @@ class RescaledIdentity(object):
             raise
 
     def solve(self, x, b):
+        """
+        Applies the operator :math:`d0 I` 
+
+        :param x: solution vector
+        :type x: :py:class:`dolfin.Vector` 
+        :param b: right-hand side vector
+        :type b: :py:class:`dolfin.Vector` 
+        """
+
         # print("\t\t WITHIN IDENTITY")
         # print("\t\t", self.d0)
         # print("\t\t", x, x.get_local())
@@ -79,24 +88,24 @@ class BFGS_operator:
     def set_H0inv(self, H0inv):
         """
         Set user-defined operator corresponding to :code:`H0inv`
-        Input:
-            :code:`H0inv`: Fenics operator with method :code:`solve()`
+
+        :param H0inv: Fenics operator with method :code:`solve()`
         """
         self.H0inv = H0inv
         
     def solve(self, x, b):
         """
-        Solve system:           :math:`H_{bfgs} x = b`
-        where :math:`H_{bfgs}` is the approximation to the Hessian build by BFGS. 
-        That is, we apply
-        .. math::
-			x = (H_{bfgs})^{-1} b = H_k b
+        Solve system:           
+        :math:`H_{\mathrm{bfgs}} x = b`
+        where :math:`H_{\mathrm{bfgs}}` is the approximation to the Hessian build by BFGS. 
+        That is, we apply :math:`x = (H_{\mathrm{bfgs}})^{-1} b = H_k b`
         where :math:`H_k` matrix is BFGS approximation to the inverse of the Hessian.
         Computation done via double-loop algorithm.
         
-        Inputs:
-            :code:`x = dolfin.Vector` - `[out]`
-            :code:`b = dolfin.Vector` - `[in]`
+        :param x: The solution to the system
+        :type x: :py:class:`dolfin.Vector` 
+        :param b: The right-hand side of the system
+        :type b: :py:class:`dolfin.Vector` 
         """
         A = []
         if self.help is None:
@@ -126,12 +135,12 @@ class BFGS_operator:
     def update(self, s, y):
         """
         Update BFGS operator with most recent gradient update.
-        
         To handle potential break from secant condition, update done via damping
-        
-        Inputs:
-            :code:`s = dolfin.Vector` `[in]` - corresponds to update in medium parameters.
-            :code:`y = dolfin.Vector` `[in]` - corresponds to update in gradient.
+
+        :param s: The update in medium parameters
+        :type s: :py:class:`dolfin.Vector` 
+        :param y: The update in gradient 
+        :type y: :py:class:`dolfin.Vector` 
         """
         damp = self.parameters["BFGS_damping"]
         memlim = self.parameters["memory_limit"]
@@ -197,6 +206,9 @@ class BFGS:
         """
         Initialize the BFGS solver.
         Type :code:`BFGS_ParameterList().showMe()` for default parameters and their description
+
+        :param cost_functional: The cost functional
+        :param parameters: The parameters for the BFGS solver
         """
         self.cost_functional = cost_functional
         
@@ -213,12 +225,20 @@ class BFGS:
     def solve(self, z, H0inv=RescaledIdentity(), box_bounds=None, constraint_projection=None):
         """
         Solve the constrained optimization problem with initial guess :code:`z`
-        :code:`z` will be overwritten.
-        :code:`H0inv`: the initial approximated inverse of the Hessian for the BFGS operator. It has an 
-        optional method :code:`update(x)` that will update the operator 
-        :code:`box_bounds`: Bound constraint (list with two entries: min and max). Can be either a scalar value or a 
-        :code:`constraint_projection` Alternative projectable constraint 
-        Return the solution :code:`z` and :code:`results`, a dictionary of iterates
+
+        :param z: The initial guess
+        :type z: :py:class:`dolfin.Vector` 
+        :param H0inv: Initial approximation of the inverse of the Hessian. 
+            Has optional method :code:`update(x)` that will update the operator
+        :param box_bounds: Bound constraint. A list with two entries (min and max). 
+            Can be either a scalar value or a :code:`dolfin.Vector` of the same size as :code:`z`
+        :type box_bounds: list 
+        :param constraint_projection: Alternative projectable constraint
+        :type constraint_projection: :py:class:`ProjectableConstraint`
+
+        :return: The optimization solution :code:`z` and a dictionary of information
+
+        .. note:: The input :code:`z` will be overwritten 
         """
         
         if box_bounds is not None:

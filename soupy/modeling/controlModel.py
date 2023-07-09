@@ -26,22 +26,24 @@ from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 class ControlModel:
     """
     This class contains the structure needed to evaluate the control objective 
-    As inputs it takes a :code:`PDEProblem object`, and a :code:`Qoi` object.
+    As inputs it takes a :py:class:`PDEVariationalControlProblem`, and a :code:`Qoi` object.
     
     In the following we will denote with
-        - :code:`u` the state variable
-        - :code:`m` the (model) parameter variable
-        - :code:`p` the adjoint variable
-        - :code:`z` the control variable
-        
+     * :code:`u` the state variable
+     * :code:`m` the (model) parameter variable
+     * :code:`p` the adjoint variable
+     * :code:`z` the control variable
     """
     
 
     def __init__(self, problem, qoi):
         """
-        Create a model given:
-            - problem: the description of the forward/adjoint problem and all the sensitivities
-            - qoi: the qoi component of the cost functional
+        Constructor
+
+        :param problem: The PDE problem 
+        :type problem: :py:class:`PDEVariationalControlProblem`
+        :param qoi: The quantity of interest
+        :type qoi: :py:class:`ControlQoI`
         """
         self.problem = problem
         self.qoi = qoi
@@ -54,21 +56,15 @@ class ControlModel:
                 
     def generate_vector(self, component = "ALL"):
         """
-        By default, return the list :code:`[u,m,p,z]` where:
-        
-            - :code:`u` is any object that describes the state variable
-            - :code:`m` is a :code:`dolfin.Vector` object that describes the parameter variable. \
-            (Needs to support linear algebra operations)
-            - :code:`p` is any object that describes the adjoint variable
-            - :code:`z` is any object that describes the control variable
-        
-        If :code:`component = STATE` return only :code:`u`
-            
-        If :code:`component = PARAMETER` return only :code:`m`
-            
-        If :code:`component = ADJOINT` return only :code:`p`
+        :param component: The component of the vector to generate (:code:`soupy.STATE`, \
+            :code:`soupy.PARAMETER`, :code:`soupy.ADJOINT`, :code:`soupy.CONTROL`, or :code:`"ALL"`)
 
-        If :code:`component = CONTROL` return only :code:`z`
+        :return: By default, :code:`component == "ALL"` will return the list :code:`[u,m,p,z]` 
+            where each element is a :py:class:`dolfin.Vector` object of the appropriate size
+            If :code:`component = soupy.STATE` return only :code:`u`.
+            If :code:`component = soupy.PARAMETER` return only :code:`m`.
+            If :code:`component = soupy.ADJOINT` return only :code:`p`.
+            If :code:`component = soupy.CONTROL` return only :code:`z`.
         """ 
         if component == "ALL":
             x = [self.problem.generate_state(),
@@ -100,31 +96,32 @@ class ControlModel:
 
     def cost(self, x):
         """
-        Given the list :code:`x = [u,m,p]` which describes the state, parameter, and
-        adjoint variable compute the cost functional as the sum of 
-        the qoi functional and the regularization functional.
-        
-        Return the list [cost functional, regularization functional, qoi functional]
-        
+        Evaluate the QoI at the a given point :math:`q(u,m,z)`.
+
+        :param x: The point :code:`x = [u,m,p,z]` at which to evaluate the QoI
+        :type x: list of :py:class:`dolfin.Vector` objects
+
+        :return: The value of the QoI
+
         .. note:: :code:`p` is not needed to compute the cost functional
         """
         qoi_cost = self.qoi.cost(x)
-        # reg_cost = self.prior.cost(x[PARAMETER])
-        # return [qoi_cost+reg_cost, reg_cost, qoi_cost]
         return qoi_cost
 
 
     def solveFwd(self, out, x):
         """
         Solve the (possibly non-linear) forward problem.
-        
-        Parameters:
-            - :code:`out`: is the solution of the forward problem (i.e. the state) (Output parameters)
-            - :code:`x = [u,m,p]` provides
-                1) the parameter variable :code:`m` for the solution of the forward problem
-                2) the initial guess :code:`u` if the forward problem is non-linear
-        
-                .. note:: :code:`p` is not accessed.
+
+        :param out: Solution of the forward problem (state)
+        :type out: :py:class:`dolfin.Vector`
+        :param x: The point :code:`x = [u,m,p,z]`. Provides
+            the parameter and control variables :code:`m` 
+            and :code:`z` for the solution of the forward problem
+            and the initial guess :code:`u` if the forward problem is non-linear
+        :type: list of :py:class:`dolfin.Vector` objects
+
+        .. note:: :code:`p` is not accessed.
         """
         self.n_fwd_solve = self.n_fwd_solve + 1
         self.problem.solveFwd(out, x)
@@ -133,12 +130,16 @@ class ControlModel:
     def solveAdj(self, out, x):
         """
         Solve the linear adjoint problem.
-        Parameters:
-            - :code:`out`: is the solution of the adjoint problem (i.e. the adjoint :code:`p`) (Output parameter)
-            - :code:`x = [u, m, p]` provides
-                1) the parameter variable :code:`m` for assembling the adjoint operator
-                2) the state variable :code:`u` for assembling the adjoint right hand side
-                .. note:: :code:`p` is not accessed
+
+        :param out: Solution of the forward problem (state)
+        :type out: :py:class:`dolfin.Vector`
+        :param x: The point :code:`x = [u,m,p,z]`. Provides
+            the state, parameter and control variables :code:`u`, :code:`m`,
+            and :code:`z` for the solution assembling the adjoint operator.
+            Vector :code:`u` is also used to assemble the adjoint right hand side.
+        :type: list of :py:class:`dolfin.Vector` objects
+
+        .. note:: :code:`p` is not accessed
         """
         self.n_adj_solve = self.n_adj_solve + 1
         rhs = self.problem.generate_state()
@@ -151,36 +152,38 @@ class ControlModel:
 
     def evalGradientParameter(self,x, mg):
         """
-        Evaluate the gradient for the variational parameter equation at the point :code:`x=[u,m,p]`.
-        Parameters:
-            - :code:`x = [u,m,p]` the point at which to evaluate the gradient.
-            - :code:`mg` the variational gradient :math:`(g, mtest)`, mtest being a test function in the parameter space \
-            (Output parameter)
-        
-        Returns the norm of the gradient in the correct inner product :math:`g_norm = sqrt(g,g)`
+        Evaluate the :math:`m` gradient action form at the point :math:`(u,m,p,z)`
+
+        :param x: The point :code:`x = [u,m,p,z]`. Provides
+            the state, parameter, adjoint, and control variables :code:`u`, :code:`m`, :code:`p`,
+            and :code:`z` for the assembling the gradient action.
+            Vector :code:`u` is also used to assemble the adjoint right hand side.
+        :type x: list of :py:class:`dolfin.Vector` objects
+        :param mg: Dual of the gradient with respect to the parameter i.e. :math:`(g_m, m_{\mathrm{test}})_{M}`
+        :type mg: :py:class:`dolfin.Vector`
+
+        :return: the norm of the gradient in the correct inner product :math:`(g_m,g_m)_{M}^{1/2}`
         """ 
         tmp = self.generate_vector(PARAMETER)
         self.problem.evalGradientParameter(x, mg)
         self.qoi.grad(PARAMETER,x,tmp)
         mg.axpy(1., tmp)
-        # if not qoi_only:
-        #     self.prior.grad(x[PARAMETER], tmp)
-        #     mg.axpy(1., tmp)
-        
-        # self.prior.Msolver.solve(tmp, mg)
-        #self.prior.Rsolver.solve(tmp, mg)
         return math.sqrt(mg.inner(tmp))
 
     
     def evalGradientControl(self,x, mg):
         """
-        Evaluate the gradient for the variational parameter equation at the point :code:`x=[u,m,p]`.
-        Parameters:
-            - :code:`x = [u,m,p]` the point at which to evaluate the gradient.
-            - :code:`mg` the variational gradient :math:`(g, mtest)`, mtest being a test function in the parameter space \
-            (Output parameter)
-        
-        Returns the norm of the gradient in the correct inner product :math:`g_norm = sqrt(g,g)`
+        Evaluate the :math:`z` gradient action form at the point :math:`(u,m,p,z)`
+
+        :param x: The point :code:`x = [u,m,p,z]`. Provides
+            the state, parameter, adjoint, and control variables :code:`u`, :code:`m`, :code:`p`,
+            and :code:`z` for the assembling the gradient action
+            Vector :code:`u` is also used to assemble the adjoint right hand side.
+        :type x: list of :py:class:`dolfin.Vector` objects
+        :param mg: Dual of the gradient with respect to the control i.e. :math:`(g_z, z_{\mathrm{test}})_{Z}`
+        :type mg: :py:class:`dolfin.Vector`
+
+        :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
         """ 
         tmp = self.generate_vector(CONTROL)
         self.problem.evalGradientControl(x, mg)
@@ -194,15 +197,17 @@ class ControlModel:
     
     def setPointForHessianEvaluations(self, x, gauss_newton_approx=False):
         """
-        Specify the point :code:`x = [u,m,p]` at which the Hessian operator (or the Gauss-Newton approximation)
-        needs to be evaluated.
-        Parameters:
-            - :code:`x = [u,m,p]`: the point at which the Hessian or its Gauss-Newton approximation needs to be evaluated.
-            - :code:`gauss_newton_approx (bool)`: whether to use Gauss-Newton approximation (default: use Newton) 
+        Specify the point :code:`x = [u,m,p,z]` at which the Hessian operator \
+            (or the Gauss-Newton approximation) needs to be evaluated.
+
+        :param x: The point :code:`x = [u,m,p,z]` for which the Hessian needs to be evaluated
+        :type xk: list of :py:class:`dolfin.Vector` objects
+        :param gauss_newton_approx: whether to use the Gauss-Newton approximation (default: use Newton)
+        :type gauss_newton_approx: bool
             
         .. note:: This routine should either:
-            - simply store a copy of x and evaluate action of blocks of the Hessian on the fly
-            - or partially precompute the block of the hessian (if feasible)
+         1. simply store a copy of x and evaluate action of blocks of the Hessian on the fly, or
+         2. partially precompute the block of the hessian (if feasible)
         """
         self.gauss_newton_approx = gauss_newton_approx
         self.problem.setLinearizationPoint(x, self.gauss_newton_approx)
@@ -214,9 +219,11 @@ class ControlModel:
     def solveFwdIncremental(self, sol, rhs):
         """
         Solve the linearized (incremental) forward problem for a given right-hand side
-        Parameters:
-            - :code:`sol` the solution of the linearized forward problem (Output)
-            - :code:`rhs` the right hand side of the linear system
+
+        :param sol: Solution of the incremental forward problem (state)
+        :type sol: :py:class:`dolfin.Vector`
+        :param rhs: Right hand side of the linear system
+        :type rhs: :py:class:`dolfin.Vector`
         """
         self.n_inc_solve = self.n_inc_solve + 1
         self.problem.solveIncremental(sol,rhs, False)
@@ -225,9 +232,11 @@ class ControlModel:
     def solveAdjIncremental(self, sol, rhs):
         """
         Solve the incremental adjoint problem for a given right-hand side
-        Parameters:
-            - :code:`sol` the solution of the incremental adjoint problem (Output)
-            - :code:`rhs` the right hand side of the linear system
+
+        :param sol: Solution of the incremental adjoint problem (adjoint)
+        :type sol: :py:class:`dolfin.Vector`
+        :param rhs: Right hand side of the linear system
+        :type rhs: :py:class:`dolfin.Vector`
         """
         self.n_inc_solve = self.n_inc_solve + 1
         self.problem.solveIncremental(sol,rhs, True)
@@ -235,25 +244,27 @@ class ControlModel:
     
     def applyC(self, dm, out):
         """
-        Apply the :math:`C` block of the Hessian to a (incremental) parameter variable, i.e.
-        :code:`out` = :math:`C dm`
+        Apply the :math:`C_{m}` block of the Hessian to a (incremental) parameter variable, i.e.
+        :code:`out` = :math:`C_{m} dm`
         
-        Parameters:
-            - :code:`dm` the (incremental) parameter variable
-            - :code:`out` the action of the :math:`C` block on :code:`dm`
-            
+        :param dm: The (incremental) parameter variable
+        :type dm: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`C_z` block on :code:`dm`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         self.problem.apply_ij(ADJOINT,PARAMETER, dm, out)
 
     def applyCz(self, dz, out):
         """
-        Apply the :math:`C` block of the Hessian to a (incremental) control variable, i.e.
+        Apply the :math:`C_z` block of the Hessian to a (incremental) control variable, i.e.
         :code:`out` = :math:`C_z dz`
         
-        Parameters:
-            - :code:`dz` the (incremental) control variable
-            - :code:`out` the action of the :math:`C` block on :code:`dm`
+        :param dz: The (incremental) control variable
+        :type dz: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`C_z` block on :code:`dz`
+        :type out: :py:class:`dolfin.Vector`
             
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
@@ -261,24 +272,28 @@ class ControlModel:
     
     def applyCt(self, dp, out):
         """
-        Apply the transpose of the :math:`C` block of the Hessian to a (incremental) adjoint variable.
-        :code:`out` = :math:`C^t dp`
-        Parameters:
-            - :code:`dp` the (incremental) adjoint variable
-            - :code:`out` the action of the :math:`C^T` block on :code:`dp`
-            
+        Apply the transpose of the :math:`C_{m}` block of the Hessian to a (incremental) adjoint variable.
+        :code:`out` = :math:`C_{m}^T dp`
+
+        :param dp: The (incremental) adjoint variable
+        :type dp: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`C_{m}^T` block on :code:`dp`
+        :type out: :py:class:`dolfin.Vector`
+
         ..note:: This routine assumes that :code:`out` has the correct shape.
         """
         self.problem.apply_ij(PARAMETER,ADJOINT, dp, out)
 
     def applyCzt(self, dp, out):
         """
-        Apply the transpose of the :math:`C_z` block of the Hessian to a (incremental) adjoint variable.
-        :code:`out` = :math:`C_z^t dp`
-        Parameters:
-            - :code:`dp` the (incremental) adjoint variable
-            - :code:`out` the action of the :math:`C_z^T` block on :code:`dp`
-            
+        Apply the transpose of the :math:`C_{z}` block of the Hessian to a (incremental) adjoint variable.
+        :code:`out` = :math:`C_{z}^T dp`
+
+        :param dp: The (incremental) adjoint variable
+        :type dp: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`C_{z}^T` block on :code:`dp`
+        :type out: :py:class:`dolfin.Vector`
+
         ..note:: This routine assumes that :code:`out` has the correct shape.
         """
         self.problem.apply_ij(CONTROL, ADJOINT, dp, out)
@@ -287,11 +302,12 @@ class ControlModel:
         """
         Apply the :math:`W_{uu}` block of the Hessian to a (incremental) state variable.
         :code:`out` = :math:`W_{uu} du`
-        
-        Parameters:
-            - :code:`du` the (incremental) state variable
-            - :code:`out` the action of the :math:`W_{uu}` block on :code:`du`
-            
+
+        :param du: The (incremental) state variable
+        :type du: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{uu}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         self.qoi.apply_ij(STATE,STATE, du, out)
@@ -307,11 +323,12 @@ class ControlModel:
         """
         Apply the :math:`W_{um}` block of the Hessian to a (incremental) parameter variable.
         :code:`out` = :math:`W_{um} dm`
-        
-        Parameters:
-            - :code:`dm` the (incremental) parameter variable
-            - :code:`out` the action of the :math:`W_{um}` block on :code:`du`
-            
+
+        :param dm: The (incremental) parameter variable
+        :type dm: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{um}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         if self.gauss_newton_approx:
@@ -328,10 +345,11 @@ class ControlModel:
         Apply the :math:`W_{uz}` block of the Hessian to a (incremental) control variable.
         :code:`out` = :math:`W_{uz} dz`
         
-        Parameters:
-            - :code:`dz` the (incremental) control variable
-            - :code:`out` the action of the :math:`W_{uz}` block on :code:`du`
-            
+        :param dz: The (incremental) control variable
+        :type dz: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{uz}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         if self.gauss_newton_approx:
@@ -346,11 +364,12 @@ class ControlModel:
         """
         Apply the :math:`W_{mu}` block of the Hessian to a (incremental) state variable.
         :code:`out` = :math:`W_{mu} du`
-        
-        Parameters:
-            - :code:`du` the (incremental) state variable
-            - :code:`out` the action of the :math:`W_{mu}` block on :code:`du`
-        
+
+        :param du: The (incremental) state variable
+        :type du: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{mu}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         if self.gauss_newton_approx:
@@ -366,10 +385,11 @@ class ControlModel:
         Apply the :math:`W_{zu}` block of the Hessian to a (incremental) state variable.
         :code:`out` = :math:`W_{zu} du`
         
-        Parameters:
-            - :code:`du` the (incremental) state variable
-            - :code:`out` the action of the :math:`W_{zu}` block on :code:`du`
-        
+        :param du: The (incremental) state variable
+        :type du: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{zu}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         if self.gauss_newton_approx:
@@ -381,41 +401,16 @@ class ControlModel:
             out.axpy(1., tmp)
 
     
-    # def applyR(self, dm, out):
-    #     """
-    #     Apply the regularization :math:`R` to a (incremental) parameter variable.
-    #     :code:`out` = :math:`R dm`
-        
-    #     Parameters:
-    #         - :code:`dm` the (incremental) parameter variable
-    #         - :code:`out` the action of :math:`R` on :code:`dm`
-        
-    #     .. note:: This routine assumes that :code:`out` has the correct shape.
-    #     """
-    #     self.prior.R.mult(dm, out)
-
-    
-    # def Rsolver(self):
-    #     """
-    #     Return an object :code:`Rsovler` that is a suitable solver for the regularization
-    #     operator :math:`R`.
-        
-    #     The solver object should implement the method :code:`Rsolver.solve(z,r)` such that
-    #     :math:`Rz \approx r`.
-    #     """
-    #     return self.prior.Rsolver
-
-    
     def applyWmm(self, dm, out):
         """
         Apply the :math:`W_{mm}` block of the Hessian to a (incremental) parameter variable.
         :code:`out` = :math:`W_{mm} dm`
         
-        Parameters:
-        
-            - :code:`dm` the (incremental) parameter variable
-            - :code:`out` the action of the :math:`W_{mm}` on block :code:`dm`
-            
+        :param dm: The (incremental) parameter variable
+        :type dm: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{mm}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         if self.gauss_newton_approx:
@@ -431,11 +426,11 @@ class ControlModel:
         Apply the :math:`W_{zz}` block of the Hessian to a (incremental) control variable.
         :code:`out` = :math:`W_{zz} dz`
         
-        Parameters:
-        
-            - :code:`dm` the (incremental) control variable
-            - :code:`out` the action of the :math:`W_{zz}` on block :code:`dz`
-            
+        :param dz: The (incremental) control variable
+        :type dz: :py:class:`dolfin.Vector`
+        :param out: The action of the :math:`W_{zz}` block on :code:`du`
+        :type out: :py:class:`dolfin.Vector`
+
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
         if self.gauss_newton_approx:
@@ -447,6 +442,20 @@ class ControlModel:
             out.axpy(1., tmp)
             
     def apply_ij(self, i, j, d, out):
+        """
+        Apply the :math:`(i,j)` block of the Hessian to a vector :code:`d`
+
+        :param i: The output variable index :code:`soupy.STATE`, :code:`soupy.PARAMETER`, 
+            :code:`soupy.ADJOINT`, or :code:`soupy.CONTROL`
+        :type i: int
+        :param j: The input variable index :code:`soupy.STATE`, :code:`soupy.PARAMETER`, 
+            :code:`soupy.ADJOINT`, or :code:`soupy.CONTROL`
+        :type j: int
+        :param d: The vector to which the Hessian is applied
+        :type d: :py:class:`dolfin.Vector`
+        :param out: The action of the Hessian on :code:`d`
+        :type out: :py:class:`dolfin.Vector`
+        """
         if i == STATE and j == STATE:
             self.applyWuu(d,out)
         elif i == STATE and j == PARAMETER:

@@ -50,17 +50,22 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
     """
     This class implements a deterministic approximation for the optimal control problem
     under uncertainty by considering a fixed parameter at the mean of the prior
+
+        .. math:: J(z) := Q(\\bar{m}, z) + P(z) 
+
     """
 
     def __init__(self, model, prior, penalization=None):
         """
-        Code implements the deterministic approximation of an optimal control problem
-        where the random parameter is taken as its mean value 
-            min J(z) := Q(\bar{m}) + P(z) 
-        - :code: `model` an instance of `soupy.ControlModel`, which contains 
-            the PDE problem and qoi
-        - :code: `prior` a prior for the random parameter.
-        - :code: `penalization` an optional Penalization object 
+        Constructor
+
+        :param model: control model containing the :code:`soupy.PDEVariationalControlProblem`
+            and :code:`soupy.ControlQoI`
+        :type model: :py:class:`soupy.ControlModel`
+        :param prior: The prior distribution for the random parameter
+        :type prior: :py:class:`hippylib.Prior`
+        :param penalization: An optional penalization object for the cost of control
+        :type penalization: :py:class:`soupy.Penalization`
         """
         self.model = model
         self.prior = prior
@@ -99,11 +104,13 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
     def computeComponents(self, z, order=0):
         """
-        Computes the components for the stochastic approximation of the cost
-        Parameters:
-            - :code: `z` the control variable 
-            - :code: `order` the order of derivatives needed. 
-                    0 for cost. 1 for grad. 2 for Hessian
+        Computes the components for the evaluation of the cost functional
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed.
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
         """
 
         # Check if a new control variable is used 
@@ -142,6 +149,17 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
 
     def cost(self, z, order=0, **kwargs):
+        """
+        Computes the value of the cost functional at given control :math:`z`
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed after evaluation
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+
+        :return: Value of the cost functional
+        """
         self.computeComponents(z, order=order)
         objective = self.model.cost(self.x)
         if self.penalization is None:
@@ -152,8 +170,16 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
     def costGrad(self, z, out):
         """
-        Compute the gradient
-        Assumes self.costValue(z, order=1) has been called 
+        Computes the value of the cost functional at given control :math:`z`
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param out: (Dual of) the gradient of the cost functional
+        :type out: :py:class:`dolfin.Vector`
+
+        :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
+
+        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 1`
         """
         self.model.evalGradientControl(self.x, out)
         if self.penalization is not None:
@@ -165,10 +191,17 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
     def costHessian(self, z, zhat, out):
         """
-        Apply the the reduced Hessian to the vector :code:`zhat`
-        evaluated at control variable :code:`z`
-        Return the result in :code:`out`.
-        Need to call self.costValue(self, order) with order>=1 before self.costHessian
+        Apply the the reduced Hessian to the vector :math:`zhat`
+        evaluated at control variable :math:`z`
+
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param zhat: The direction of Hessian action
+        :type zhat: :py:class:`dolfin.Vector`
+        :param out: The assembled Hessian action
+        :type out: :py:class:`dolfin.Vector`
+        
+        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 2`
         """
         self.model.setPointForHessianEvaluations(self.x)
         self.model.applyCz(zhat, self.rhs_fwd)
@@ -193,7 +226,22 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
 
 class RiskMeasureControlCostFunctional:
+    """
+    This class implements a risk measure cost functional for \
+        optimal control problem under uncertainty
+
+        .. math:: J(z) := \\rho[Q(m, z)] + P(z) 
+
+    """
     def __init__(self, risk_measure, penalization=None):
+        """
+        Constructor
+
+        :param risk_measure: Class implementing the risk measure :math:`\\rho(m,z)`
+        :type risk_measure: :py:class:`soupy.RiskMeasure`
+        :param penalization: An optional penalization object for the cost of control
+        :type penalization: :py:class:`soupy.Penalization`
+        """
         self.risk_measure = risk_measure
         self.penalization = penalization
         self.grad_risk = self.risk_measure.generate_vector(CONTROL)
@@ -203,6 +251,18 @@ class RiskMeasureControlCostFunctional:
         return self.risk_measure.generate_vector(component)
 
     def cost(self, z, order=0, **kwargs):
+        """
+        Computes the value of the cost functional at given control :math:`z`
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed after evaluation
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+        :param kwargs: additional arguments, e.g. :code:`rng` for the risk measure computation
+
+        :return: Value of the cost functional
+        """
         self.risk_measure.computeComponents(z, order=order, **kwargs)
         cost_risk = self.risk_measure.cost()
         if self.penalization is not None:
@@ -214,7 +274,16 @@ class RiskMeasureControlCostFunctional:
 
     def costGrad(self, z, out):
         """
-        First calls cost with order = 1
+        Computes the value of the cost functional at given control :math:`z`
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param out: (Dual of) the gradient of the cost functional
+        :type out: :py:class:`dolfin.Vector`
+
+        :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
+
+        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 1`
         """
         out.zero()
         self.risk_measure.computeComponents(z, order=1)

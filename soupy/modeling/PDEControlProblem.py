@@ -24,6 +24,20 @@ from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 class PDEVariationalControlProblem(hp.PDEVariationalProblem):
     def __init__(self, Vh, varf_handler, bc, bc0, is_fwd_linear = False, lu_method="mumps"):
+        """
+        Constructor 
+
+        :param Vh: List of function spaces the state, parameter, adjoint, and control
+        :type Vh: list of :py:class:`dolfin.FunctionSpace`
+        :param varf_handler: Variational form handler with :code:`__call__` method
+        :param bc: List of Dirichlet boundary conditions for the state
+        :param bc0: List of zeroed Dirichlet boundary conditions 
+        :param is_fwd_linear: Flag indicating whether the forward problem is linear
+        :type is_fwd_linear: bool
+        :param lu_method: Method for solving linear systems (default, mumps, etc.)
+        :type lu_method: str
+        """
+
         # assert for class assumptions here
         assert id(Vh[STATE]) == id(Vh[ADJOINT]), print('Need to have same STATE and ADJOINT spaces')
         assert len(Vh) == 4
