@@ -8,6 +8,7 @@ Submodules
 
     soupy.modeling
     soupy.optimization
+    soupy.solver
     soupy.collectives
     soupy.utils
 

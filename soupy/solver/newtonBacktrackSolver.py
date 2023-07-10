@@ -9,6 +9,10 @@ from mpi4py import MPI
 import hippylib as hp 
 
 def applyBC(bcs, u):
+    """
+    Applies a single or a list of :code:`dolfin.DirichletBC` 
+    to the vector :code:`u`
+    """
     if bcs is None:
         pass
     elif isinstance(bcs, list):
@@ -18,6 +22,10 @@ def applyBC(bcs, u):
         bcs.apply(u)
 
 def homogenizeBC(bcs):
+    """
+    Converts a single or a list of :code:`dolfin.DirichletBC` 
+    to their homogenized (zeroed) forms
+    """
     if bcs is None:
         return None
     elif isinstance(bcs, list):
@@ -34,11 +42,13 @@ def homogenizeBC(bcs):
 
 class NewtonBacktrackSolver:
     """
-    The user must provide the variational forms for the energy functional. 
-    The gradient and the Hessian of the energy functional can be either provided by the user
-    or computed by FEniCS using automatic differentiation.
-    
-    NOTE: Essential Boundary Conditions are not supported
+    Backtracking Newton solver for the nonlinear variational system 
+
+        .. math:: r(u,m,p,z) = 0 \\forall p 
+
+    The user must provide the variational forms for the residual form, \
+        an initial guess, boundary conditions, and optionally, \
+        variational forms for the Jacobian and backtracking cost functional.
     """
     termination_reasons = [
                            "Maximum number of Iteration reached",      #0
@@ -49,13 +59,14 @@ class NewtonBacktrackSolver:
     
     def __init__(self):
         """
-        Initialize the InexactNewtonCG with the following parameters.
-        rel_tolerance         --> we converge when ||r||_2/||r_0||_2 <= rel_tolerance
-        abs_tolerance         --> we converge when ||r||_2 <= abs_tolerance
-        maxximum_iterations   --> maximum number of iterations
-        c_armijo              --> Armijo constant for sufficient reduction
-        max_backtracking_iter --> Maximum number of backtracking iterations
-        print_level           --> Print info on screen
+        Initializes the :code:`NewtonBacktrackSolver` with the following parameters.
+
+         - :code:`rel_tolerance`         --> we converge when :math:`\|r\|_2/\|r_0\|_2 \leq` :code:`rel_tolerance`
+         - :code:`abs_tolerance`         --> we converge when :math:`\|r\|_2 \leq` :code:`abs_tolerance`
+         - :code:`maxximum_iterations`   --> maximum number of iterations
+         - :code:`c_armijo`              --> Armijo constant for sufficient reduction
+         - :code:`max_backtracking_iter` --> Maximum number of backtracking iterations
+         - :code:`print_level`           --> Print info on screen
         """        
         self.parameters = {}
         self.parameters["rel_tolerance"]         = 1e-8
