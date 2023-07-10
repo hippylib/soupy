@@ -25,7 +25,7 @@ logging.getLogger('UFL').setLevel(logging.WARNING)
 dl.set_log_active(False)
 
 sys.path.append('../../')
-from soupy import PDEVariationalControlProblem, NewtonBacktrack, \
+from soupy import PDEVariationalControlProblem, \
     STATE, PARAMETER, ADJOINT, CONTROL
 
 from poissonControlProblem import PoissonVarfHandler, poisson_control_settings, \
