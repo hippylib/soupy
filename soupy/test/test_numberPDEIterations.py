@@ -25,39 +25,15 @@ logging.getLogger('UFL').setLevel(logging.WARNING)
 dl.set_log_active(False)
 
 sys.path.append('../../')
-from soupy import PDEVariationalControlProblem, NewtonBacktrack, NonlinearPDEControlProblem, \
+from soupy import PDEVariationalControlProblem, NewtonBacktrack, \
     STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import PoissonVarfHandler, NonlinearPoissonVarfHandler, poisson_control_settings, \
+from poissonControlProblem import PoissonVarfHandler, poisson_control_settings, \
     UniformDistribution
 
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)
-
-
-def setupNonlinearPDEProblem(nx, ny, n_wells_per_side):
-    settings = poisson_control_settings()
-    settings['nx'] = nx
-    settings['ny'] = ny
-    settings['N_WELLS_PER_SIDE'] = n_wells_per_side
-    settings['LINEAR'] = False
-    n_control = n_wells_per_side ** 2 
-    
-    # 1. Make spaces
-    mesh = dl.UnitSquareMesh(nx, ny)
-    Vh_STATE = dl.FunctionSpace(mesh, "CG", 1)
-    Vh_PARAMETER = dl.FunctionSpace(mesh, "CG", 1)
-    Vh_CONTROL = dl.VectorFunctionSpace(mesh, "R", degree=0, dim=n_control)
-    Vh = [Vh_STATE, Vh_PARAMETER, Vh_STATE, Vh_CONTROL]
-
-    bc = dl.DirichletBC(Vh[STATE], dl.Expression("x[1]", degree=1), u_boundary)
-    bc0 = dl.DirichletBC(Vh[STATE], dl.Constant(0.0), u_boundary)
-    poisson_varf = NonlinearPoissonVarfHandler(Vh, settings=settings)
-    newton_solver = NewtonBacktrack()
-    pde = NonlinearPDEControlProblem(Vh, poisson_varf, [bc], [bc0], newton_solver)
-    
-    return Vh, pde, settings
 
 
 def setupDistributions(Vh, settings):
@@ -163,13 +139,6 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         self.assertGreater(pde.n_linear_solves, n_solves)
         print("Total linear solves after new solveFwd: ", pde.n_linear_solves)
 
-    def nonlinearPDEIterations(self): 
-        is_fwd_linear = False
-        Vh, pde, settings = setupNonlinearPDEProblem(self.nx, self.ny, self.n_wells_per_side)
-        prior, control_dist = setupDistributions(Vh, settings)
-        self.countPDEIterations(Vh, pde, prior, control_dist, is_fwd_linear)
-
-
     def variationalPDEIterations(self, is_fwd_linear=True):
         Vh, pde, settings = setupVariationalPDEControlProblem(self.nx, self.ny, self.n_wells_per_side, is_fwd_linear)
         prior, control_dist = setupDistributions(Vh, settings)
@@ -178,7 +147,6 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
     def testVariationPDEIterations(self):
         self.variationalPDEIterations(True)
         self.variationalPDEIterations(False)
-        self.nonlinearPDEIterations()
 
 if __name__ == "__main__":
     unittest.main()

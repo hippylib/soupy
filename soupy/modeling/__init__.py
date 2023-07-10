@@ -25,10 +25,6 @@ from .meanVarRiskMeasure import meanVarRiskMeasureSettings, MeanVarRiskMeasure
 
 from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA, MeanVarRiskMeasureSAA_MPI
 
-from .nonlinearStateProblem import NonlinearStateProblem, NonlinearResidualHandler
-
-from .nonlinearPDEControlProblem import NonlinearPDEControlProblem
-
 from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization
 
 from . smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
