@@ -200,7 +200,7 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         self.Cz = dl.assemble(dl.derivative(g_form[ADJOINT],x_fun[CONTROL]))
         [bc.zero(self.C) for bc in self.bc0]
         [bc.zero(self.Cz) for bc in self.bc0]
-                
+
         if self.solver_fwd_inc is None:
             self.solver_fwd_inc = self._createLUSolver()
             self.solver_adj_inc = self._createLUSolver()
@@ -273,8 +273,13 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         KKT[CONTROL, STATE] = self.Wzu
         KKT[CONTROL, CONTROL] = self.Wzz
         KKT[CONTROL, ADJOINT] = hp.Transpose(self.Cz)
-        
-        if i >= j:
+
+        if i == ADJOINT and j == CONTROL:
+            # Check Cz first since the index ordering is different with CONTROL 
+            # This avoids doing transpmult of hp.Tranpose(Cz)
+            self.Cz.mult(dir, out) 
+
+        elif i >= j:
             if KKT[i,j] is None:
                 out.zero()
             else:
