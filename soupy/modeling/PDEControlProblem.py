@@ -75,10 +75,15 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
                         "incremental_forward":0,
                         "incremental_adjoint":0}
         self.n_linear_solves = 0 
-        self.nonlinear_solver_params = None 
+        self.nonlinear_solver_parameters = None 
     
-    def set_nonlinear_solver_parameters(self, params):
-        self.nonlinear_solver_params = params
+    def set_nonlinear_solver_parameters(self, parameters):
+        """ Set the solver parameters used for `dolfin.NonlinearVariationalSolver`
+
+        :param parameters: Solver parameters for `dolfin.NonlinearVariationalSolver`
+        :type parameters: dict
+        """
+        self.nonlinear_solver_parameters = parameters
 
     def generate_state(self):
         """ Return a vector in the shape of the state. """
@@ -135,8 +140,8 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             nonlinear_problem = dl.NonlinearVariationalProblem(res_form, u, self.bc, jacobian_form)
             solver = dl.NonlinearVariationalSolver(nonlinear_problem)
 
-            if self.nonlinear_solver_params is not None:
-                solver.parameters.update(self.nonlinear_solver_params)
+            if self.nonlinear_solver_parameters is not None:
+                solver.parameters.update(self.nonlinear_solver_parameters)
 
             num_iters, converged = solver.solve()
             state.zero()
