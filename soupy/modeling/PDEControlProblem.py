@@ -75,7 +75,10 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
                         "incremental_forward":0,
                         "incremental_adjoint":0}
         self.n_linear_solves = 0 
-
+        self.nonlinear_solver_params = None 
+    
+    def set_nonlinear_solver_parameters(self, params):
+        self.nonlinear_solver_params = params
 
     def generate_state(self):
         """ Return a vector in the shape of the state. """
@@ -131,6 +134,10 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             jacobian_form = dl.derivative(res_form, u) 
             nonlinear_problem = dl.NonlinearVariationalProblem(res_form, u, self.bc, jacobian_form)
             solver = dl.NonlinearVariationalSolver(nonlinear_problem)
+
+            if self.nonlinear_solver_params is not None:
+                solver.parameters.update(self.nonlinear_solver_params)
+
             num_iters, converged = solver.solve()
             state.zero()
             state.axpy(1., u.vector())
