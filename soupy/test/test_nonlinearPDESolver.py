@@ -52,7 +52,15 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         return u_fun, num_iter, converged
 
     def _solve_by_nonlinear_snes_solver(self):
-        params = {'nonlinear_solver' : 'snes'}
+        params = {'nonlinear_solver': 'snes',
+            'snes_solver':
+            {
+                'linear_solver'           : 'mumps',
+                'absolute_tolerance'      : 1e-10,
+                'relative_tolerance'      : 1e-10,
+                'maximum_iterations'      : 20,
+             }
+         }
         u_fun = dl.Function(self.Vh_STATE)
         v = dl.TestFunction(self.Vh_STATE)
         res_form = residual(u_fun, v)
