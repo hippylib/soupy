@@ -4,7 +4,7 @@ class NonlinearVariationalSolver:
     """
     Solver for the nonlinear variational problem 
 
-        .. math:: r(u,v) = 0 \\forall v
+        .. math:: \\text{Find } u \in U \qquad r(u,v) = 0 \quad \\forall v \in V
 
     The user must provide the variational forms for the residual form, \
         an initial guess, boundary conditions, and optionally, \
@@ -30,7 +30,7 @@ class NonlinearVariationalSolver:
         """
         Solve the nonlinear variational system 
 
-        .. math:: r(u,v) = 0 \\forall v
+        .. math:: \\text{Find } u \in U \qquad r(u,v) = 0 \quad \\forall v \in V
 
         given using the `dolfin.NonlinearVariationalSolver` with a supplied initial guess
 
