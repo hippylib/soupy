@@ -44,7 +44,7 @@ class NewtonBacktrackSolver:
     """
     Backtracking Newton solver for the nonlinear variational system 
 
-        .. math:: r(u,m,p,z) = 0 \\forall p 
+        .. math:: r(u,v) = 0 \\forall v
 
     The user must provide the variational forms for the residual form, \
         an initial guess, boundary conditions, and optionally, \
@@ -80,12 +80,14 @@ class NewtonBacktrackSolver:
     def solve(self, residual_form, u, bcs=None, J_form = None, energy_form=None, solver=None):
         """
         Solve the nonlinear variational system 
-        .. math:: R(u,m,p) = 0 
+
+        .. math:: r(u,v) = 0 \\forall v
+
         given using a backtracking Newton method with supplied initial guess 
 
         :param residual_form: Variational form for the residual 
-        :param u: Initial guess for the solution 
-        :type u: :py:class:`dolfin.Vector`
+        :param u: Initial guess for the solution and funciton used in :code:`residual_form`
+        :type u: :py:class:`dolfin.Function`
         :param bcs: List of boundary conditions 
         :type bcs: list 
         :param J_form: Variational form for the Jacobian of the residual 
