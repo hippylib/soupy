@@ -16,3 +16,4 @@ from .newtonBacktrackSolver import NewtonBacktrackSolver
 from .nonlinearVariationalSolver import NonlinearVariationalSolver
 
 from .PETScLUSolver import PETScLUSolver
+
