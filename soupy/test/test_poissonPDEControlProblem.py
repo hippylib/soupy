@@ -230,6 +230,57 @@ class TestPoissonPDEControlProblem(unittest.TestCase):
         self.finiteDifferenceCheck(False)
 
 
+    def testNonlinearSolverParams(self):
+        settings = poisson_control_settings()
+        settings['nx'] = self.nx
+        settings['ny'] = self.ny
+        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
+        settings['LINEAR'] = False
+
+        _, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
+
+        noise = dl.Vector()
+        prior.init_vector(noise, "noise")
+
+        bc = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
+        bc0 = dl.DirichletBC(self.Vh[STATE], dl.Constant(0.0), u_boundary)
+        poisson_varf = PoissonVarfHandler(self.Vh, settings=settings)
+
+        pde_updated_params = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
+                is_fwd_linear=settings["LINEAR"])        
+        params = {'nonlinear_solver': 'snes',
+            'snes_solver':
+            {
+                'linear_solver'           : 'mumps',
+                'absolute_tolerance'      : 1e-10,
+                'relative_tolerance'      : 1e-10,
+                'maximum_iterations'      : 20,
+             }
+         }
+        pde_updated_params.set_nonlinear_solver_parameters(params)
+        pde = PDEVariationalControlProblem(self.Vh, poisson_varf, bc, bc0, 
+                is_fwd_linear=settings["LINEAR"])        
+
+        
+        u0 = pde.generate_state()
+        u1 = pde.generate_state()
+        m = pde.generate_parameter()
+        z = pde.generate_control()
+        x = [u0, m, None, z]
+    
+        
+        hp.parRandom.normal(1.0, noise)
+        prior.sample(noise, m)
+        hp.parRandom.normal(1.0, z)
+
+        pde_updated_params.solveFwd(u0, x)
+        pde.solveFwd(u1, x)
+        
+        rel_err = np.linalg.norm(u0.get_local() - u1.get_local())/np.linalg.norm(u1.get_local())
+        print("Relative error between default and SNES nonlinear solver: %g" %(rel_err))
+        self.assertTrue(rel_err < self.reltol)
+
+
 if __name__ == "__main__":
     unittest.main()
             

@@ -250,3 +250,4 @@ class SGD:
         self.final_cost      = cost_old
         print(SGD.termination_reasons[self.reason])
         return z, np.array(costs)
+

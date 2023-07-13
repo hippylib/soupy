@@ -388,3 +388,4 @@ class BFGS:
         self.final_cost      = cost_old
 
         return z, result
+

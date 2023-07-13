@@ -71,3 +71,4 @@ class InnerProductEqualityConstraint(ProjectableConstraint):
         :return: :math:`c^T z - a` for input :code:`z`
         """
         return self.c.inner(z) - self.a
+

@@ -11,6 +11,8 @@
 # terms of the GNU General Public License (as published by the Free
 # Software Foundation) version 3.0 dated June 1991.
 
-from .newtonBacktrack import NewtonBacktrack
+from .newtonBacktrackSolver import NewtonBacktrackSolver
+
+from .nonlinearVariationalSolver import NonlinearVariationalSolver
 
 from .customPETScLUSolver import CustomPETScLUSolver

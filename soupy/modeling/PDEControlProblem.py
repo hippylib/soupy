@@ -75,7 +75,15 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
                         "incremental_forward":0,
                         "incremental_adjoint":0}
         self.n_linear_solves = 0 
+        self.nonlinear_solver_parameters = None 
+    
+    def set_nonlinear_solver_parameters(self, parameters):
+        """ Set the solver parameters used for `dolfin.NonlinearVariationalSolver`
 
+        :param parameters: Solver parameters for `dolfin.NonlinearVariationalSolver`
+        :type parameters: dict
+        """
+        self.nonlinear_solver_parameters = parameters
 
     def generate_state(self):
         """ Return a vector in the shape of the state. """
@@ -131,6 +139,10 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             jacobian_form = dl.derivative(res_form, u) 
             nonlinear_problem = dl.NonlinearVariationalProblem(res_form, u, self.bc, jacobian_form)
             solver = dl.NonlinearVariationalSolver(nonlinear_problem)
+
+            if self.nonlinear_solver_parameters is not None:
+                solver.parameters.update(self.nonlinear_solver_parameters)
+
             num_iters, converged = solver.solve()
             state.zero()
             state.axpy(1., u.vector())
@@ -200,7 +212,7 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         self.Cz = dl.assemble(dl.derivative(g_form[ADJOINT],x_fun[CONTROL]))
         [bc.zero(self.C) for bc in self.bc0]
         [bc.zero(self.Cz) for bc in self.bc0]
-                
+
         if self.solver_fwd_inc is None:
             self.solver_fwd_inc = self._createLUSolver()
             self.solver_adj_inc = self._createLUSolver()
@@ -273,8 +285,13 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         KKT[CONTROL, STATE] = self.Wzu
         KKT[CONTROL, CONTROL] = self.Wzz
         KKT[CONTROL, ADJOINT] = hp.Transpose(self.Cz)
-        
-        if i >= j:
+
+        if i == ADJOINT and j == CONTROL:
+            # Check Cz first since the index ordering is different with CONTROL 
+            # This avoids doing transpmult of hp.Tranpose(Cz)
+            self.Cz.mult(dir, out) 
+
+        elif i >= j:
             if KKT[i,j] is None:
                 out.zero()
             else:
@@ -309,3 +326,4 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method=self.lu_method)
         else:
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method="default")
+

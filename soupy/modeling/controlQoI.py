@@ -394,3 +394,4 @@ class L2MisfitControlQoI(ControlQoI):
         for i in range(len(x)):
             self.x[i].zero()
             self.x[i].axpy(1.0, x[i])
+

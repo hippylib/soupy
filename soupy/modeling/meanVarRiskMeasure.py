@@ -166,3 +166,4 @@ class MeanVarRiskMeasure(RiskMeasure):
         Hzhat.axpy(1., self.zhelp)
         self.model.applyWzu(self.uhat, self.zhelp)
         Hzhat.axpy(-1., self.zhelp)
+
