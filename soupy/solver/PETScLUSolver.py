@@ -5,16 +5,34 @@ from mpi4py import MPI
 
 class PETScLUSolver:
     """
-    Wrapper for `dolfin.PETScLUSolver` with methods
-    :code:`solve_transpose` and :code:`set_operator`
+    LU solver for linear systems :math:`Ax = b` and :math:`A^Tx = b`. \
+        It is a wrapper for :py:class:`dolfin.PETScLUSolver` \
+        providing custom implementations for methods :code:`solve_transpose` \
+        and :code:`set_operator` if they are unavailable in the \
+        :code:`dolfin` version being used.
     """
     def __init__(self, mpi_comm=MPI.COMM_WORLD, method="mumps"):
+        """
+        Constructor:
+
+        :param mpi_comm: MPI Communicator for the linear system
+        :type mpi_comm: :py:class:`MPI.Comm`
+        :param method: LU method 
+        :type method: str
+        """
         self.mpi_comm = mpi_comm 
         self.method = method 
         self.solver = dl.PETScLUSolver(mpi_comm, method)
         self.ksp = self.solver.ksp()
 
     def set_operator(self, A):
+        """
+        Set the linear operator 
+
+        :param A: Matrix for the solves
+        :type A: :py:class:`dolfin.Matrix` or :py:class:`dolfin.PETScMatrix`
+        """
+
         if hasattr(A, 'mat'):
             self.ksp.setOperators(A.mat())
         else:
@@ -22,22 +40,26 @@ class PETScLUSolver:
 
     def solve(self, x, b):
         """
-        Solve the linear system 
+        Solve the linear system :math:`Ax = b` \
+            and stores result to :code:`x`
 
-        .. math:: `Ax = b`
-
-        and stores result to :code:`x`
+        :param x: Solution vector
+        :type x: :py:class:`dolfin.Vector` or :py:class:`dolfin.PETScVector`
+        :param b: Right hand side vector
+        :type b: :py:class:`dolfin.Vector` or :py:class:`dolfin.PETScVector`
         """
 
         self.solver.solve(x, b)
 
     def solve_transpose(self, x, b):
         """
-        Solve the linear system 
+        Solve the linear system :math:`A^T x = b` \
+            and stores result to :code:`x`
 
-        .. math:: `A^T x = b`
-
-        and stores result to :code:`x`
+        :param x: Solution vector
+        :type x: :py:class:`dolfin.Vector` or :py:class:`dolfin.PETScVector`
+        :param b: Right hand side vector
+        :type b: :py:class:`dolfin.Vector` or :py:class:`dolfin.PETScVector`
         """
         if hasattr(self.solver, 'solve_transpose'):
             self.solver.solveTranspose(x, b)
