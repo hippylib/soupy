@@ -15,4 +15,4 @@ from .newtonBacktrackSolver import NewtonBacktrackSolver
 
 from .nonlinearVariationalSolver import NonlinearVariationalSolver
 
-from .customPETScLUSolver import CustomPETScLUSolver
+from .PETScLUSolver import PETScLUSolver
