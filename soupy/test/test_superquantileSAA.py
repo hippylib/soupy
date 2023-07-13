@@ -292,8 +292,6 @@ class TestSuperquantileSAA(unittest.TestCase):
             self.assertTrue(err/np.abs(sq_by_samples) < tol)
 
 
-
-
-
 if __name__ == "__main__":
     unittest.main()
+

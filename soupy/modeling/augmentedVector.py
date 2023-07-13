@@ -84,3 +84,4 @@ class AugmentedVector:
     
     def apply(self, method):
         self.v.apply(method)
+

@@ -326,3 +326,4 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method=self.lu_method)
         else:
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method="default")
+

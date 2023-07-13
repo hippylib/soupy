@@ -246,3 +246,4 @@ class NewtonBacktrackSolver:
                 
         sys.stdout.flush()
         return self.it, self.converged
+
