@@ -16,3 +16,11 @@ soupy.solver.newtonBacktrackSolver
     :members:
     :undoc-members:
     :show-inheritance:
+
+soupy.solver.PETScLUSolver 
+-----------------------------------------------
+
+.. automodule:: soupy.solver.PETScLUSolver
+    :members:
+    :undoc-members:
+    :show-inheritance:
