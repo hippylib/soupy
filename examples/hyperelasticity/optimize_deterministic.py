@@ -14,7 +14,7 @@ sys.path.append( os.environ.get('SOUPY_PATH'))
 import hippylib as hp 
 import soupy
 
-from control_problem_setup import hyperelasticity_problem_settings, setup_hyperelasticity_problem
+from setupHyperelasticityProblem import hyperelasticity_problem_settings, setup_hyperelasticity_problem
 
 
 # Optimization options for the form compiler
