@@ -24,7 +24,7 @@ class UniformDistribution:
     Class for sampling from a uniform distribution to `dl.Vector`
     Used only for tests 
     """
-    def __init__(self, Vh, a, b):
+    def __init__(self, Vh, a, b, rng_seed=1):
         """ 
         Constructor:
             :code: `Vh`: Function space for sample vectors
@@ -38,12 +38,14 @@ class UniformDistribution:
         self.b = b
         self.ndim = self.Vh.dim()
         self._dummy = dl.Function(Vh).vector()
+        self.random_state = np.random.RandomState(rng_seed)
 
     def init_vector(self, v):
         v.init( self._dummy.local_range() )
 
     def sample(self, out):
-        v = np.random.rand(self.ndim) * (self.b-self.a) + self.a
+        v = self.random_state.rand(self.ndim) * (self.b-self.a) + self.a
+        # v = np.random.rand(self.ndim) * (self.b-self.a) + self.a
         out.set_local(v)
         
 
