@@ -38,6 +38,7 @@ def semilinear_elliptic_control_settings():
 	settings['loc_upper'] = 0.9
 	settings['well_width'] = 0.08
 
+	settings['mean'] = -1.0
 	settings['gamma'] = 0.1
 	settings['delta'] = 5.0
 	settings['theta0'] = 2.0
@@ -49,9 +50,15 @@ def semilinear_elliptic_control_settings():
 
 class SemilinearEllipticVarfHandler:
 	"""
+    Variational form handler for the semilinear elliptic PDE
 	"""
 	def __init__(self,Vh,settings = semilinear_elliptic_control_settings()):
 		"""
+        Constructor:
+        
+        :param Vh: List of function spaces
+        :param settings: Settings from :code:`semilinear_elliptic_control_settings`
+
 		"""
 		self.linear = settings['linear']
 
@@ -85,15 +92,23 @@ class SemilinearEllipticVarfHandler:
 			return dl.exp(m)*dl.inner(dl.grad(u),dl.grad(p))*dl.dx + u**3*p*dl.dx  - dl.inner(self.mollifiers,z)*p*dl.dx
 
 
-def setup_semilinear_elliptic_pde(settings, comm_mesh=MPI.COMM_WORLD, timing=False):
+def setup_semilinear_elliptic_pde(settings, comm_mesh=MPI.COMM_WORLD):
+    """
+    Setup the semilinear elliptic PDE Problem
+
+    :param settings: Problem settinsg from :code:`semilinear_elliptic_control_settings`
+    :param comm_mesh: MPI communicator for the mesh. Set to :code:`MPI.COMM_SELF` 
+        if doing sample parallel
+
+    """
     assert comm_mesh.Get_size() == 1
     mesh = dl.UnitSquareMesh(comm_mesh, settings['nx'], settings['ny'])
-    Vh2 = dl.FunctionSpace(mesh, 'Lagrange', settings["state_order"])
-    Vh1 = dl.FunctionSpace(mesh, 'Lagrange', settings["parameter_order"])
+    Vh_STATE = dl.FunctionSpace(mesh, 'Lagrange', settings["state_order"])
+    Vh_PARAMETER = dl.FunctionSpace(mesh, 'Lagrange', settings["parameter_order"])
     n_control = settings['n_wells_per_side']**2
     Vh_CONTROL = dl.VectorFunctionSpace(mesh, "R", degree=0, dim=n_control)
 
-    Vh = [Vh2, Vh1, Vh2,Vh_CONTROL]
+    Vh = [Vh_STATE, Vh_PARAMETER, Vh_STATE, Vh_CONTROL]
 
     def u_boundary(x, on_boundary):
         return on_boundary 
@@ -104,9 +119,9 @@ def setup_semilinear_elliptic_pde(settings, comm_mesh=MPI.COMM_WORLD, timing=Fal
     bc0 = dl.DirichletBC(Vh[soupy.STATE], u_bdr0, u_boundary)
     pde_varf = SemilinearEllipticVarfHandler(Vh, settings = settings)
     pde = soupy.PDEVariationalControlProblem(Vh, pde_varf, bc, bc0, is_fwd_linear=settings['linear'], lu_method="default")
-
+    
     m_mean_fun = dl.Function(Vh[hp.PARAMETER])
-    m_mean_fun.interpolate(dl.Constant(-1.0))
+    m_mean_fun.interpolate(dl.Constant(settings['mean']))
     prior = bilaplacian_2D(Vh[hp.PARAMETER], mean = m_mean_fun.vector(),
         gamma = settings['gamma'],
         delta = settings['delta'],

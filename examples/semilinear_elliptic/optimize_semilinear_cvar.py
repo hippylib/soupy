@@ -29,26 +29,24 @@ def print_on_root(print_str, mpi_comm=MPI.COMM_WORLD):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Solving OUU problem")
-    parser.add_argument('-t', '--target', type=str, default="sinusoid", help="target case")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--target', type=str, default="sinusoid", help="Target case")
     parser.add_argument('-p', '--param', type=float, default=1.0, help="Parameter for target definition")
     parser.add_argument('-b', '--beta', type=float, default=0.95, help="CVaR percentile value")
-    parser.add_argument('--epsilon', type=float, default=1e-4, help="CVaR approximation parameter")
+    parser.add_argument('-e', '--epsilon', type=float, default=1e-4, help="CVaR smoothing parameter")
 
-    parser.add_argument('-N', '--N_sample', type=int, default=16, help="Number of samples for SD")
-    parser.add_argument('-n', '--max_iter', type=int, default=100, help="Maximum number of SD iterations")
-    parser.add_argument('-e', '--N_eval', type=int, default=100, help="Number of samples for evaluation of optimum")
+    parser.add_argument('-N', '--N_sample', type=int, default=16, help="Number of samples for SAA")
+    parser.add_argument('-n', '--max_iter', type=int, default=100, help="Maximum number of optimization iterations")
 
     parser.add_argument('--nx', type=int, default=64, help="Number of elements in x direction")
     parser.add_argument('--ny', type=int, default=64, help="Number of elements in y direction")
     parser.add_argument('--N_sources', type=int, default=7, help="Number of sources per side")
     parser.add_argument('--loc_lower', type=float, default=0.1, help="Lower bound of location of sources")
     parser.add_argument('--loc_upper', type=float, default=0.9, help="Upper bound of location of sources")
-    parser.add_argument('--well_width', type=float, default=0.08, help="Upper bound of location of sources")
+    parser.add_argument('--well_width', type=float, default=0.08, help="Width of sources")
 
     parser.add_argument('--display', default=False, action="store_true", help="Display optimization iterations")
-    parser.add_argument('--postprocess', default=False, action="store_true", help="Upper bound of location of sources")
-    parser.add_argument('--seed', type=int, default=0, help="Random seed for sampling the initial guess and random parameter")
+    parser.add_argument('--seed', type=int, default=0, help="Random seed for sampling the random parameter")
     args = parser.parse_args()
         
     # MPI 
@@ -56,13 +54,12 @@ if __name__ == "__main__":
     comm_sampler = MPI.COMM_WORLD
     comm_rank_sampler = comm_sampler.Get_rank()
     comm_size_sampler = comm_sampler.Get_size()
-    print_on_root("Split communicators", comm_sampler)
+    print_on_root("Make communicators", comm_sampler)
 
 
     # ----------------- Initialize parameters ----------------- # 
     # Set parsed parameters
 
-    MODEL = "PDE" 
 
     # control problem parameters
     semilinear_elliptic_settings = semilinear_elliptic_control_settings()
@@ -73,12 +70,12 @@ if __name__ == "__main__":
     semilinear_elliptic_settings['loc_upper'] = args.loc_upper
     semilinear_elliptic_settings['n_wells_per_side'] = args.N_sources
 
-    #  Parse save directory 
-    save_dir = "results_cvar_eps%g/%s_mesh%dx%d_sources%d_%gto%g_width%g_target_%s_p%g_beta%g_SAA_ns%d_maxiter%d" %(args.epsilon,
-        MODEL, args.nx, args.ny, 
+    #  Save directory 
+    save_dir = "results/PDE_mesh%dx%d_sources%d_%gto%g_width%g_target_%s_p%g_cvar_beta%g_eps%g_SAA_ns%d_maxiter%d" %(args.nx, args.ny, 
         args.N_sources, args.loc_lower, args.loc_upper, args.well_width,
         args.target, args.param, 
-        args.beta, args.N_sample,  args.max_iter)
+        args.beta, args.epsilon,
+        args.N_sample, args.max_iter)
 
     if args.seed > 0:
         # Do the sampling randomly 
@@ -129,14 +126,14 @@ if __name__ == "__main__":
     opt_options = {"maxiter" : args.max_iter, "disp" : args.display} 
 
     # Generate the initial guess array as zeros. 
-    z0 = pde_cost.generate_vector(soupy.CONTROL)
-    z0_np = z0.get_local()
+    zt = pde_cost.generate_vector(soupy.CONTROL)
+    zt0_np = zt.get_local()
 
     # Flush the out buffer before starting optimization 
     sys.stdout.flush()
 
     tsolve_0 = time.time()
-    results = scipy.optimize.minimize(scipy_cost.function(), z0_np, method="L-BFGS-B", jac=scipy_cost.jac(), bounds=box_bounds, options=opt_options)
+    results = scipy.optimize.minimize(scipy_cost.function(), zt0_np, method="L-BFGS-B", jac=scipy_cost.jac(), bounds=box_bounds, options=opt_options)
     tsolve_1 = time.time()
     tsolve = tsolve_1 - tsolve_0
 
@@ -153,13 +150,32 @@ if __name__ == "__main__":
     print_on_root("Number of linear PDE solves (single proc): %d" %(pde.n_linear_solves))
     print_on_root("Number of linear PDE solves (all procs): %d" %(n_linear_solves_total[0]))
     
-    z0.set_local(zt_opt_np)
-    pde_rm.computeComponents(z0)
+    zt.set_local(zt_opt_np)
+    pde_rm.computeComponents(zt)
     risk_opt = pde_rm.cost()
     cvar_opt = pde_rm.superquantile()
 
     # -----------------  Post processing ----------------- #
+    inds_all = [soupy.STATE, soupy.PARAMETER, soupy.ADJOINT, soupy.CONTROL]
+    x_fun = [dl.Function(Vh[ind]) for ind in inds_all]
+    x = [x_fun[ind].vector() for ind in inds_all]
+
+    # Set parameter
+    noise = dl.Vector(comm_mesh)
+    prior.init_vector(noise, "noise")
+    hp.parRandom.normal(1.0, noise)
+    prior.sample(noise, x[soupy.PARAMETER])
+
+    # Set control 
+    x[soupy.CONTROL].axpy(1.0, zt.get_vector())
+
+    # Solve at optimal 
+    control_model.solveFwd(x[soupy.STATE], x)
+
+
     if comm_rank_sampler == 0:
+        np.save("%s/z_opt.npy" %(save_dir), z_opt_np)
+
         with open("%s/results.p" %(save_dir), "wb") as results_file:
             pickle.dump(results, results_file)
 
@@ -176,6 +192,17 @@ if __name__ == "__main__":
 
         plot_sources(z_opt_np, semilinear_elliptic_settings["n_wells_per_side"], 
                      semilinear_elliptic_settings["loc_lower"], semilinear_elliptic_settings["loc_upper"])
-
         plt.savefig("%s/control.png" %(save_dir))
-        np.save("%s/z_opt.npy" %(save_dir), z_opt_np)
+
+        plt.figure()
+        hp.nb.plot(u_target, mytitle="Target state")
+        plt.savefig("%s/target.png" %(save_dir))
+        
+        plt.figure()
+        hp.nb.plot(x_fun[soupy.STATE], mytitle="Sample state at optimal control")
+        plt.savefig("%s/state.png" %(save_dir))
+            
+        plt.figure()
+        hp.nb.plot(x_fun[soupy.PARAMETER], mytitle="Sample parameter")
+        plt.savefig("%s/parameter.png" %(save_dir))
+

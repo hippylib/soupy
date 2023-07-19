@@ -16,6 +16,9 @@ import soupy
 
 
 def get_target(target_case, target_param, comm_mesh=MPI.COMM_WORLD):
+    """
+    Get the dolfin expression for the target state
+    """
     if target_case == "constant":
         u_expr = dl.Constant(target_param)
     
