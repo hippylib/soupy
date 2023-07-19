@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import dolfin as dl
 import scipy.optimize 
-
+from mpi4py import MPI 
 
 sys.path.append( os.environ.get('HIPPYLIB_PATH'))
 sys.path.append( os.environ.get('SOUPY_PATH'))
@@ -27,6 +27,7 @@ ffc_options = {"optimize": True, \
 
 dl.set_log_active(False)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--maxiter', type=int, default=100, help="Maximum number of SD iterations")
@@ -35,9 +36,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create mesh and setup model components 
+    comm_mesh = MPI.COMM_WORLD
+
     settings = hyperelasticity_problem_settings()
     settings["qoi_type"] = args.qoi_type
-    mesh, Vh, hyperelasticity_varf, control_model, prior = setup_hyperelasticity_problem(settings)
+    mesh, Vh, hyperelasticity_varf, control_model, prior = setup_hyperelasticity_problem(settings, comm_mesh)
     
     l2_penalty = soupy.L2Penalization(Vh, args.penalization)
     pde_cost = soupy.DeterministicControlCostFunctional(control_model, prior, l2_penalty)
@@ -46,6 +49,7 @@ if __name__ == "__main__":
     box_bounds = scipy.optimize.Bounds(lb=0.0, ub=1.0)
 
     x = control_model.generate_vector()
+    x[soupy.PARAMETER].axpy(1.0, prior.mean)
     control_model.solveFwd(x[soupy.STATE], x)
     disp_fun_init = hp.vector2Function(x[soupy.STATE], Vh[soupy.STATE])
 
@@ -57,8 +61,15 @@ if __name__ == "__main__":
     z_opt = results['x']     
 
     x[soupy.CONTROL].set_local(z_opt)
-    control_model.solveFwd(x[soupy.STATE], x)
+    x[soupy.CONTROL].apply("")
 
+    control_model.solveFwd(x[soupy.STATE], x)
+    z_fun = dl.Function(Vh[soupy.CONTROL], x[soupy.CONTROL])
+
+    with dl.HDF5File(mesh.mpi_comm(), "z_opt.h5", "w") as save_file:
+        save_file.write(z_fun, "control")
+    
+    # ---------- postprocessing the plotting ----------- # 
     plt.figure()
     ax = dl.plot(disp_fun_init, mode="displacement")
     plt.colorbar(ax)
@@ -74,4 +85,3 @@ if __name__ == "__main__":
     plt.colorbar(ax)
     plt.title("Optimal displacement")
     plt.show()
-
