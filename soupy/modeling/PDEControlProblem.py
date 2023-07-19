@@ -169,7 +169,16 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         adj_form = dl.derivative( dl.derivative(varf, u, du), p, dp )
         Aadj, dummy = dl.assemble_system(adj_form, ufl.inner(u,du)*ufl.dx, self.bc0)
         self.solver.set_operator(Aadj)
-        self.solver.solve(adj, adj_rhs)
+
+        # Apply the zeroed Dirichlet boundary conditions 
+        # This is safer then the standard hippylib approach where 
+        # the boundary conditions are assumed to have been applied
+        # before being passed into the :code:`solveAdj` method
+        local_adj_rhs = adj_rhs.copy()
+        for bc0 in self.bc0:
+            bc0.apply(local_adj_rhs)
+
+        self.solver.solve(adj, local_adj_rhs)
         self.n_linear_solves += 1 
      
     def evalGradientParameter(self, x, out):
@@ -261,12 +270,21 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             
                 .. math:: \\delta_{up} F(u, m, p, z; \\hat{u}, \\tilde{p}) = \\mbox{rhs},\\quad \\forall \\hat{u}.
         """
+
+        # Apply the zeroed Dirichlet boundary conditions 
+        # This is safer then the standard hippylib approach where 
+        # the boundary conditions are assumed to have been applied
+        # before being passed into the :code:`solveIncremental` method
+        local_rhs = rhs.copy()
+        for bc0 in self.bc0:
+            bc0.apply(local_rhs)
+
         if is_adj:
             self.n_calls["incremental_adjoint"] += 1
-            self.solver_adj_inc.solve(out, rhs)
+            self.solver_adj_inc.solve(out, local_rhs)
         else:
             self.n_calls["incremental_forward"] += 1
-            self.solver_fwd_inc.solve(out, rhs)
+            self.solver_fwd_inc.solve(out, local_rhs)
         self.n_linear_solves += 1 
     
     def apply_ij(self,i,j, dir, out):   

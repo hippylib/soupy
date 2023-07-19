@@ -37,10 +37,16 @@ def u_boundary(x, on_boundary):
 
 class TestControlCostFunctional(unittest.TestCase):
     def setUp(self):
+        """
+        Note, the source setup makes boundary effects more pronounced
+        This is important for catching BC errors 
+        """
         self.reltol = 1e-3
         self.fdtol = 1e-2
-        self.delta = 1e-3
+        self.delta = 1e-4
         self.n_wells_per_side = 3
+        self.loc_upper = 1.0
+        self.loc_lower = 0.0
         self.nx = 20
         self.ny = 20
         self.n_control = self.n_wells_per_side**2
@@ -54,10 +60,15 @@ class TestControlCostFunctional(unittest.TestCase):
 
 
     def testCostValue(self):
+        """
+        Test the evaluation of a QoI with known value
+        """
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
+        settings['LOC_LOWER'] = self.loc_lower
+        settings['LOC_UPPER'] = self.loc_upper
         settings['LINEAR'] = True
 
         pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings) 
@@ -77,20 +88,21 @@ class TestControlCostFunctional(unittest.TestCase):
         self.assertTrue(abs((c_val - c_val_exact)/c_val_exact) < self.reltol)
         
 
-    def finiteDifferenceCheck(self, is_fwd_linear=True):
+    def finiteDifferenceCheck(self, qoi_varf, is_fwd_linear=True):
+        """
+        Finite difference checks the gradient and Hessian action of the cost functional
+        """
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
 
+        settings['LOC_LOWER'] = self.loc_lower
+        settings['LOC_UPPER'] = self.loc_upper
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = is_fwd_linear
 
         pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings) 
-
-        def l2norm(u,m,z):
-            return u**2*dl.dx
-
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
         model = ControlModel(pde, qoi)
         cost = DeterministicControlCostFunctional(model, prior, penalization=None)
 
@@ -119,6 +131,7 @@ class TestControlCostFunctional(unittest.TestCase):
         
         print("Finite difference derivative: %g" %(dcdz_fd))
         print("Adjoint derivative: %g" %(dcdz_ad))
+        print("Derivative error: %g" %(abs((dcdz_fd - dcdz_ad)/dcdz_ad)))
         self.assertTrue(abs((dcdz_fd - dcdz_ad)/dcdz_ad) < self.fdtol)
 
         Hdz_fd = (g1.get_local() - g0.get_local())/self.delta
@@ -129,15 +142,52 @@ class TestControlCostFunctional(unittest.TestCase):
         print("Norm error: %g" %(err_hess))
         self.assertTrue(err_hess/np.linalg.norm(Hdz_ad) < self.fdtol)
 
-    def testFiniteDifference(self):
-        self.finiteDifferenceCheck(True)
-        self.finiteDifferenceCheck(False)
+    def testFiniteDifferenceL2Norm(self):
+        print("Finite difference checking the L2 norm")
+        def L2_norm(u,m,z):
+            return dl.exp(m)*u**2 * dl.dx 
+        print("Linear PDE")
+        self.finiteDifferenceCheck(L2_norm, True)
+        print("Nonlinear, PDE")
+        self.finiteDifferenceCheck(L2_norm, False)
+
+    def testFiniteDifferenceH1Norm(self):
+        print("Finite difference checking the H1 norm")
+        def H1_norm(u,m,z):
+            return dl.inner(dl.exp(m)*dl.grad(u), dl.grad(u))*dl.dx 
+        print("Linear PDE")
+        self.finiteDifferenceCheck(H1_norm, True)
+        print("Nonlinear PDE")
+        self.finiteDifferenceCheck(H1_norm, False)
+
+    def testFiniteDifferenceBoundaryL2Norm(self):
+        print("Finite difference checking the L2 norm on the boundary")
+        def boundary_l2_norm(u,m,z):
+            return dl.exp(m)*u**2 * dl.ds 
+        print("Linear PDE")
+        self.finiteDifferenceCheck(boundary_l2_norm, True)
+        print("Nonlinear PDE")
+        self.finiteDifferenceCheck(boundary_l2_norm, False)
+
+    def testFiniteDifferenceBoundaryH1Norm(self):
+        print("Finite difference checking the H1 norm on the boundary")
+        def boundary_H1_norm(u,m,z):
+            return dl.inner(dl.exp(m)*dl.grad(u), dl.grad(u))*dl.ds 
+        print("Linear PDE")
+        self.finiteDifferenceCheck(boundary_H1_norm, True)
+        print("Nonlinear PDE")
+        self.finiteDifferenceCheck(boundary_H1_norm, False)
 
     def testSavedSolution(self):
-
+        """
+        Test if the correct solution and adjoint solves are being stored
+        and re-used 
+        """
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
+        settings['LOC_LOWER'] = self.loc_lower
+        settings['LOC_UPPER'] = self.loc_upper
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
         settings['LINEAR'] = False
 
