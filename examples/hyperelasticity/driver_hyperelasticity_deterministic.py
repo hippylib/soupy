@@ -37,7 +37,7 @@ import scipy.optimize
 from mpi4py import MPI 
 
 sys.path.append(os.environ.get('HIPPYLIB_PATH'))
-sys.path.append(os.environ.get('../../'))
+sys.path.append('../../')
 
 import hippylib as hp 
 import soupy
