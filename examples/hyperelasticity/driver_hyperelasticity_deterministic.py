@@ -36,8 +36,8 @@ import dolfin as dl
 import scipy.optimize 
 from mpi4py import MPI 
 
-sys.path.append( os.environ.get('HIPPYLIB_PATH'))
-sys.path.append( os.environ.get('SOUPY_PATH'))
+sys.path.append(os.environ.get('HIPPYLIB_PATH'))
+sys.path.append(os.environ.get('../../'))
 
 import hippylib as hp 
 import soupy
