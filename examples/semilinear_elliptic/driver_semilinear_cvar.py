@@ -1,3 +1,36 @@
+# Copyright (c) 2023, The University of Texas at Austin 
+# & Georgia Institute of Technology
+#
+# All Rights reserved.
+# See file COPYRIGHT for details.
+#
+# This file is part of the SOUPy package. For more information see
+# https://github.com/hippylib/soupy/
+#
+# SOUPy is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (as published by the Free
+# Software Foundation) version 3.0 dated June 1991.
+
+"""
+Minimization of the CVaR risk measure using the SAA approximation for a 
+semi-linear elliptic PDE with a log-normal conductivity field. Objective 
+function is the L2 misfit between the state and a target state. The example is 
+taken from the paper: 
+
+Dingcheng Luo, Thomas O'Leary, Peng Chen, and Omar Ghattas,
+Efficient PDE-Constrained optimization under high-dimensional uncertainty using 
+derivative-informed neural operators. Luo, O'Leary-Roseberry, Chen, Ghattas, 
+to appear.
+
+This example shows how to implement a finite dimensional optimization variable.
+In this case, the control variable is a vector representing the strengths of 
+a grid of localized sources. See :code:`semilinearEllipticControlPDE.py` for
+more details.
+
+This example also shows how to use the :code:`ScipyCostWrapper` to convert
+a :code:`ControlCostFunctional` to be compatible with :code:`scipy.optimize`
+"""
+
 import random 
 import time
 import os, sys
@@ -171,7 +204,6 @@ if __name__ == "__main__":
 
     # Solve at optimal 
     control_model.solveFwd(x[soupy.STATE], x)
-
 
     if comm_rank_sampler == 0:
         np.save("%s/z_opt.npy" %(save_dir), z_opt_np)

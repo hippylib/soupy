@@ -1,3 +1,31 @@
+# Copyright (c) 2023, The University of Texas at Austin 
+# & Georgia Institute of Technology
+#
+# All Rights reserved.
+# See file COPYRIGHT for details.
+#
+# This file is part of the SOUPy package. For more information see
+# https://github.com/hippylib/soupy/
+#
+# SOUPy is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (as published by the Free
+# Software Foundation) version 3.0 dated June 1991.
+
+
+"""
+This example implements a deterministic optimization problem for material 
+design in hyperelasticity. The objective is to minimize the compliance of
+the structure subject. The design variable takes values in [0, 1], which 
+selects between two different material properties. 
+
+See :code:`setupHyperelasticityProblem.py` for problem settings, including
+mesh, geometry, and solver properties. 
+
+The example uses a custom forward solver. See 
+:code:`hyperelasticityControlPDE.py` for the PDE definition and solver
+"""
+
+
 import pickle
 import sys, os
 import argparse 
@@ -33,6 +61,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--maxiter', type=int, default=100, help="Maximum number of SD iterations")
     parser.add_argument('-q', '--qoi_type', type=str, default="stiffness", choices=["all", "stiffness", "point"])
     parser.add_argument('-p', '--penalization', type=float, default=1e-1, help="Scaling of penalization")
+    parser.add_argument('--show', default=False, action="store_true", help="Show figure")
     args = parser.parse_args()
 
     # Create mesh and setup model components 
@@ -74,14 +103,19 @@ if __name__ == "__main__":
     ax = dl.plot(disp_fun_init, mode="displacement")
     plt.colorbar(ax)
     plt.title("Displacement with soft material")
+    plt.savefig("u_soft.png")
 
     plt.figure()
     ax = dl.plot(hp.vector2Function(x[soupy.CONTROL], Vh[soupy.CONTROL]))
     plt.colorbar(ax)
     plt.title("Optimal design")
+    plt.savefig("z_opt.png")
 
     plt.figure()
     ax = dl.plot(hp.vector2Function(x[soupy.STATE], Vh[soupy.STATE]), mode="displacement")
     plt.colorbar(ax)
     plt.title("Optimal displacement")
-    plt.show()
+    plt.savefig("u_opt.png")
+
+    if args.show:
+        plt.show()

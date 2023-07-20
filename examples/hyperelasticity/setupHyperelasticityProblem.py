@@ -1,3 +1,16 @@
+# Copyright (c) 2023, The University of Texas at Austin 
+# & Georgia Institute of Technology
+#
+# All Rights reserved.
+# See file COPYRIGHT for details.
+#
+# This file is part of the SOUPy package. For more information see
+# https://github.com/hippylib/soupy/
+#
+# SOUPy is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (as published by the Free
+# Software Foundation) version 3.0 dated June 1991.
+
 import pickle
 import sys, os
 from mpi4py import MPI 
@@ -52,7 +65,7 @@ def hyperelasticity_problem_settings():
     settings["obs"] = {"location" : 0.5, "width" : 0.1}
     settings["qoi_type"] = "stiffness"
     settings["geometry"] = {"lx" : 2.0, "ly" : 0.5, "lz" : 0.25, "dim" : 2}
-    settings["mesh"] = {"nx" : 160, "ny" : 40, "nz" : 16}
+    settings["mesh"] = {"nx" : 96, "ny" : 24, "nz" : 12}
     settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0]}
     settings["uncertainty"] = {"gamma" : 0.1, "delta" : 1, "robin_bc" : True}
     return settings
