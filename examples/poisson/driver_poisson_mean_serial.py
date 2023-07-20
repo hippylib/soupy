@@ -1,3 +1,24 @@
+# Copyright (c) 2023, The University of Texas at Austin 
+# & Georgia Institute of Technology
+#
+# All Rights reserved.
+# See file COPYRIGHT for details.
+#
+# This file is part of the SOUPy package. For more information see
+# https://github.com/hippylib/soupy/
+#
+# SOUPy is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (as published by the Free
+# Software Foundation) version 3.0 dated June 1991.
+
+"""
+Minimization of the mean risk measure using the SAA approximation for the 
+linear poisson problem with a log-normal conductivity field. 
+
+This driver is purely serial. For a parallel implementation, see
+:code:`driver_poisson_mean_mpi.py`
+"""
+
 import sys 
 import os 
 
@@ -11,17 +32,19 @@ import hippylib as hp
 import soupy 
 dl.set_log_active(False)
 
-N_ELEMENTS_X = 32
-N_ELEMENTS_Y = 32 
+N_ELEMENTS_X = 20
+N_ELEMENTS_Y = 20
 IS_FWD_LINEAR = True
 
-PRIOR_GAMMA = 1.0
-PRIOR_DELTA = 20.0
+PRIOR_GAMMA = 10.0
+PRIOR_DELTA = 50.0
 PRIOR_MEAN = -2.0
 
 VARIANCE_WEIGHT = 0.0
 SAMPLE_SIZE = 4
 PENALTY_WEIGHT = 1e-3
+
+RESULTS_DIRECTORY = "results_serial"
 
 # 1. Setup function spaces 
 mesh = dl.UnitSquareMesh(N_ELEMENTS_X, N_ELEMENTS_Y)
@@ -87,7 +110,7 @@ estimate_risk = risk_measure.cost()
 
 # Saving output to disk
 z_fun = hp.vector2Function(z, Vh[soupy.CONTROL])
-with dl.HDF5File(mesh.mpi_comm(), "z_opt_no_mpi.h5", "w") as save_file:
+with dl.HDF5File(mesh.mpi_comm(), "%s/z_opt.h5" %(RESULTS_DIRECTORY), "w") as save_file:
     save_file.write(z_fun, "control")
 
 x = cost_functional.generate_vector()
@@ -104,30 +127,30 @@ prior.sample(noise, x[soupy.PARAMETER])
 control_model.solveFwd(x[soupy.STATE], x)
 
 # save some figures 
-os.makedirs("figures_no_mpi", exist_ok=True)
+os.makedirs(RESULTS_DIRECTORY, exist_ok=True)
 
 plt.figure()
 hp.nb.plot(hp.vector2Function(x[soupy.CONTROL], Vh[soupy.CONTROL]))
 plt.title("Optimal control") 
-plt.savefig("figures_no_mpi/optimal_control.png")
+plt.savefig("%s/optimal_control.png" %(RESULTS_DIRECTORY))
 plt.close()
 
 plt.figure()
 hp.nb.plot(hp.vector2Function(x[soupy.PARAMETER], Vh[soupy.PARAMETER]))
 plt.title("Sample parameter at optimal") 
-plt.savefig("figures_no_mpi/sample_parameter.png")
+plt.savefig("%s/sample_parameter.png" %(RESULTS_DIRECTORY))
 plt.close()
 
 plt.figure()
 hp.nb.plot(hp.vector2Function(x[soupy.STATE], Vh[soupy.STATE]))
 plt.title("Sample state at optimal") 
-plt.savefig("figures_no_mpi/sample_state.png")
+plt.savefig("%s/sample_state.png" %(RESULTS_DIRECTORY))
 plt.close()
 
 plt.figure()
 hp.nb.plot(u_target_function)
 plt.title("Target state")
-plt.savefig("figures_no_mpi/target_state.png")
+plt.savefig("%s/target_state.png" %(RESULTS_DIRECTORY))
 plt.close()
 
 
