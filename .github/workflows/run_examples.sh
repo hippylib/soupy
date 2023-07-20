@@ -5,7 +5,7 @@ export HIPPYLIB_PATH=$(pwd)/hippylib
 # Run poisson example
 cd examples/poisson
 python driver_poisson_mean_serial.py
-mpirun -n 4 python driver_poisson_mean_mpi.py
+mpirun -n 1 python driver_poisson_mean_mpi.py
 python compare_results.py
 
 # Run hyperelasticity example 
