@@ -30,8 +30,8 @@ def main():
     """
     Compares the solutions with/without mpi 
     """
-    N_ELEMENTS_X = 32
-    N_ELEMENTS_Y = 32 
+    N_ELEMENTS_X = 20
+    N_ELEMENTS_Y = 20
     TOL = 1e-12
 
     RESULTS_DIRECTORY_MPI = "results_mpi"
