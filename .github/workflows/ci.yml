@@ -27,3 +27,5 @@ jobs:
           run: pwd && ls
         - name: Run unit tests 
           run: source .github/workflows/run_tests.sh
+        - name: Run examples
+          run: source .github/workflows/run_examples.sh
