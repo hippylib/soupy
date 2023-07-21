@@ -61,7 +61,7 @@ def superquantileRiskMeasureSAASettings(data = {}):
 
 class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     """
-    Class for the a sample average approximation of the superquantile risk measure (CVaR) 
+    Risk measure for the sample average approximation of the superquantile risk measure (CVaR) 
     with sample parallelism using MPI 
     """
 
@@ -270,7 +270,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
 
     def costGrad(self, gt):
         """
-        Evaluates the value of the risk measure once components have been computed
+        Evaluates the gradient of the risk measure once components have been computed
 
         :param g: (Dual of) the gradient of the risk measure to store result in
         :type g: :py:class:`dolfin.Vector`

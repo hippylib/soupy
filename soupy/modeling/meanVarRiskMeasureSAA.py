@@ -37,7 +37,7 @@ def meanVarRiskMeasureSAASettings(data = {}):
 
 class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
     """
-    Class for the mean + variance risk measure using sample average approximation
+    Mean + variance risk measure using sample average approximation
         
         .. math:: \\rho[Q](z) = \mathbb{E}_m[Q(m,z)] + \\beta \mathbb{V}_m[Q(m,z)]
 
@@ -242,7 +242,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
     def costGrad(self, g):
         """
-        Evaluates the value of the risk measure once components have been computed
+        Evaluates the gradient of the risk measure once components have been computed
 
         :param g: (Dual of) the gradient of the risk measure to store result in
         :type g: :py:class:`dolfin.Vector`
@@ -348,7 +348,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
 class MeanVarRiskMeasureSAA(RiskMeasure):
     """
-    Class for the mean + variance risk measure using sample average approximation
+    The mean + variance risk measure using sample average approximation
         
         .. math:: \\rho[Q](z) = \mathbb{E}_m[Q(m,z)] + \\beta \mathbb{V}_m[Q(m,z)]
     """

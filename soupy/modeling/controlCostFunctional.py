@@ -19,7 +19,7 @@ from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 class ControlCostFunctional:
     """
-    This class defines the cost function for solving an optimal control problem
+    Base class for the cost function for solving an optimal control problem
     under uncertainty.
     """
 

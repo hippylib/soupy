@@ -70,35 +70,3 @@ def finiteDifferenceCheckApproximation(approx, t, dt, delta=1e-3):
 
 
 
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt 
-    softplus = SmoothPlusApproximationSoftplus()
-    quartic = SmoothPlusApproximationQuartic()
-    
-    t = np.linspace(-5, 5, 200)
-    plt.figure()
-    plt.plot(t, softplus(t), '-',label="Softplus")
-    plt.plot(t, quartic(t), '--', label="Quartic")
-    plt.legend()
-    plt.show()
-
-    np.random.seed(1)
-
-    print("t is scalar")
-    t = np.random.randn()
-    dt = 1.0
-    print("FD check softplus")
-    finiteDifferenceCheckApproximation(softplus, t, dt)
-    print("FD check quartic")
-    finiteDifferenceCheckApproximation(quartic, t, dt)
-
-    
-    print("t is numpy array")
-    t = np.linspace(-5, 5, 200)
-    dt = np.ones_like(t)
-    print("FD check softplus")
-    finiteDifferenceCheckApproximation(softplus, t, dt)
-    print("FD check quartic")
-    finiteDifferenceCheckApproximation(quartic, t, dt)
-
-

@@ -14,8 +14,7 @@
 class RiskMeasure:
 
     """
-    This class defines the cost function for solving an optimal control problem
-    under uncertainty.
+    Abstract class for the risk measure :math:`\\rho[Q](z)` 
     """
     def generate_vector(self, components="ALL"):
         """
@@ -47,7 +46,7 @@ class RiskMeasure:
 
     def costGrad(self):
         """
-        Evaluates the value of the risk measure once components have been computed
+        Evaluates the gradient of the risk measure once components have been computed
 
         :param g: (Dual of) the gradient of the risk measure to store result in
         :type g: :py:class:`dolfin.Vector`
@@ -56,7 +55,7 @@ class RiskMeasure:
         """
         raise NotImplementedError("Child class should implement method costGrad")
 
-    def costHessian(self, zhat, out):
+    def costHessian(self, zhat, Hzhat):
         """
         Apply the hessian of the risk measure once components have been computed \
             in the direction :code:`zhat`
