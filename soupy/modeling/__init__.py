@@ -27,7 +27,9 @@ from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMea
 
 from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization
 
-from . smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
+from .riskMeasure import RiskMeasure
+
+from .smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
 
 from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA_MPI, superquantileRiskMeasureSAASettings, sampleSuperquantile, sampleSuperquantileByMinimization
 

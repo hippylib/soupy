@@ -23,9 +23,6 @@ class ControlCostFunctional:
     under uncertainty.
     """
 
-    def objective(self, z):
-        raise NotImplementedError("Child class should implement method objective")
-
     def cost(self, z):
         """
         Given the control variable z evaluate the cost functional
@@ -281,8 +278,6 @@ class RiskMeasureControlCostFunctional:
         :type out: :py:class:`dolfin.Vector`
 
         :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
-
-        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 1`
         """
         out.zero()
         self.risk_measure.computeComponents(z, order=1)
@@ -308,8 +303,6 @@ class RiskMeasureControlCostFunctional:
         :type zhat: :py:class:`dolfin.Vector`
         :param out: The assembled Hessian action
         :type out: :py:class:`dolfin.Vector`
-        
-        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 2`
         """
         out.zero()
         self.risk_measure.computeComponents(z, order=2)

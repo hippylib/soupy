@@ -85,3 +85,11 @@ soupy.modeling.penalization
     :members:
     :undoc-members:
     :show-inheritance:
+
+soupy.modeling.RiskMeasure
+---------------------------------------
+
+.. automodule:: soupy.modeling.RiskMeasure
+    :members:
+    :undoc-members:
+    :show-inheritance:
