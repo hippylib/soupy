@@ -58,6 +58,12 @@ def sample_zt_and_bcast(control_dist, zt, collective, root=0):
     control_dist.sample(z)
     collective.bcast(z)
 
+def l2_norm(u,m,z):
+    return u**2*dl.dx 
+
+def qoi_for_testing(u,m,z):
+    return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
+
 
 class TestSuperquantileSAA_MPI(unittest.TestCase):
     """
@@ -87,34 +93,43 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         Vh_CONTROL = dl.VectorFunctionSpace(self.mesh, "R", degree=0, dim=self.n_control)
         self.Vh = [Vh_STATE, Vh_PARAMETER, Vh_STATE, Vh_CONTROL]
 
+    def _setup_pde_and_distributions(self, is_fwd_linear):
+        settings = poisson_control_settings()
+        settings['nx'] = self.nx
+        settings['ny'] = self.ny
+        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
+        settings['LINEAR'] = is_fwd_linear
+        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
+        return pde, prior, control_dist
+
+    def _setup_control_model(self, pde, qoi_varf):
+        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
+        model = ControlModel(pde, qoi)
+        return qoi, model
+
+
+    def _setup_superquantile_risk_measure(self, model, prior, sample_size, beta, 
+                smoothplus_type='quartic', epsilon=1e-4):
+        rm_settings = superquantileRiskMeasureSAASettings()
+        rm_settings['sample_size'] = sample_size
+        rm_settings['beta'] = beta
+        rm_settings['smoothplus_type']
+        rm_settings['epsilon']
+        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        return risk 
 
     def testSavedSolution(self):
         """
         Testing correct solutions are saved internally 
         """
+        IS_FWD_LINEAR = False 
         SAMPLE_SIZE = 100
-        # 1. Settings for PDE
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = False
-        
-        # 2. Setting up problem
-        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
+        BETA = 0.5 
+
+        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        qoi, model = self._setup_control_model(pde, l2_norm)
+        risk = self._setup_superquantile_risk_measure(model, prior, SAMPLE_SIZE, BETA)
     
-        # 3. Setting up QoI, model, and risk measure
-        def l2norm(u,m,z):
-            return u**2*dl.dx
-
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
-
-        rm_settings = superquantileRiskMeasureSAASettings()
-        rm_settings['sample_size'] = SAMPLE_SIZE
-        rm_settings['beta'] = 0.5
-        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
-
         zt0 = risk.generate_vector(CONTROL)
         zt1 = risk.generate_vector(CONTROL)
 
@@ -168,30 +183,12 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         """
         Finite difference checks with gradients and hessians 
         """
-        # 1. Settings for PDE
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = is_fwd_linear
+        BETA = 0.5
 
-        # 2. Setting up problem
-        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
-    
-        # 3. Setting up QoI, model, and risk measure
-        def l2norm(u,m,z):
-            return u**2*dl.dx
-
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
-
-        rm_settings = superquantileRiskMeasureSAASettings()
-        rm_settings['sample_size'] = sample_size
-        rm_settings['beta'] = 0.5
-        rm_settings['smoothplus_type'] = smoothplus_type
-        rm_settings['epsilon'] = epsilon
-
-        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
+        qoi, model = self._setup_control_model(pde, qoi_for_testing)
+        risk = self._setup_superquantile_risk_measure(model, prior, sample_size, BETA,
+            smoothplus_type=smoothplus_type, epsilon=epsilon)
 
         zt0 = risk.generate_vector(CONTROL)
         dzt = risk.generate_vector(CONTROL)
@@ -199,7 +196,6 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         gt0 = risk.generate_vector(CONTROL)
         gt1 = risk.generate_vector(CONTROL)
         Hdzt = risk.generate_vector(CONTROL)
-
 
         sample_zt_and_bcast(control_dist, zt0, self.collective_sampler)
         sample_zt_and_bcast(control_dist, dzt, self.collective_sampler)
@@ -234,8 +230,8 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
 
         Hdz_fd = (gt1.get_local() - gt0.get_local())/self.delta
         Hdz_ad = Hdzt.get_local()
-        print("Finite difference Hessian action ", Hdz_fd)
-        print("Adjoint Hessian action ", Hdz_ad)
+        print("Finite difference Hessian action \n", Hdz_fd)
+        print("Adjoint Hessian action \n", Hdz_ad)
         err_hess = np.linalg.norm(Hdz_fd - Hdz_ad)
         print("Norm error: %g" %(err_hess))
 
@@ -308,30 +304,15 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         Check that gather samples is collecting the samples properly \
             and that the correct number of samples is being collected
         """
-        # 1. Settings for PDE
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = False
-        
-        # 2. Setup problem
-        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
-    
-        # 3. Setting up QoI, model, and risk measure
-        def l2norm(u,m,z):
-            return u**2*dl.dx
+        IS_FWD_LINEAR = False 
+        BETA = 0.5 
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
+        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        qoi, model = self._setup_control_model(pde, l2_norm)
+        risk = self._setup_superquantile_risk_measure(model, prior, sample_size, BETA)
 
-        rm_settings = superquantileRiskMeasureSAASettings()
-        rm_settings['sample_size'] = sample_size
-        rm_settings['beta'] = 0.5
         rank_sampler = self.comm_sampler.Get_rank()
-        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         risk.q_samples = np.zeros(risk.q_samples.shape) + rank_sampler
-
         q_all = risk.gatherSamples()
         number_equal_to_rank = np.sum(np.isclose(q_all, rank_sampler))
 

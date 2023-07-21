@@ -36,6 +36,12 @@ from poissonControlProblem import poisson_control_settings, setupPoissonPDEProbl
 
 from mpi4py import MPI
 
+def l2_norm(u,m,z):
+    return u**2*dl.dx 
+
+def qoi_for_testing(u,m,z):
+    return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
+
 
 class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
     def setUp(self):
@@ -79,31 +85,36 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
         risk.computeComponents(z)
         c_val = risk.cost()
         print("After computing: ", c_val)
-        
-    def testSavedSolution(self):
-        # 1. Settings for PDE
+
+    def _setup_pde_and_distributions(self, is_fwd_linear):
         settings = poisson_control_settings()
         settings['nx'] = self.nx
         settings['ny'] = self.ny
         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = False
-        
-        # 2. Setup problem
+        settings['LINEAR'] = is_fwd_linear
         pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
-        noise = dl.Vector(self.comm_mesh)
-        prior.init_vector(noise, "noise")
-    
-        # 3. Setting up QoI, model, and risk measure
-        def l2norm(u,m,z):
-            return u**2*dl.dx
+        return pde, prior, control_dist
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+    def _setup_control_model(self, pde, qoi_varf):
+        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
         model = ControlModel(pde, qoi)
+        return qoi, model
 
+    def _setup_mean_var_risk_measure(self, model, prior, sample_size, beta):
         rm_settings = meanVarRiskMeasureSAASettings()
-        rm_settings['sample_size'] = 5
-        rm_settings['beta'] = 0.5
+        rm_settings['sample_size'] = sample_size
+        rm_settings['beta'] = beta
         risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        return risk
+        
+    def testSavedSolution(self):
+        IS_FWD_LINEAR = False 
+        SAMPLE_SIZE = 10
+        BETA = 0.5 
+
+        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        qoi, model = self._setup_control_model(pde, l2_norm)
+        risk = self._setup_mean_var_risk_measure(model, prior, SAMPLE_SIZE, BETA)
 
         z0 = model.generate_vector(CONTROL)
         z1 = model.generate_vector(CONTROL)
@@ -156,6 +167,7 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
 
 
     def finiteDifferenceCheck(self, sample_size, is_fwd_linear=True):
+        BETA = 0.5
         print("-" * 80)
         print("Finite difference check with %d samples" %(sample_size))
         if is_fwd_linear:
@@ -163,31 +175,9 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
         else:
             print("Nonlinear problem")
 
-
-        # 1. Settings for PDE
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = is_fwd_linear
-
-        # 2. Setting up problem
-        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
-        noise = dl.Vector(self.comm_sampler)
-        prior.init_vector(noise, "noise")
-    
-        # 3. Setting up QoI, model, and risk measure
-        def qoi_for_testing(u,m,z):
-            return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
-
-        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_for_testing)
-        model = ControlModel(pde, qoi)
-
-        rm_settings = meanVarRiskMeasureSAASettings()
-        rm_settings['sample_size'] = sample_size
-        rm_settings['beta'] = 0.5
-
-        risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
+        qoi, model = self._setup_control_model(pde, qoi_for_testing)
+        risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
 
         z0 = model.generate_vector(CONTROL)
         dz = model.generate_vector(CONTROL)
@@ -226,8 +216,8 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
         # Test hessians
         Hdz_fd = (g1.get_local() - g0.get_local())/self.delta
         Hdz_ad = Hdz.get_local()
-        print("Finite difference Hessian action ", Hdz_fd)
-        print("Adjoint Hessian action ", Hdz_ad)
+        print("Finite difference Hessian action \n", Hdz_fd)
+        print("Adjoint Hessian action \n", Hdz_ad)
         err_hess = np.linalg.norm(Hdz_fd - Hdz_ad)
         print("Norm error: %g" %(err_hess))
         self.assertTrue(err_hess/np.linalg.norm(Hdz_ad) < self.fdtol)
@@ -247,28 +237,15 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
         Check that gather samples is collecting the samples properly \
             and that the correct number of samples is being collected
         """
-        # 1. Settings for PDE
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = False
-        
-        # 2. Setup problem
-        pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
-    
-        # 3. Setting up QoI, model, and risk measure
-        def l2norm(u,m,z):
-            return u**2*dl.dx
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
+        IS_FWD_LINEAR = False 
+        BETA = 0.5 
 
-        rm_settings = meanVarRiskMeasureSAASettings()
-        rm_settings['sample_size'] = sample_size
-        rm_settings['beta'] = 0.5
+        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        qoi, model = self._setup_control_model(pde, l2_norm)
+        risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
+
         rank_sampler = self.comm_sampler.Get_rank()
-        risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         risk.q_samples = np.zeros(risk.q_samples.shape) + rank_sampler
 
         q_all = risk.gatherSamples()

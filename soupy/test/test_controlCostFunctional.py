@@ -136,8 +136,8 @@ class TestControlCostFunctional(unittest.TestCase):
 
         Hdz_fd = (g1.get_local() - g0.get_local())/self.delta
         Hdz_ad = Hdz.get_local()
-        print("Finite difference Hessian action ", Hdz_fd)
-        print("Adjoint Hessian action ", Hdz_ad)
+        print("Finite difference Hessian action \n", Hdz_fd)
+        print("Adjoint Hessian action \n", Hdz_ad)
         err_hess = np.linalg.norm(Hdz_fd - Hdz_ad)
         print("Norm error: %g" %(err_hess))
         self.assertTrue(err_hess/np.linalg.norm(Hdz_ad) < self.fdtol)
