@@ -13,4 +13,63 @@
 
 class RiskMeasure:
 
-	pass
+    """
+    This class defines the cost function for solving an optimal control problem
+    under uncertainty.
+    """
+    def generate_vector(self, components="ALL"):
+        """
+        Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
+        raise NotImplementedError("Child class should implement method generate_vector")
+
+    def computeComponents(self, z, order=0):
+        """
+        Computes the components for the evaluation of the risk measure
+
+        :param z: the control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param order: Order of the derivatives needed.
+            :code:`0` for cost, :code:`1` for gradient, :code:`2` for Hessian
+        :type order: int 
+        """
+        raise NotImplementedError("Child class should implement method computeComponents")
+
+    def cost(self):
+        """
+        Evaluates the value of the risk measure once components have been computed
+
+        :return: Value of the cost functional
+
+        .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
+        """
+        raise NotImplementedError("Child class should implement method costValue")
+
+    def costGrad(self):
+        """
+        Evaluates the value of the risk measure once components have been computed
+
+        :param g: (Dual of) the gradient of the risk measure to store result in
+        :type g: :py:class:`dolfin.Vector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
+        """
+        raise NotImplementedError("Child class should implement method costGrad")
+
+    def costHessian(self, zhat, out):
+        """
+        Apply the hessian of the risk measure once components have been computed \
+            in the direction :code:`zhat`
+        
+        :param zhat: Direction for application of Hessian action of the risk measure
+        :type zhat: :py:class:`dolfin.Vector`
+        :param Hzhat: (Dual of) Result of the Hessian action of the risk measure 
+            to store the result in
+        :type Hzhat: :py:class:`dolfin.Vector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
+        """
+        raise NotImplementedError("Child class should implement method costHess")
+
+
+
