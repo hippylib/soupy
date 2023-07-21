@@ -22,7 +22,8 @@ from hippylib import ParameterList, Random
 from .riskMeasure import RiskMeasure
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
-from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective, MultipleSerialPDEsCollective
+from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective, \
+        MultipleSerialPDEsCollective, allocate_process_sample_sizes
 
 
 def meanVarRiskMeasureSAASettings(data = {}):
@@ -32,20 +33,6 @@ def meanVarRiskMeasureSAASettings(data = {}):
 
     return ParameterList(data)
 
-
-def _allocate_sample_sizes(sample_size, comm_sampler):
-    """
-    Compute the number of samples needed in each process 
-    Return result as a list 
-    """ 
-    n, r = divmod(sample_size, comm_sampler.size)
-    sample_size_allprocs = []
-    for i_rank in range(comm_sampler.size):
-        if i_rank < r: 
-            sample_size_allprocs.append(n+1)
-        else:
-            sample_size_allprocs.append(n)
-    return sample_size_allprocs
 
 
 class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
@@ -82,7 +69,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         assert self.sample_size >= comm_sampler.Get_size(), \
             "Total samples %d needs to be greater than MPI size %d" %(self.sample_size, comm_sampler.Get_size())
         self.comm_sampler = comm_sampler 
-        self.sample_size_allprocs = _allocate_sample_sizes(self.sample_size, self.comm_sampler)
+        self.sample_size_allprocs = allocate_process_sample_sizes(self.sample_size, self.comm_sampler)
         self.sample_size_proc = self.sample_size_allprocs[self.comm_sampler.rank]
 
         if comm_sampler.Get_size() == 1:
