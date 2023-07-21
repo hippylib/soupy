@@ -170,7 +170,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
     def costGrad(self, z, out):
         """
-        Computes the value of the cost functional at given control :math:`z`
+        Computes the gradient of the cost functional at given control :math:`z`
 
         :param z: the control variable
         :type z: :py:class:`dolfin.Vector`
@@ -244,8 +244,7 @@ class RiskMeasureControlCostFunctional:
         """
         self.risk_measure = risk_measure
         self.penalization = penalization
-        self.grad_risk = self.risk_measure.generate_vector(CONTROL)
-        self.grad_penalization = self.risk_measure.generate_vector(CONTROL)
+        self.z_help = self.risk_measure.generate_vector(CONTROL)
 
     def generate_vector(self, component="ALL"):
         return self.risk_measure.generate_vector(component)
@@ -274,7 +273,7 @@ class RiskMeasureControlCostFunctional:
 
     def costGrad(self, z, out):
         """
-        Computes the value of the cost functional at given control :math:`z`
+        Computes the gradient of the cost functional at given control :math:`z`
 
         :param z: the control variable
         :type z: :py:class:`dolfin.Vector`
@@ -289,19 +288,33 @@ class RiskMeasureControlCostFunctional:
         self.risk_measure.computeComponents(z, order=1)
 
         # Risk measure gradient
-        self.risk_measure.costGrad(self.grad_risk)
-        out.axpy(1.0, self.grad_risk)
+        self.risk_measure.costGrad(out)
 
         if self.penalization is not None:
-            self.penalization.grad(z, self.grad_penalization)
-            out.axpy(1.0, self.grad_penalization)
+            self.penalization.grad(z, self.z_help)
+            out.axpy(1.0, self.z_help)
 
         gradnorm = np.sqrt(out.inner(out))
         return gradnorm
 
     def costHessian(self, z, zhat, out):
-        pass
+        """
+        Apply the the reduced Hessian to the vector :math:`zhat`
+        evaluated at control variable :math:`z`
 
+        :param z: The control variable
+        :type z: :py:class:`dolfin.Vector`
+        :param zhat: The direction of Hessian action
+        :type zhat: :py:class:`dolfin.Vector`
+        :param out: The assembled Hessian action
+        :type out: :py:class:`dolfin.Vector`
+        
+        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 2`
+        """
+        out.zero()
+        self.risk_measure.computeComponents(z, order=2)
+        self.risk_measure.costHessian(zhat, out)
 
-
-
+        if self.penalization is not None:
+            self.penalization.hessian(z, zhat, self.z_help)
+            out.axpy(1.0, self.z_help)
