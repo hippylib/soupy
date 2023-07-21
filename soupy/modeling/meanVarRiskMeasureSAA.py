@@ -79,7 +79,8 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         self.sample_size = self.settings['sample_size']
         self.beta = settings['beta']
 
-        assert self.sample_size >= comm_sampler.Get_size()
+        assert self.sample_size >= comm_sampler.Get_size(), \
+            "Total samples %d needs to be greater than MPI size %d" %(self.sample_size, comm_sampler.Get_size())
         self.comm_sampler = comm_sampler 
         self.sample_size_allprocs = _allocate_sample_sizes(self.sample_size, self.comm_sampler)
         self.sample_size_proc = self.sample_size_allprocs[self.comm_sampler.rank]
@@ -90,7 +91,6 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
             self.collective = MultipleSerialPDEsCollective(self.comm_sampler)
 
         # Within process 
-        self.g = self.model.generate_vector(CONTROL)
         self.q_samples = np.zeros(self.sample_size_proc)
 
         # self.q_bar_proc = np.array([0.])
@@ -110,6 +110,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
         # Generate samples for m 
         self.x_mc = [] 
+        self.g_mc = [] 
         self.z = self.model.generate_vector(CONTROL)
 
         if mpi4py.MPI.COMM_WORLD.rank == 0:
@@ -130,6 +131,9 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
             self.prior.sample(self.noise, mi)
             self.x_mc.append(x)
 
+            g = self.model.generate_vector(CONTROL)
+            self.g_mc.append(g)
+
         if mpi4py.MPI.COMM_WORLD.rank == 0:
             logging.info("Done sampling")
 
@@ -137,6 +141,17 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         self.diff_helper= self.model.generate_vector(CONTROL)
         self.has_adjoint_solve = False
         self.has_forward_solve = False
+
+        # For Hessian computations 
+        self.has_hessian_variables = False
+        self.uhat = None
+        self.phat = None
+        self.rhs_fwd = None
+        self.rhs_adj = None
+        self.rhs_adj2 = None
+        self.Hi_zhat = None
+        self.Hz_helper = None 
+
 
     def generate_vector(self, component = "ALL"):
         return self.model.generate_vector(component)
@@ -209,9 +224,9 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
                 if order >= 1 and new_adjoint_solve:
                     self.model.solveAdj(x[ADJOINT], x)
-                    self.model.evalGradientControl(x, self.g)
-                    self.g_bar.axpy(1/self.sample_size, self.g)
-                    self.qg_bar.axpy(self.q_samples[i]/self.sample_size, self.g)
+                    self.model.evalGradientControl(x, self.g_mc[i])
+                    self.g_bar.axpy(1/self.sample_size, self.g_mc[i])
+                    self.qg_bar.axpy(self.q_samples[i]/self.sample_size, self.g_mc[i])
             
             if new_forward_solve:
                 self.q_bar = self.collective.allReduce(self.q_bar, "SUM")
@@ -247,45 +262,101 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
         .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
-        # print("(proc %d) q_bar = %g" %(self.comm_sampler.Get_rank(), self.q_bar))
         g.zero()
         g.axpy(1.0, self.g_bar)
         g.axpy(2*self.beta, self.qg_bar)
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
+
     def costHessian(self, zhat, Hzhat):
-        logging.warning("No hessian implemented")
-        return 
-
-        # self.model.setPointForHessianEvaluations(self.x)
-        # self.model.applyCz(zhat, self.rhs_fwd)
-        # self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-        # self.model.applyWuu(self.uhat, self.rhs_adj)
-        # self.model.applyWuz(zhat, self.rhs_adj2)
-        # self.rhs_adj.axpy(-1., self.rhs_adj2)
-        # self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        # self.model.applyWzz(zhat, Hzhat)
-
-        # self.model.applyCzt(self.phat, self.zhelp)
-        # Hzhat.axpy(1., self.zhelp)
-        # self.model.applyWzu(self.uhat, self.zhelp)
-        # Hzhat.axpy(-1., self.zhelp)
-
-    def gatherSamples(self, root=0):
         """
-        Gather the QoI samples on the root process
-
-        :param root: Rank of the process to gather the samples on
-        :type root: int
+        Apply the hessian of the risk measure once components have been computed \
+            in the direction :code:`zhat`
         
+        :param zhat: Direction for application of Hessian action of the risk measure
+        :type zhat: :py:class:`dolfin.Vector`
+        :param Hzhat: (Dual of) Result of the Hessian action of the risk measure 
+            to store the result in
+        :type Hzhat: :py:class:`dolfin.Vector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
+        """
+        if not self.has_hessian_variables:
+            self._generate_hessian_variables()
+
+        Hzhat.zero()
+        for i in range(self.sample_size_proc):
+            xi = self.x_mc[i] 
+            gi = self.g_mc[i]
+            qi = self.q_samples[i] 
+            self._apply_qoi_hessian(xi, zhat, self.Hi_zhat)
+
+            hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar
+            
+            # Apply :math:`H_i z` the qoi hessian at sample
+            Hzhat.axpy(hessian_scale_factor/self.sample_size, self.Hi_zhat)
+
+            # Apply :math:`g_i g_i^T`for qoi gradients at sample
+            gradient_scale_factor = gi.inner(zhat) * 2*self.beta
+            Hzhat.axpy(gradient_scale_factor/self.sample_size, gi)
+        
+
+        self.collective.allReduce(Hzhat, "SUM")
+
+        # Apply :math:`\bar{g} \bar{g}^T` for mean qoi gradients
+        mean_gradient_scale_factor = self.g_bar.inner(zhat) * 2*self.beta
+        Hzhat.axpy(-mean_gradient_scale_factor, self.g_bar)
+
+
+    def gatherSamples(self):
+        """
+        Gather the QoI samples from all processes
+
         :return: An array of the sample QoI values
         :return type: :py:class:`numpy.ndarray`
         """
-        q_all = None 
-        if self.comm_sampler.Get_rank() == 0:
-            q_all = np.zeros(self.sample_size)
-        self.comm_sampler.Gatherv(self.q_samples, q_all, root=root)
+        q_all = np.zeros(self.sample_size) 
+        self.comm_sampler.Allgatherv(self.q_samples, [q_all, self.sample_size_allprocs])
         return q_all 
+
+
+    def _apply_qoi_hessian(self, x, zhat, Hzhat_qoi):
+        """
+        apply the Hessian of the qoi at given point :code:`x` 
+        """
+
+        # Set linearization point 
+        self.model.setPointForHessianEvaluations(x)
+
+        # Solve incremental forward
+        self.model.applyCz(zhat, self.rhs_fwd)
+        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
+
+        # Solve incremental adjoint 
+        self.model.applyWuu(self.uhat, self.rhs_adj)
+        self.model.applyWuz(zhat, self.rhs_adj2)
+        self.rhs_adj.axpy(-1., self.rhs_adj2)
+
+        # Apply model hessian
+        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
+        self.model.applyWzz(zhat, Hzhat_qoi)
+
+        self.model.applyCzt(self.phat, self.Hz_helper)
+        Hzhat_qoi.axpy(1., self.Hz_helper)
+        self.model.applyWzu(self.uhat, self.Hz_helper)
+        Hzhat_qoi.axpy(-1., self.Hz_helper)
+
+    def _generate_hessian_variables(self):
+        self.uhat = self.model.generate_vector(STATE)
+        self.phat = self.model.generate_vector(ADJOINT)
+        self.rhs_fwd = self.model.generate_vector(STATE)
+        self.rhs_adj = self.model.generate_vector(ADJOINT)
+        self.rhs_adj2 = self.model.generate_vector(ADJOINT)
+        self.Hi_zhat = self.model.generate_vector(CONTROL)
+        self.Hz_helper = self.model.generate_vector(CONTROL)
+        self.has_hessian_variables = True
+
+
 
 
 class MeanVarRiskMeasureSAA(RiskMeasure):
@@ -328,6 +399,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
         # Generate samples for m 
         self.x_mc = [] 
+        self.g_mc = [] 
         self.z = self.model.generate_vector(CONTROL)
         logging.info("Initial sampling of stochastic parameter")
         for i in range(self.sample_size):
@@ -339,8 +411,22 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
             self.prior.sample(self.noise, mi)
             self.x_mc.append(x)
 
+            gi = self.model.generate_vector(CONTROL) 
+            self.g_mc.append(gi)
+
         # Helper variable 
+        self.Hz_helper = self.model.generate_vector(CONTROL)
         self.diff_helper= self.model.generate_vector(CONTROL)
+
+        self.has_hessian_variables = False
+        self.uhat = None
+        self.phat = None
+        self.rhs_fwd = None
+        self.rhs_adj = None
+        self.rhs_adj2 = None
+        self.Hi_zhat = None
+
+
         self.has_adjoint_solve = False
         self.has_forward_solve = False
 
@@ -406,9 +492,9 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
                 if order >= 1 and new_adjoint_solve:
                     self.model.solveAdj(x[ADJOINT], x)
-                    self.model.evalGradientControl(x, self.g)
-                    self.g_bar.axpy(1/self.sample_size, self.g)
-                    self.qg_bar.axpy(self.q_samples[i]/self.sample_size, self.g)
+                    self.model.evalGradientControl(x, self.g_mc[i])
+                    self.g_bar.axpy(1/self.sample_size, self.g_mc[i])
+                    self.qg_bar.axpy(self.q_samples[i]/self.sample_size, self.g_mc[i])
 
             self.q_bar = np.mean(self.q_samples)
 
@@ -432,7 +518,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
     def costGrad(self, g):
         """
-        Computes the value of the risk measure once components have been computed
+        Compute the gradient of the risk measure once components have been computed
 
         :param g: (Dual of) the gradient of the risk measure to store the result in
         :type g: :py:class:`dolfin.Vector`
@@ -445,19 +531,77 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
     def costHessian(self, zhat, Hzhat):
-        logging.warning("No hessian implemented")
-        return 
+        """
+        Apply the hessian of the risk measure once components have been computed \
+            in the direction :code:`zhat`
+        
+        :param zhat: Direction for application of Hessian action of the risk measure
+        :type zhat: :py:class:`dolfin.Vector`
+        :param Hzhat: (Dual of) Result of the Hessian action of the risk measure 
+            to store the result in
+        :type Hzhat: :py:class:`dolfin.Vector`
 
-        # self.model.setPointForHessianEvaluations(self.x)
-        # self.model.applyCz(zhat, self.rhs_fwd)
-        # self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-        # self.model.applyWuu(self.uhat, self.rhs_adj)
-        # self.model.applyWuz(zhat, self.rhs_adj2)
-        # self.rhs_adj.axpy(-1., self.rhs_adj2)
-        # self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        # self.model.applyWzz(zhat, Hzhat)
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
+        """
 
-        # self.model.applyCzt(self.phat, self.zhelp)
-        # Hzhat.axpy(1., self.zhelp)
-        # self.model.applyWzu(self.uhat, self.zhelp)
-        # Hzhat.axpy(-1., self.zhelp)
+        if not self.has_hessian_variables:
+            self._generate_hessian_variables()
+
+        Hzhat.zero()
+        for i in range(self.sample_size):
+            xi = self.x_mc[i] 
+            gi = self.g_mc[i]
+            qi = self.q_samples[i] 
+            self._apply_qoi_hessian(xi, zhat, self.Hi_zhat)
+
+            hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar
+            
+            # Apply :math:`H_i z` the qoi hessian at sample
+            Hzhat.axpy(hessian_scale_factor/self.sample_size, self.Hi_zhat)
+
+            # Apply :math:`g_i g_i^T`for qoi gradients at sample
+            gradient_scale_factor = gi.inner(zhat) * 2*self.beta
+            Hzhat.axpy(gradient_scale_factor/self.sample_size, gi)
+
+
+        # Apply :math:`\bar{g} \bar{g}^T` for mean qoi gradients
+        mean_gradient_scale_factor = self.g_bar.inner(zhat) * 2*self.beta
+        Hzhat.axpy(-mean_gradient_scale_factor, self.g_bar)
+
+
+    def _generate_hessian_variables(self):
+        self.uhat = self.model.generate_vector(STATE)
+        self.phat = self.model.generate_vector(ADJOINT)
+        self.rhs_fwd = self.model.generate_vector(STATE)
+        self.rhs_adj = self.model.generate_vector(ADJOINT)
+        self.rhs_adj2 = self.model.generate_vector(ADJOINT)
+        self.Hi_zhat = self.model.generate_vector(CONTROL)
+        self.has_hessian_variables = True
+
+
+    def _apply_qoi_hessian(self, x, zhat, Hzhat_qoi):
+        """
+        apply the Hessian of the qoi at given point :code:`x` 
+        """
+
+        # Set linearization point 
+        self.model.setPointForHessianEvaluations(x)
+
+        # Solve incremental forward
+        self.model.applyCz(zhat, self.rhs_fwd)
+        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
+
+        # Solve incremental adjoint 
+        self.model.applyWuu(self.uhat, self.rhs_adj)
+        self.model.applyWuz(zhat, self.rhs_adj2)
+        self.rhs_adj.axpy(-1., self.rhs_adj2)
+
+        # Apply model hessian
+        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
+        self.model.applyWzz(zhat, Hzhat_qoi)
+
+        self.model.applyCzt(self.phat, self.Hz_helper)
+        Hzhat_qoi.axpy(1., self.Hz_helper)
+        self.model.applyWzu(self.uhat, self.Hz_helper)
+        Hzhat_qoi.axpy(-1., self.Hz_helper)
+

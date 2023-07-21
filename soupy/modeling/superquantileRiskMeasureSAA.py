@@ -106,7 +106,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             # Default case 
             self.smoothplus = SmoothPlusApproximationQuartic(self.settings["epsilon"])
 
-        assert self.sample_size >= comm_sampler.Get_size()
+        assert self.sample_size >= comm_sampler.Get_size(), \
+            "Total samples %d needs to be greater than MPI size %d" %(self.sample_size, comm_sampler.Get_size())
         self.comm_sampler = comm_sampler 
         self.sample_size_allprocs = _allocate_sample_sizes(self.sample_size, self.comm_sampler)
         self.sample_size_proc = self.sample_size_allprocs[self.comm_sampler.rank]
@@ -117,7 +118,6 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             self.collective = MultipleSerialPDEsCollective(self.comm_sampler)
 
         # Within process 
-        self.g = self.model.generate_vector(CONTROL)
         self.q_samples = np.zeros(self.sample_size_proc)
 
         # Aggregate components for computing cost, grad, hess
@@ -134,6 +134,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         self.x_mc = [] 
         self.z = self.model.generate_vector(CONTROL)
         self.zt = AugmentedVector(self.z, copy_vector=False)
+
+        self.g_mc = []
 
         if mpi4py.MPI.COMM_WORLD.rank == 0:
             logging.info("Initial sampling of stochastic parameter")
@@ -152,6 +154,9 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             rng.normal(1.0, self.noise)
             self.prior.sample(self.noise, mi)
             self.x_mc.append(x)
+            
+            g = self.model.generate_vector(CONTROL)
+            self.g_mc.append(g)
 
         if mpi4py.MPI.COMM_WORLD.rank == 0:
             logging.info("Done sampling")
@@ -160,6 +165,16 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         self.diff_helper= self.model.generate_vector(CONTROL)
         self.has_adjoint_solve = False
         self.has_forward_solve = False
+
+        self.Hz_helper = self.model.generate_vector(CONTROL)
+        self.has_hessian_variables = False
+        self.uhat = None
+        self.phat = None
+        self.rhs_fwd = None
+        self.rhs_adj = None
+        self.rhs_adj2 = None
+        self.Hi_zhat = None
+
 
     def generate_vector(self, component = "ALL"):
         if component == CONTROL:
@@ -238,9 +253,9 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             if order >= 1:
                 if new_adjoint_solve:
                     self.model.solveAdj(x[ADJOINT], x)
-                self.model.evalGradientControl(x, self.g)
+                self.model.evalGradientControl(x, self.g_mc[i])
                 self.sprime_bar += self.smoothplus.grad(qi - t)/self.sample_size
-                self.sprime_g_bar.axpy(self.smoothplus.grad(qi - t)/self.sample_size, self.g)
+                self.sprime_g_bar.axpy(self.smoothplus.grad(qi - t)/self.sample_size, self.g_mc[i])
         
         self.s_bar = self.collective.allReduce(self.s_bar, "SUM")
         
@@ -282,25 +297,112 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         dz_np = np.append(dzJ_np, dtJ_np)
         gt.set_local(dz_np) 
 
-    def costHessian(self, zhat, Hzhat):
-        logging.warning("No hessian implemented")
-        return 
 
-    def gatherSamples(self, root=0):
+    def costHessian(self, zt_hat, Hzt_hat):
         """
-        Gather the QoI samples on the root process
-
-        :param root: Rank of the process to gather the samples on
-        :type root: int
+        Apply the hessian of the risk measure once components have been computed \
+            in the direction :code:`zhat`
         
+        :param zt_hat: Direction for application of Hessian action of the risk measure
+        :type zt_hat: :py:class:`soupy.AugmentedVector`
+        :param Hzt_hat: (Dual of) Result of the Hessian action of the risk measure 
+            to store the result in
+        :type Hzt_hat: :py:class:`soupy.AugmentedVector`
+
+        .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
+        """
+        if not self.has_hessian_variables:
+            self._generate_hessian_variables()
+
+        Hzt_hat.zero()
+
+        Hz_hat = Hzt_hat.get_vector()
+        Ht_hat = 0.0
+
+        z_hat = zt_hat.get_vector()
+        t_hat = zt_hat.get_scalar()
+
+        t = self.zt.get_scalar()
+
+
+
+        for i in range(self.sample_size_proc):
+            xi = self.x_mc[i] 
+            gi = self.g_mc[i]
+            qi = self.q_samples[i] 
+            
+            # Derivatives of the smoothed max approximation
+            sprime_i = self.smoothplus.grad(qi - t)
+            sprimeprime_i = self.smoothplus.hessian(qi - t)
+
+
+            self._apply_qoi_hessian(xi, z_hat, self.Hi_zhat)
+            gi_inner_zhat = gi.inner(z_hat)
+            
+            # Output of Hessian in z
+            zz_hessian_scale_factor = sprime_i/(1-self.beta)/self.sample_size
+            zz_gradient_scale_factor = sprimeprime_i * gi_inner_zhat/(1-self.beta)/self.sample_size 
+            zt_gradient_scale_factor = -sprimeprime_i * t_hat/(1-self.beta)/self.sample_size
+
+            Hz_hat.axpy(zz_hessian_scale_factor, self.Hi_zhat)
+            Hz_hat.axpy(zz_gradient_scale_factor + zt_gradient_scale_factor, gi)
+
+            # Output of Hessian in t 
+            Ht_hat += sprimeprime_i/(1-self.beta)/self.sample_size * (t_hat - gi_inner_zhat)
+            
+        self.collective.allReduce(Hz_hat, "SUM")
+        Ht_hat_all = self.collective.allReduce(Ht_hat, "SUM")
+        Hzt_hat.set_scalar(Ht_hat_all)
+
+
+    def _generate_hessian_variables(self):
+        self.uhat = self.model.generate_vector(STATE)
+        self.phat = self.model.generate_vector(ADJOINT)
+        self.rhs_fwd = self.model.generate_vector(STATE)
+        self.rhs_adj = self.model.generate_vector(ADJOINT)
+        self.rhs_adj2 = self.model.generate_vector(ADJOINT)
+        self.Hi_zhat = self.model.generate_vector(CONTROL)
+        self.has_hessian_variables = True
+
+
+    def _apply_qoi_hessian(self, x, zhat, Hzhat_qoi):
+        """
+        apply the Hessian of the qoi at given point :code:`x` 
+        """
+
+        # Set linearization point 
+        self.model.setPointForHessianEvaluations(x)
+
+        # Solve incremental forward
+        self.model.applyCz(zhat, self.rhs_fwd)
+        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
+
+        # Solve incremental adjoint 
+        self.model.applyWuu(self.uhat, self.rhs_adj)
+        self.model.applyWuz(zhat, self.rhs_adj2)
+        self.rhs_adj.axpy(-1., self.rhs_adj2)
+
+        # Apply model hessian
+        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
+        self.model.applyWzz(zhat, Hzhat_qoi)
+
+        self.model.applyCzt(self.phat, self.Hz_helper)
+        Hzhat_qoi.axpy(1., self.Hz_helper)
+        self.model.applyWzu(self.uhat, self.Hz_helper)
+        Hzhat_qoi.axpy(-1., self.Hz_helper)
+
+
+    def gatherSamples(self):
+        """
+        Gather the QoI samples from all processes
+
         :return: An array of the sample QoI values
         :return type: :py:class:`numpy.ndarray`
         """
-        q_all = None 
-        if self.comm_sampler.Get_rank() == 0:
-            q_all = np.zeros(self.sample_size)
-        self.comm_sampler.Gatherv(self.q_samples, q_all, root=root)
+        q_all = np.zeros(self.sample_size) 
+        self.comm_sampler.Allgatherv(self.q_samples, [q_all, self.sample_size_allprocs])
         return q_all 
+
 
     def superquantile(self):
         """ 
@@ -310,13 +412,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     
         .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
-        q_all = self.gatherSamples(root=0)
-        value = 0.0
-        if self.comm_sampler.Get_rank() == 0: 
-            value = sampleSuperquantile(q_all, self.beta)
-        value = self.comm_sampler.bcast(value, root=0)
+        q_all = self.gatherSamples()
+        value = sampleSuperquantile(q_all, self.beta)
         return value 
-
-
 
 
