@@ -33,7 +33,7 @@ from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     RiskMeasureControlCostFunctional, \
     STATE, PARAMETER, ADJOINT, CONTROL
     
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 def l2_norm(u,m,z):
     return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx

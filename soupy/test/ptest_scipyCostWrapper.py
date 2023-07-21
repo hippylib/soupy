@@ -35,7 +35,7 @@ from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     STATE, PARAMETER, ADJOINT, CONTROL, \
     MultipleSerialPDEsCollective
     
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 def qoi_for_testing(u,m,z):
     return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds

@@ -34,7 +34,7 @@ from soupy import VariationalControlQoI, ControlModel, \
                         superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA_MPI, \
                         STATE, PARAMETER, ADJOINT, CONTROL, MultipleSerialPDEsCollective
 
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 
 def standardNormalSuperquantile(beta):

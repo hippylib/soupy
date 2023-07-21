@@ -32,7 +32,7 @@ from soupy import VariationalControlQoI, ControlModel, \
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 from mpi4py import MPI
 

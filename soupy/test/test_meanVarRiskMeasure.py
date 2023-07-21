@@ -30,7 +30,7 @@ from soupy import VariationalControlQoI, ControlModel, \
     meanVarRiskMeasureSettings, MeanVarRiskMeasure,\
     STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 
 class TestControlCostFunctional(unittest.TestCase):

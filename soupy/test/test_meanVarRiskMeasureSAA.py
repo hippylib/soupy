@@ -31,7 +31,7 @@ from soupy import VariationalControlQoI, ControlModel, \
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 def l2_norm(u,m,z):
     return u**2*dl.dx 

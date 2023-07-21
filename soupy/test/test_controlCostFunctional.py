@@ -30,7 +30,7 @@ from soupy import VariationalControlQoI, ControlModel, DeterministicControlCostF
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 def u_boundary(x, on_boundary):
     return on_boundary and (x[1] < dl.DOLFIN_EPS or x[1] > 1.0 - dl.DOLFIN_EPS)

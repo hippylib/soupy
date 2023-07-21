@@ -33,7 +33,7 @@ from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     RiskMeasureControlCostFunctional, \
     STATE, PARAMETER, ADJOINT, CONTROL
     
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 class TestControlCostFunctional(unittest.TestCase):
     def setUp(self):
