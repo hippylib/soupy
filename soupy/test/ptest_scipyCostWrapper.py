@@ -17,6 +17,7 @@ import os, sys
 import dolfin as dl
 import numpy as np
 import matplotlib.pyplot as plt
+from mpi4py import MPI
 
 import logging
 logging.getLogger('FFC').setLevel(logging.WARNING)
@@ -29,9 +30,10 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     VariationalControlQoI, L2Penalization, \
-    ControlModel, MeanVarRiskMeasureSAA, meanVarRiskMeasureSAASettings, \
+    ControlModel, MeanVarRiskMeasureSAA_MPI, meanVarRiskMeasureSAASettings, \
     RiskMeasureControlCostFunctional, ScipyCostWrapper, \
-    STATE, PARAMETER, ADJOINT, CONTROL
+    STATE, PARAMETER, ADJOINT, CONTROL, \
+    MultipleSerialPDEsCollective
     
 from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
@@ -51,8 +53,14 @@ class TestControlCostFunctional(unittest.TestCase):
         self.nx = 16
         self.ny = 16
 
+        self.comm_mesh = MPI.COMM_SELF 
+        self.comm_sampler = MPI.COMM_WORLD
+        self.rank_sampler = self.comm_sampler.Get_rank()
+        self.size_sampler = self.comm_sampler.Get_size()
+        self.collective = MultipleSerialPDEsCollective(self.comm_sampler)
+
         # Make spaces
-        self.mesh = dl.UnitSquareMesh(self.nx, self.ny)
+        self.mesh = dl.UnitSquareMesh(self.comm_mesh, self.nx, self.ny)
         Vh_STATE = dl.FunctionSpace(self.mesh, "CG", 2)
         Vh_PARAMETER = dl.FunctionSpace(self.mesh, "CG", 1)
         Vh_CONTROL = dl.FunctionSpace(self.mesh, "CG", 1)
@@ -82,6 +90,7 @@ class TestControlCostFunctional(unittest.TestCase):
     def _sample_control(self, z):
         hp.parRandom.normal(1.0, self.control_noise)
         self.control_prior.sample(self.control_noise, z)
+        self.collective.bcast(z, root=0)
 
     def _setup_control_model(self, pde, qoi_varf):
         qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
@@ -92,7 +101,7 @@ class TestControlCostFunctional(unittest.TestCase):
         rm_settings = meanVarRiskMeasureSAASettings()
         rm_settings['sample_size'] = sample_size
         rm_settings['beta'] = beta
-        risk = MeanVarRiskMeasureSAA(model, prior, rm_settings)
+        risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         return risk
 
 
@@ -116,13 +125,19 @@ class TestControlCostFunctional(unittest.TestCase):
         cost_scipy = func(z.get_local())
         cost_error = cost_value - cost_scipy 
 
+
         print("---------- Check cost values are equal ----------")
-        print("Cost functional: %g" %(cost_value))
-        print("Cost from scipy wrapper: %g" %(cost_scipy))
+        print("Rank %d Cost functional: %g" %(self.rank_sampler, cost_value))
+        print("Rank %d Cost from scipy wrapper: %g" %(self.rank_sampler, cost_scipy))
+        sys.stdout.flush()
         if abs(cost_value) > 0:
             self.assertTrue(abs(cost_error/cost_value) < self.reltol)
         else:
             self.assertTrue(cost_error < self.reltol)
+        
+        # check that all processes have the same cost 
+        cost_allprocs = self.comm_sampler.allgather(cost_value)
+        self.assertTrue(np.allclose(cost_allprocs, cost_allprocs[0]))
 
 
     def testCostValue(self):
@@ -150,6 +165,9 @@ class TestControlCostFunctional(unittest.TestCase):
         grad_fun = scipy_wrapper.jac()
         hess_fun = scipy_wrapper.hessp()
 
+
+        g = cost_functional.generate_vector(CONTROL)
+
         z0 = cost_functional.generate_vector(CONTROL)
         dz = cost_functional.generate_vector(CONTROL)
         self._sample_control(z0)
@@ -160,21 +178,21 @@ class TestControlCostFunctional(unittest.TestCase):
         z1_np = z0_np + self.delta * dz_np
         
         c0 = cost_fun(z0_np)
-        g0 = grad_fun(z0_np)
-        Hdz_ad = hess_fun(z0_np, dz)
+        g0_np = grad_fun(z0_np)
+        Hdz_ad = hess_fun(z0_np, dz_np)
 
         c1 = cost_fun(z1_np)
-        g1 = grad_fun(z1_np)
+        g1_np = grad_fun(z1_np)
 
         dcdz_fd = (c1 - c0)/self.delta
-        dcdz_ad = np.inner(g0, dz)
+        dcdz_ad = np.inner(g0_np, dz_np)
         print("Initial cost: ", c0)
         print("New cost: ", c1)
         print("Finite difference derivative: %g" %(dcdz_fd))
         print("Adjoint derivative: %g" %(dcdz_ad))
         self.assertTrue(abs((dcdz_fd - dcdz_ad)/dcdz_ad) < self.fdtol)
 
-        Hdz_fd = (g1 - g0)/self.delta
+        Hdz_fd = (g1_np - g0_np)/self.delta
         print("Finite difference Hessian action norm: %g" %(np.linalg.norm(Hdz_fd)))
         print("Adjoint Hessian action norm: %g" %(np.linalg.norm(Hdz_ad)))
         err_hess = np.linalg.norm(Hdz_fd - Hdz_ad)
@@ -186,7 +204,6 @@ class TestControlCostFunctional(unittest.TestCase):
         use_penalization = False
         self.finiteDifferenceCheck(sample_size, use_penalization)
 
-        sample_size = 10
         use_penalization = True
         self.finiteDifferenceCheck(sample_size, use_penalization)
 
