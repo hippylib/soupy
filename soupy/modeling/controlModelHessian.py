@@ -25,7 +25,7 @@ class ControlModelHessian:
         """
         Apply the Hessian of the QoI. 
         
-        ::note Assumes the :code:`model.setPointForHessianEvaluations` has been called
+        ::note Assumes the :code:`model.setLinearizationPoint` has been called
         """
 
         # Solve incremental forward

@@ -316,7 +316,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             sprime_i = self.smoothplus.grad(qi - t)
             sprimeprime_i = self.smoothplus.hessian(qi - t)
 
-            self.model.setPointForHessianEvaluations(xi)
+            self.model.setLinearizationPoint(xi)
             self.control_model_hessian.mult(z_hat, self.Hi_zhat)
             gi_inner_zhat = gi.inner(z_hat)
             

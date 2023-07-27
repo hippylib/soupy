@@ -155,17 +155,3 @@ class MeanVarRiskMeasure(RiskMeasure):
 
     def costHessian(self, zhat, Hzhat):
         logging.warning("Hessian not implemented for MeanVarRiskMeasure")
-        # self.model.setPointForHessianEvaluations(self.x)
-        # self.model.applyCz(zhat, self.rhs_fwd)
-        # self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-        # self.model.applyWuu(self.uhat, self.rhs_adj)
-        # self.model.applyWuz(zhat, self.rhs_adj2)
-        # self.rhs_adj.axpy(-1., self.rhs_adj2)
-        # self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        # self.model.applyWzz(zhat, Hzhat)
-
-        # self.model.applyCzt(self.phat, self.zhelp)
-        # Hzhat.axpy(1., self.zhelp)
-        # self.model.applyWzu(self.uhat, self.zhelp)
-        # Hzhat.axpy(-1., self.zhelp)
-

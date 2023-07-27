@@ -195,7 +195,7 @@ class ControlModel:
         return math.sqrt(mg.inner(tmp))
 
     
-    def setPointForHessianEvaluations(self, x, gauss_newton_approx=False):
+    def setLinearizationPoint(self, x, gauss_newton_approx=False):
         """
         Specify the point :code:`x = [u,m,p,z]` at which the Hessian operator \
             (or the Gauss-Newton approximation) needs to be evaluated.

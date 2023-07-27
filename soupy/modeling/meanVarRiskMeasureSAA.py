@@ -273,7 +273,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
             xi = self.x_mc[i] 
             gi = self.g_mc[i]
             qi = self.q_samples[i] 
-            self.model.setPointForHessianEvaluations(xi)
+            self.model.setLinearizationPoint(xi)
             self.control_model_hessian.mult(zhat, self.Hi_zhat)
 
             hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar
@@ -498,7 +498,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
             gi = self.g_mc[i]
             qi = self.q_samples[i] 
 
-            self.model.setPointForHessianEvaluations(xi)
+            self.model.setLinearizationPoint(xi)
             self.control_model_hessian.mult(zhat, self.Hi_zhat)
 
             hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar

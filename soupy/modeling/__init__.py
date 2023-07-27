@@ -19,6 +19,8 @@ from .controlCostFunctional import ControlCostFunctional, DeterministicControlCo
 
 from .controlModel import ControlModel
 
+from .controlModelHessian import ControlModelHessian
+
 from .controlQoI import ControlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI
 
 from .meanVarRiskMeasure import meanVarRiskMeasureSettings, MeanVarRiskMeasure

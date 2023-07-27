@@ -200,7 +200,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
         
         .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 2`
         """
-        self.model.setPointForHessianEvaluations(self.x)
+        self.model.setLinearizationPoint(self.x)
         self.model.applyCz(zhat, self.rhs_fwd)
         self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
         self.model.applyWuu(self.uhat, self.rhs_adj)
