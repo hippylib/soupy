@@ -20,13 +20,21 @@ class ControlModelHessian:
         self.rhs_adj2 = self.model.generate_vector(ADJOINT)
         self.Hz_helper = self.model.generate_vector(CONTROL)
 
+    def init_vector(self, z, dim):
+        """
+        Initialize vector to be compatible with operator. Note since \
+            the Hessian is symmetric, dimension is not important 
+        """
+        self.model.init_control(z)
 
-    def mult(self, zhat, Hzhat_qoi):
+
+    def mult(self, zhat, out):
         """
         Apply the Hessian of the QoI. 
         
         ::note Assumes the :code:`model.setLinearizationPoint` has been called
         """
+        out.zero()
 
         # Solve incremental forward
         self.model.applyCz(zhat, self.rhs_fwd)
@@ -39,9 +47,9 @@ class ControlModelHessian:
 
         # Apply model hessian
         self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        self.model.applyWzz(zhat, Hzhat_qoi)
+        self.model.applyWzz(zhat, out)
 
         self.model.applyCzt(self.phat, self.Hz_helper)
-        Hzhat_qoi.axpy(1., self.Hz_helper)
+        out.axpy(1., self.Hz_helper)
         self.model.applyWzu(self.uhat, self.Hz_helper)
-        Hzhat_qoi.axpy(-1., self.Hz_helper)
+        out.axpy(-1., self.Hz_helper)
