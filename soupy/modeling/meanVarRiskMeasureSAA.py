@@ -21,6 +21,7 @@ from hippylib import ParameterList, Random
 
 from .riskMeasure import RiskMeasure
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
+from .controlModelHessian import ControlModelHessian
 
 from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective, \
         MultipleSerialPDEsCollective, allocate_process_sample_sizes
@@ -130,14 +131,8 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         self.has_forward_solve = False
 
         # For Hessian computations 
-        self.has_hessian_variables = False
-        self.uhat = None
-        self.phat = None
-        self.rhs_fwd = None
-        self.rhs_adj = None
-        self.rhs_adj2 = None
-        self.Hi_zhat = None
-        self.Hz_helper = None 
+        self.control_model_hessian = None 
+        self.Hi_zhat = self.model.generate_vector(CONTROL)
 
 
     def generate_vector(self, component = "ALL"):
@@ -268,15 +263,18 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
 
         .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
-        if not self.has_hessian_variables:
-            self._generate_hessian_variables()
+        if self.control_model_hessian is None:
+            self.control_model_hessian = ControlModelHessian(self.model)
+
+
 
         Hzhat.zero()
         for i in range(self.sample_size_proc):
             xi = self.x_mc[i] 
             gi = self.g_mc[i]
             qi = self.q_samples[i] 
-            self._apply_qoi_hessian(xi, zhat, self.Hi_zhat)
+            self.model.setPointForHessianEvaluations(xi)
+            self.control_model_hessian.mult(zhat, self.Hi_zhat)
 
             hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar
             
@@ -307,41 +305,6 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         return q_all 
 
 
-    def _apply_qoi_hessian(self, x, zhat, Hzhat_qoi):
-        """
-        apply the Hessian of the qoi at given point :code:`x` 
-        """
-
-        # Set linearization point 
-        self.model.setPointForHessianEvaluations(x)
-
-        # Solve incremental forward
-        self.model.applyCz(zhat, self.rhs_fwd)
-        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-
-        # Solve incremental adjoint 
-        self.model.applyWuu(self.uhat, self.rhs_adj)
-        self.model.applyWuz(zhat, self.rhs_adj2)
-        self.rhs_adj.axpy(-1., self.rhs_adj2)
-
-        # Apply model hessian
-        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        self.model.applyWzz(zhat, Hzhat_qoi)
-
-        self.model.applyCzt(self.phat, self.Hz_helper)
-        Hzhat_qoi.axpy(1., self.Hz_helper)
-        self.model.applyWzu(self.uhat, self.Hz_helper)
-        Hzhat_qoi.axpy(-1., self.Hz_helper)
-
-    def _generate_hessian_variables(self):
-        self.uhat = self.model.generate_vector(STATE)
-        self.phat = self.model.generate_vector(ADJOINT)
-        self.rhs_fwd = self.model.generate_vector(STATE)
-        self.rhs_adj = self.model.generate_vector(ADJOINT)
-        self.rhs_adj2 = self.model.generate_vector(ADJOINT)
-        self.Hi_zhat = self.model.generate_vector(CONTROL)
-        self.Hz_helper = self.model.generate_vector(CONTROL)
-        self.has_hessian_variables = True
 
 
 
@@ -405,13 +368,9 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         self.Hz_helper = self.model.generate_vector(CONTROL)
         self.diff_helper= self.model.generate_vector(CONTROL)
 
-        self.has_hessian_variables = False
-        self.uhat = None
-        self.phat = None
-        self.rhs_fwd = None
-        self.rhs_adj = None
-        self.rhs_adj2 = None
-        self.Hi_zhat = None
+
+        self.control_model_hessian = None 
+        self.Hi_zhat = self.model.generate_vector(CONTROL)
 
 
         self.has_adjoint_solve = False
@@ -530,16 +489,17 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
         .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
-
-        if not self.has_hessian_variables:
-            self._generate_hessian_variables()
+        if self.control_model_hessian is None:
+            self.control_model_hessian = ControlModelHessian(self.model)
 
         Hzhat.zero()
         for i in range(self.sample_size):
             xi = self.x_mc[i] 
             gi = self.g_mc[i]
             qi = self.q_samples[i] 
-            self._apply_qoi_hessian(xi, zhat, self.Hi_zhat)
+
+            self.model.setPointForHessianEvaluations(xi)
+            self.control_model_hessian.mult(zhat, self.Hi_zhat)
 
             hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar
             
@@ -550,45 +510,9 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
             gradient_scale_factor = gi.inner(zhat) * 2*self.beta
             Hzhat.axpy(gradient_scale_factor/self.sample_size, gi)
 
-
         # Apply :math:`\bar{g} \bar{g}^T` for mean qoi gradients
         mean_gradient_scale_factor = self.g_bar.inner(zhat) * 2*self.beta
         Hzhat.axpy(-mean_gradient_scale_factor, self.g_bar)
 
 
-    def _generate_hessian_variables(self):
-        self.uhat = self.model.generate_vector(STATE)
-        self.phat = self.model.generate_vector(ADJOINT)
-        self.rhs_fwd = self.model.generate_vector(STATE)
-        self.rhs_adj = self.model.generate_vector(ADJOINT)
-        self.rhs_adj2 = self.model.generate_vector(ADJOINT)
-        self.Hi_zhat = self.model.generate_vector(CONTROL)
-        self.has_hessian_variables = True
-
-
-    def _apply_qoi_hessian(self, x, zhat, Hzhat_qoi):
-        """
-        apply the Hessian of the qoi at given point :code:`x` 
-        """
-
-        # Set linearization point 
-        self.model.setPointForHessianEvaluations(x)
-
-        # Solve incremental forward
-        self.model.applyCz(zhat, self.rhs_fwd)
-        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-
-        # Solve incremental adjoint 
-        self.model.applyWuu(self.uhat, self.rhs_adj)
-        self.model.applyWuz(zhat, self.rhs_adj2)
-        self.rhs_adj.axpy(-1., self.rhs_adj2)
-
-        # Apply model hessian
-        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        self.model.applyWzz(zhat, Hzhat_qoi)
-
-        self.model.applyCzt(self.phat, self.Hz_helper)
-        Hzhat_qoi.axpy(1., self.Hz_helper)
-        self.model.applyWzu(self.uhat, self.Hz_helper)
-        Hzhat_qoi.axpy(-1., self.Hz_helper)
 

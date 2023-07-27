@@ -32,3 +32,4 @@ def allocate_process_sample_sizes(sample_size, comm_sampler):
         else:
             sample_size_allprocs.append(n)
     return sample_size_allprocs
+

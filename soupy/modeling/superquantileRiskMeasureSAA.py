@@ -21,6 +21,7 @@ from hippylib import ParameterList, Random
 
 from .riskMeasure import RiskMeasure
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
+from .controlModelHessian import ControlModelHessian
 
 from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective, \
         MultipleSerialPDEsCollective, allocate_process_sample_sizes
@@ -152,14 +153,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         self.has_adjoint_solve = False
         self.has_forward_solve = False
 
-        self.Hz_helper = self.model.generate_vector(CONTROL)
-        self.has_hessian_variables = False
-        self.uhat = None
-        self.phat = None
-        self.rhs_fwd = None
-        self.rhs_adj = None
-        self.rhs_adj2 = None
-        self.Hi_zhat = None
+        self.Hi_zhat = self.model.generate_vector(CONTROL)
+        self.control_model_hessian = None 
 
 
     def generate_vector(self, component = "ALL"):
@@ -297,8 +292,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
 
         .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
-        if not self.has_hessian_variables:
-            self._generate_hessian_variables()
+        if self.control_model_hessian is None:
+            self.control_model_hessian = ControlModelHessian(self.model)
 
         Hzt_hat.zero()
 
@@ -321,8 +316,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
             sprime_i = self.smoothplus.grad(qi - t)
             sprimeprime_i = self.smoothplus.hessian(qi - t)
 
-
-            self._apply_qoi_hessian(xi, z_hat, self.Hi_zhat)
+            self.model.setPointForHessianEvaluations(xi)
+            self.control_model_hessian.mult(z_hat, self.Hi_zhat)
             gi_inner_zhat = gi.inner(z_hat)
             
             # Output of Hessian in z
@@ -339,43 +334,6 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         self.collective.allReduce(Hz_hat, "SUM")
         Ht_hat_all = self.collective.allReduce(Ht_hat, "SUM")
         Hzt_hat.set_scalar(Ht_hat_all)
-
-
-    def _generate_hessian_variables(self):
-        self.uhat = self.model.generate_vector(STATE)
-        self.phat = self.model.generate_vector(ADJOINT)
-        self.rhs_fwd = self.model.generate_vector(STATE)
-        self.rhs_adj = self.model.generate_vector(ADJOINT)
-        self.rhs_adj2 = self.model.generate_vector(ADJOINT)
-        self.Hi_zhat = self.model.generate_vector(CONTROL)
-        self.has_hessian_variables = True
-
-
-    def _apply_qoi_hessian(self, x, zhat, Hzhat_qoi):
-        """
-        apply the Hessian of the qoi at given point :code:`x` 
-        """
-
-        # Set linearization point 
-        self.model.setPointForHessianEvaluations(x)
-
-        # Solve incremental forward
-        self.model.applyCz(zhat, self.rhs_fwd)
-        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-
-        # Solve incremental adjoint 
-        self.model.applyWuu(self.uhat, self.rhs_adj)
-        self.model.applyWuz(zhat, self.rhs_adj2)
-        self.rhs_adj.axpy(-1., self.rhs_adj2)
-
-        # Apply model hessian
-        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        self.model.applyWzz(zhat, Hzhat_qoi)
-
-        self.model.applyCzt(self.phat, self.Hz_helper)
-        Hzhat_qoi.axpy(1., self.Hz_helper)
-        self.model.applyWzu(self.uhat, self.Hz_helper)
-        Hzhat_qoi.axpy(-1., self.Hz_helper)
 
 
     def gatherSamples(self):
