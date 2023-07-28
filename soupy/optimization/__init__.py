@@ -13,6 +13,10 @@
 
 from .bfgs import BFGS, BFGS_ParameterList
 
+from .cgSolverSteihaug import  IdentityOperator, CGSolverSteihaug, CGSolverSteihaug_ParameterList
+
+from .inexactNewtonCG import InexactNewtonCG, InexactNewtonCG_ParameterList
+
 from .sgd import SGD, SGD_ParameterList
 
 from .steepestDescent import SteepestDescent, SteepestDescent_ParameterList
