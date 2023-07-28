@@ -10,7 +10,8 @@ class ControlModelHessian:
         """
         Constructor:
 
-        :param model: :py:class:`soupy.ControlModel`
+        :param model: Control model defining the control to QoI map
+        :type model: :py:class:`soupy.ControlModel`
         """
         self.model = model 
         self.uhat = self.model.generate_vector(STATE)

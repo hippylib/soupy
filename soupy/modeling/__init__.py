@@ -17,6 +17,8 @@ from .augmentedVector import AugmentedVector
 
 from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional
 
+from .controlCostHessian import ControlCostHessian 
+
 from .controlModel import ControlModel
 
 from .controlModelHessian import ControlModelHessian
