@@ -155,6 +155,13 @@ class CGSolverSteihaug:
     def solve(self,x,b):
         """
         Solve the linear system :math:`Ax = b`
+
+        :param x: Solution vector
+        :type x: :py:class:`dolfin.Vector` 
+
+        :param b: Right hand side vector
+        :type b: :py:class:`dolfin.Vector` 
+
         """
         self.iter = 0
         self.converged = False

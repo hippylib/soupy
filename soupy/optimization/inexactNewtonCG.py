@@ -23,8 +23,8 @@ from .cgSolverSteihaug import CGSolverSteihaug
 
 def LS_ParameterList():
     """
-    Generate a ParameterList for line search globalization.
-    type: :code:`LS_ParameterList().showMe()` for default values and their descriptions
+    Generate a ParameterList for line search globalization. \
+        type :code:`LS_ParameterList().showMe()` for default values and their descriptions
     """
     parameters = {}
     parameters["c_armijo"]              = [1e-4, "Armijo constant for sufficient reduction"]
@@ -34,8 +34,8 @@ def LS_ParameterList():
 
 def TR_ParameterList():
     """
-    Generate a ParameterList for Trust Region globalization.
-    type: :code:`RT_ParameterList().showMe()` for default values and their descriptions
+    Generate a ParameterList for Trust Region globalization. \
+        type :code:`RT_ParameterList().showMe()` for default values and their descriptions
     """
     parameters = {}
     parameters["eta"] = [0.05, "Reject step if (actual reduction)/(predicted reduction) < eta"]
@@ -44,8 +44,8 @@ def TR_ParameterList():
 
 def InexactNewtonCG_ParameterList():
     """
-    Generate a ParameterList for InexactNewtonCG.
-    type: :code:`InexactNewtonCG_ParameterList().showMe()` for default values and their descriptions
+    Generate a ParameterList for InexactNewtonCG. \
+        type :code:`InexactNewtonCG_ParameterList().showMe()` for default values and their descriptions
     """
     parameters = {}
     parameters["rel_tolerance"]         = [1e-6, "we converge when sqrt(g,g)/sqrt(g_0,g_0) <= rel_tolerance"]
@@ -83,8 +83,8 @@ class InexactNewtonCG:
     
     More specifically the model object should implement following methods:
         - :code:`cost(z)` -> evaluate the cost functional
-        - :code:`costGrad(g) -> evaluate the gradient and store to :code:`g`
-        - :code:`costHessian(zhat, Hzhat) -> apply the cost Hessian
+        - :code:`costGrad(g)` -> evaluate the gradient and store to :code:`g`
+        - :code:`costHessian(zhat, Hzhat)` -> apply the cost Hessian
        
     Type :code:`help(Model)` for additional information
     """
@@ -162,8 +162,6 @@ class InexactNewtonCG:
         c_armijo = self.parameters["LS"]["c_armijo"]
         max_backtracking_iter = self.parameters["LS"]["max_backtracking_iter"]
         
-        # self.model.solveFwd(x[STATE], x)
-        
         self.it = 0
         self.converged = False
         self.ncalls += 1
@@ -175,10 +173,6 @@ class InexactNewtonCG:
         cost_old = self.cost_functional.cost(z, order=2)
         
         while (self.it < max_iter) and (self.converged == False):
-            # self.model.solveAdj(x[ADJOINT], x)
-            # self.model.setPointForHessianEvaluations(x, gauss_newton_approx=(self.it < GN_iter) )
-            # gradnorm = self.model.evalGradientParameter(x, mg)
-
             # Compute the gradient 
             gradnorm = self.cost_functional.costGrad(mg)
             
@@ -266,7 +260,13 @@ class InexactNewtonCG:
                             
         self.final_grad_norm = gradnorm
         self.final_cost      = cost_new
-        return z
+
+        result = dict()
+        result["termination_reason"] = InexactNewtonCG.termination_reasons[self.reason]
+        result["final_cost"] = cost_new
+        result["final_grad_norm"] = gradnorm
+
+        return z, result 
     
     def _solve_tr(self,z):
         rel_tol = self.parameters["rel_tolerance"]
@@ -288,16 +288,10 @@ class InexactNewtonCG:
         R_zhat = self.cost_functional.generate_vector(CONTROL)   
         zstar = self.cost_functional.generate_vector(CONTROL)
         mg = self.cost_functional.generate_vector(CONTROL)
-
         
-        # cost_old, reg_old, misfit_old = self.model.cost(x)
         cost_old = self.cost_functional.cost(z, order=2)
 
         while (self.it < max_iter) and (self.converged == False):
-            # self.model.solveAdj(x[ADJOINT], x)
-            # self.model.setPointForHessianEvaluations(x, gauss_newton_approx=(self.it < GN_iter) )
-            # gradnorm = self.model.evalGradientParameter(x, mg)
-
             gradnorm = self.cost_functional.costGrad(mg)
             
             if self.it == 0:
@@ -400,6 +394,12 @@ class InexactNewtonCG:
                             
         self.final_grad_norm = gradnorm
         self.final_cost      = cost_old
-        return z
+        
+        result = dict()
+        result["termination_reason"] = InexactNewtonCG.termination_reasons[self.reason]
+        result["final_cost"] = cost_old
+        result["final_grad_norm"] = gradnorm
+
+        return z, result 
 
 

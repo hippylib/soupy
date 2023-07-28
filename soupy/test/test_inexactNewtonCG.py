@@ -65,11 +65,15 @@ class TestInexactNewtonCG(unittest.TestCase):
 
         z0 = dl.Function(cost.Vz).vector()
         hp.parRandom.normal(1.0, z0)
-        z_opt = newton_solver.solve(z0)
+        z_opt, result = newton_solver.solve(z0)
         print(newton_solver.termination_reasons[newton_solver.reason])
         return z_opt.get_local()
 
     def testQuadraticCost(self):
+        """
+        Test that optimization is carried out correctly 
+        """
+
         # Unconstrained quadratic case
         tol = 1e-3
         dim = 10

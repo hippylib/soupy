@@ -1,3 +1,17 @@
+# Copyright (c) 2023, The University of Texas at Austin 
+# & Georgia Institute of Technology
+#
+# All Rights reserved.
+# See file COPYRIGHT for details.
+#
+# This file is part of the SOUPy package. For more information see
+# https://github.com/hippylib/soupy/
+#
+# SOUPy is free software; you can redistribute it and/or modify it under the
+# terms of the GNU General Public License (as published by the Free
+# Software Foundation) version 3.0 dated June 1991.
+
+
 from .variables import STATE, ADJOINT, PARAMETER, CONTROL 
 
 
@@ -29,13 +43,18 @@ class ControlModelHessian:
         self.model.init_control(z)
 
 
-    def mult(self, zhat, out):
+    def mult(self, zhat, Hzhat):
         """
         Apply the Hessian of the QoI. 
+
+        :param zhat: Direction for Hessian action 
+        :type zhat: :py:class:`dolfin.Vector` or similar
+        :param Hzhat: Output for Hessian action
+        :type Hzhat: :py:class:`dolfin.Vector` or similar
         
         ::note Assumes the :code:`model.setLinearizationPoint` has been called
         """
-        out.zero()
+        Hzhat.zero()
 
         # Solve incremental forward
         self.model.applyCz(zhat, self.rhs_fwd)
@@ -48,9 +67,9 @@ class ControlModelHessian:
 
         # Apply model hessian
         self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        self.model.applyWzz(zhat, out)
+        self.model.applyWzz(zhat, Hzhat)
 
         self.model.applyCzt(self.phat, self.Hz_helper)
-        out.axpy(1., self.Hz_helper)
+        Hzhat.axpy(1., self.Hz_helper)
         self.model.applyWzu(self.uhat, self.Hz_helper)
-        out.axpy(-1., self.Hz_helper)
+        Hzhat.axpy(-1., self.Hz_helper)

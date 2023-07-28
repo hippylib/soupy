@@ -169,7 +169,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
 
     def costGrad(self, g):
         """
-        Computes the gradient of the cost functional at given control :math:`z`
+        Computes the gradient of the cost functional 
 
         :param g: (Dual of) the gradient of the cost functional
         :type g: :py:class:`dolfin.Vector`
@@ -189,10 +189,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
     def costHessian(self, zhat, Hzhat):
         """
         Apply the the reduced Hessian to the vector :math:`zhat`
-        evaluated at control variable :math:`z`
 
-        :param z: The control variable
-        :type z: :py:class:`dolfin.Vector`
         :param zhat: The direction of Hessian action
         :type zhat: :py:class:`dolfin.Vector`
         :param Hzhat: The assembled Hessian action
@@ -273,14 +270,14 @@ class RiskMeasureControlCostFunctional:
 
     def costGrad(self, g):
         """
-        Computes the gradient of the cost functional at given control :math:`z`
+        Computes the gradient of the cost functional 
 
         :param g: (Dual of) the gradient of the cost functional
         :type g: :py:class:`dolfin.Vector`
 
         :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
 
-        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 2`
+        .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 1`
         """
         g.zero()
 
@@ -297,10 +294,7 @@ class RiskMeasureControlCostFunctional:
     def costHessian(self, zhat, Hzhat):
         """
         Apply the the reduced Hessian to the vector :math:`zhat`
-        evaluated at control variable :math:`z`
 
-        :param z: The control variable
-        :type z: :py:class:`dolfin.Vector`
         :param zhat: The direction of Hessian action
         :type zhat: :py:class:`dolfin.Vector`
         :param Hzhat: The assembled Hessian action
