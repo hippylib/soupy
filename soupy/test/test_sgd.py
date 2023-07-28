@@ -36,17 +36,18 @@ class QuadraticCost:
         assert component == CONTROL
         return dl.Function(self.Vz).vector()
 
-
     def cost(self, z, order=0, sample_size=1, rng=None):
+        self.z = z 
         return z.inner(z)
 
-    def costGrad(self, z, out):
-        out.zero()
-        out.axpy(2.0, z)
+    def costGrad(self, g):
+        g.zero()
+        g.axpy(2.0, self.z)
+        return g.inner(g)
 
-    def costHessian(self, z, zhat, out):
-        out.zero()
-        out.axpy(zhat)
+    def costHessian(self, zhat, Hzhat):
+        Hzhat.zero()
+        Hzhat.axpy(1.0, zhat)
 
 
 
