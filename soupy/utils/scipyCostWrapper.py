@@ -70,7 +70,7 @@ class ScipyCostWrapper:
         self.z_help.set_local(z_np)
         self.z_help.apply("")
         self.cost_functional.cost(self.z_help, order=1)
-        self.cost_functional.costGrad(self.z_help, self.z_out_help)
+        self.cost_functional.costGrad(self.z_out_help)
         if self.verbose and MPI.COMM_WORLD.Get_rank() == 0:
             print("Gradient evaluation")
         self.n_grad += 1
@@ -82,10 +82,10 @@ class ScipyCostWrapper:
         self.z_help.apply("")
 
         self.z_hat_help.set_local(zhat_np)
-        self.z_help.apply("")
+        self.z_hat_help.apply("")
 
         self.cost_functional.cost(self.z_help, order=2)
-        self.cost_functional.costHessian(self.z_help, self.z_hat_help, self.z_out_help)
+        self.cost_functional.costHessian(self.z_hat_help, self.z_out_help)
         if self.verbose and MPI.COMM_WORLD.Get_rank() == 0:
             print("Hessian action evaluation")
         self.n_hess += 1
