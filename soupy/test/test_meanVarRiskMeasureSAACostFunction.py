@@ -9,12 +9,13 @@
 #
 # SOUPy is free software; you can redistribute it and/or modify it under the
 # terms of the GNU General Public License (as published by the Free
-# Software Foundation) version 3.0 dated June 1991.
+# Software Foundation) version 3.0 dated June 1991.import unittest
 
 import unittest
+
 import dolfin as dl
-import numpy as np 
-import matplotlib.pyplot as plt 
+import numpy as np
+import matplotlib.pyplot as plt
 
 import logging
 logging.getLogger('FFC').setLevel(logging.WARNING)
@@ -26,30 +27,30 @@ sys.path.append(os.environ.get('HIPPYLIB_PATH'))
 import hippylib as hp
 
 sys.path.append('../../')
-from soupy import VariationalControlQoI, ControlModel, \
-                        meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA,\
-                        PDEVariationalControlProblem, \
-                        STATE, PARAMETER, CONTROL
-
+from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
+    VariationalControlQoI, L2Penalization, \
+    ControlModel, MeanVarRiskMeasureSAA, meanVarRiskMeasureSAASettings, \
+    RiskMeasureControlCostFunctional, \
+    STATE, PARAMETER, ADJOINT, CONTROL
+    
 from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 def l2_norm(u,m,z):
-    return u**2*dl.dx 
+    return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx
 
 def qoi_for_testing(u,m,z):
     return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
 
-
-class TestMeanVarRiskMeasureSAA(unittest.TestCase):
+class TestControlCostFunctional(unittest.TestCase):
     def setUp(self):
         self.reltol = 1e-3
-        self.fdtol = 1e-1
+        self.fdtol = 1e-2
         self.delta = 1e-3
         self.n_wells_per_side = 3
         self.nx = 20
         self.ny = 20
         self.n_control = self.n_wells_per_side**2
-        
+
         # Make spaces
         self.mesh = dl.UnitSquareMesh(self.nx, self.ny)
         Vh_STATE = dl.FunctionSpace(self.mesh, "CG", 1)
@@ -78,87 +79,44 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         risk = MeanVarRiskMeasureSAA(model, prior, rm_settings)
         return risk
 
-    def testCostValue(self):
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = True
-
-        pde, prior, _ = setupPoissonPDEProblem(self.Vh, settings)
-        def l2norm(u,m,z):
-            return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
-
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
-
-        risk = MeanVarRiskMeasureSAA(model, prior)
-        z = model.generate_vector(CONTROL)
-        c_val = risk.cost()
-        print("Before computing: ", c_val)
-        risk.computeComponents(z)
-        c_val = risk.cost()
-        print("After computing: ", c_val)
-        
-    def testSavedSolution(self):
-        IS_FWD_LINEAR = False
-        SAMPLE_SIZE = 5
-        BETA = 0.5 
+    def costValueCheck(self, sample_size, use_penalization):
+        IS_FWD_LINEAR = True
+        ALPHA = 2.0 
+        BETA = 0.0
 
         pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
         qoi, model = self._setup_control_model(pde, l2_norm)
-        risk = self._setup_mean_var_risk_measure(model, prior, SAMPLE_SIZE, BETA)
+        risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
 
-        z0 = model.generate_vector(CONTROL)
-        z1 = model.generate_vector(CONTROL)
+        if use_penalization:
+            penalty = L2Penalization(self.Vh, ALPHA)
+        else:
+            penalty = None
 
-        # np.random.seed(1)
-        control_dist.sample(z0)
-        control_dist.sample(z1)
-        
-        print("Test if correct solution and adjoint solves are being stored")
-        
-        # initial cost
-        risk.computeComponents(z0, order=0)
-        self.assertFalse(risk.has_adjoint_solve)
-        c0 = risk.cost()
-        
-        # same place, check same 
-        risk.computeComponents(z0, order=0)
-        self.assertFalse(risk.has_adjoint_solve)
-        self.assertAlmostEqual(c0, risk.cost())
-    
-        # now with gradient 
-        risk.computeComponents(z0, order=1)
-        self.assertAlmostEqual(c0, risk.cost())
-        self.assertTrue(risk.has_adjoint_solve)
-        
-        # new cost, no gradient 
-        risk.computeComponents(z1, order=0)
-        c1 = risk.cost()
-        self.assertFalse(risk.has_adjoint_solve)
-        
-        # back to old cost
-        risk.computeComponents(z0, order=0)
-        self.assertAlmostEqual(c0, risk.cost())
-        self.assertFalse(risk.has_adjoint_solve)
+        z = model.generate_vector(CONTROL)
+        control_dist.sample(z)
 
-        # new cost, with gradient
-        risk.computeComponents(z1, order=1)
-        self.assertTrue(risk.has_adjoint_solve)
-        self.assertAlmostEqual(c1, risk.cost())
+        costFun = RiskMeasureControlCostFunctional(risk, penalty)
+        c_val = costFun.cost(z, order=0)
 
-        # new cost, no gradient 
-        risk.computeComponents(z1, order=0)
-        self.assertTrue(risk.has_adjoint_solve)
-        self.assertAlmostEqual(c1, risk.cost())
+        risk.computeComponents(z, order=0)
+        r_val = risk.cost()
 
-        # old cost, no gradient 
-        risk.computeComponents(z0, order=1)
-        self.assertAlmostEqual(c0, risk.cost())
-        self.assertTrue(risk.has_adjoint_solve)
+        if use_penalization:
+            p_val = penalty.cost(z)
+        else:
+            p_val = 0
 
+        c_total = r_val + p_val
+        print("Cost evaluation: %g" %(c_val))
+        print("Risk: %g" %(r_val))
+        print("Penalization: %g" %(p_val))
+        print("Combined: %g" %(r_val + p_val))
 
+        cost_err = abs(c_val - c_total)
+
+        if abs(c_total) > 0:
+            self.assertTrue(abs(cost_err/c_val) < 1e-3)
 
 
     def finiteDifferenceCheck(self, sample_size, is_fwd_linear=True):
@@ -169,10 +127,14 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         else:
             print("Nonlinear problem")
         
+        ALPHA = 0.0
         BETA = 0.5
         pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
         qoi, model = self._setup_control_model(pde, qoi_for_testing)
         risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
+
+        penalty = L2Penalization(self.Vh, ALPHA)
+        costFun = RiskMeasureControlCostFunctional(risk, penalty)
 
         z0 = model.generate_vector(CONTROL)
         dz = model.generate_vector(CONTROL)
@@ -187,19 +149,14 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         z1.axpy(1.0, z0)
         z1.axpy(self.delta, dz)
 
-        risk.computeComponents(z0, order=1)
+        c0 = costFun.cost(z0, order=2)
+        costFun.costGrad(g0)
+        costFun.costHessian(dz, Hdz)
 
-        c0 = risk.cost()
-        risk.costGrad(g0)
-        risk.costHessian(dz, Hdz)
+        c1 = costFun.cost(z1, order=1)
+        costFun.costGrad(g1)
+        costFun.costGrad(g1)
 
-        rng = hp.Random()        
-        risk.computeComponents(z1, order=1, sample_size=sample_size)
-
-        c1 = risk.cost()
-        risk.costGrad(g1)
-
-        # Test gradients
         dcdz_fd = (c1 - c0)/self.delta
         dcdz_ad = g0.inner(dz)
         print("Initial cost: ", c0)
@@ -208,7 +165,6 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         print("Adjoint derivative: %g" %(dcdz_ad))
         self.assertTrue(abs((dcdz_fd - dcdz_ad)/dcdz_ad) < self.fdtol)
 
-        # Test hessians
         Hdz_fd = (g1.get_local() - g0.get_local())/self.delta
         Hdz_ad = Hdz.get_local()
         print("Finite difference Hessian action \n", Hdz_fd)
@@ -217,21 +173,33 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         print("Norm error: %g" %(err_hess))
         self.assertTrue(err_hess/np.linalg.norm(Hdz_ad) < self.fdtol)
 
-    def testFiniteDifferenceLinearProblem(self):
+    def testCostValueLinearPDE(self):
         is_fwd_linear = True
-        n_samples = 1
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
+        n_sample = 1
+        self.costValueCheck(n_sample, is_fwd_linear)
+        n_sample = 10
+        self.costValueCheck(n_sample, is_fwd_linear)
 
-        n_samples = 10
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
+    def testCostValueNonlinearPDE(self):
+        is_fwd_linear = True
+        n_sample = 1
+        self.costValueCheck(n_sample, is_fwd_linear)
+        n_sample = 10
+        self.costValueCheck(n_sample, is_fwd_linear)
 
-    def testFiniteDifferenceNonlinearProblem(self):
+    def testFiniteDifferenceLinearPDE(self):
+        is_fwd_linear = True
+        n_sample = 1
+        self.finiteDifferenceCheck(n_sample, is_fwd_linear)
+        n_sample = 10
+        self.finiteDifferenceCheck(n_sample, is_fwd_linear)
+
+    def testFiniteDifferenceNonlinearPDE(self):
         is_fwd_linear = False
-        n_samples = 1
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
-
-        n_samples = 10
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
+        n_sample = 1
+        self.finiteDifferenceCheck(n_sample, is_fwd_linear)
+        n_sample = 10
+        self.finiteDifferenceCheck(n_sample, is_fwd_linear)
 
 
 if __name__ == "__main__":

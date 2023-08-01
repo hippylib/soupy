@@ -38,7 +38,7 @@ def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
     
     rng = hp.Random()
     c0 = pde_cost.cost(z0, rng=rng, order=1, sample_size=sample_size)
-    pde_cost.costGrad(z0, gz)
+    pde_cost.costGrad(gz)
 
     rng = hp.Random()
     delta = 1e-3
@@ -70,7 +70,7 @@ def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
     
     rng = hp.Random()
     c0 = pde_cost.cost(z0, order=1)
-    pde_cost.costGrad(z0, gz)
+    pde_cost.costGrad(gz)
 
     rng = hp.Random()
     delta = 1e-3

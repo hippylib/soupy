@@ -28,6 +28,14 @@ soupy.modeling.controlQoI
     :show-inheritance:
 
 
+soupy.modeling.controlModelHessian
+---------------------------------------
+
+.. automodule:: soupy.modeling.controlModelHessian
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 soupy.modeling.controlCostFunctional
 ---------------------------------------
@@ -36,6 +44,23 @@ soupy.modeling.controlCostFunctional
     :members:
     :undoc-members:
     :show-inheritance:
+
+soupy.modeling.controlCostHessian
+---------------------------------------
+
+.. automodule:: soupy.modeling.controlCostHessian
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+soupy.modeling.riskMeasure
+---------------------------------------
+
+.. automodule:: soupy.modeling.riskMeasure
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 soupy.modeling.meanVarRiskMeasure
 ---------------------------------------
@@ -53,13 +78,6 @@ soupy.modeling.meanVarRiskMeasureSAA
     :undoc-members:
     :show-inheritance:
 
-soupy.modeling.variables
--------------------------------------------
-
-.. automodule:: soupy.modeling.variables
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 soupy.modeling.augmentedVector
 -------------------------------------------
@@ -77,11 +95,20 @@ soupy.modeling.superquantileRiskMeasureSAA
     :undoc-members:
     :show-inheritance:
 
-
 soupy.modeling.penalization
 ---------------------------------------
 
 .. automodule:: soupy.modeling.penalization
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+
+soupy.modeling.variables
+-------------------------------------------
+
+.. automodule:: soupy.modeling.variables
     :members:
     :undoc-members:
     :show-inheritance:

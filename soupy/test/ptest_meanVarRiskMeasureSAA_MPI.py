@@ -27,11 +27,14 @@ import hippylib as hp
 
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
-                        meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA,\
+                        meanVarRiskMeasureSAASettings, \
+                        MeanVarRiskMeasureSAA_MPI,\
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, CONTROL
 
 from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+
+from mpi4py import MPI
 
 def l2_norm(u,m,z):
     return u**2*dl.dx 
@@ -40,10 +43,10 @@ def qoi_for_testing(u,m,z):
     return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
 
 
-class TestMeanVarRiskMeasureSAA(unittest.TestCase):
+class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
     def setUp(self):
         self.reltol = 1e-3
-        self.fdtol = 1e-1
+        self.fdtol = 1e-2
         self.delta = 1e-3
         self.n_wells_per_side = 3
         self.nx = 20
@@ -51,11 +54,37 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         self.n_control = self.n_wells_per_side**2
         
         # Make spaces
-        self.mesh = dl.UnitSquareMesh(self.nx, self.ny)
+        self.comm_mesh = MPI.COMM_SELF
+        self.comm_sampler = MPI.COMM_WORLD
+
+        self.mesh = dl.UnitSquareMesh(self.comm_mesh, self.nx, self.ny)
         Vh_STATE = dl.FunctionSpace(self.mesh, "CG", 1)
         Vh_PARAMETER = dl.FunctionSpace(self.mesh, "CG", 1)
         Vh_CONTROL = dl.VectorFunctionSpace(self.mesh, "R", degree=0, dim=self.n_control)
         self.Vh = [Vh_STATE, Vh_PARAMETER, Vh_STATE, Vh_CONTROL]
+
+
+    def testCostValue(self):
+        settings = poisson_control_settings()
+        settings['nx'] = self.nx
+        settings['ny'] = self.ny
+        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
+        settings['LINEAR'] = True
+
+        pde, prior, _ = setupPoissonPDEProblem(self.Vh, settings)
+        def l2norm(u,m,z):
+            return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
+
+        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        model = ControlModel(pde, qoi)
+
+        risk = MeanVarRiskMeasureSAA_MPI(model, prior, comm_sampler=self.comm_sampler)
+        z = model.generate_vector(CONTROL)
+        c_val = risk.cost()
+        print("Before computing: ", c_val)
+        risk.computeComponents(z)
+        c_val = risk.cost()
+        print("After computing: ", c_val)
 
     def _setup_pde_and_distributions(self, is_fwd_linear):
         settings = poisson_control_settings()
@@ -75,34 +104,12 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         rm_settings = meanVarRiskMeasureSAASettings()
         rm_settings['sample_size'] = sample_size
         rm_settings['beta'] = beta
-        risk = MeanVarRiskMeasureSAA(model, prior, rm_settings)
+        risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         return risk
-
-    def testCostValue(self):
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = True
-
-        pde, prior, _ = setupPoissonPDEProblem(self.Vh, settings)
-        def l2norm(u,m,z):
-            return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
-
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
-
-        risk = MeanVarRiskMeasureSAA(model, prior)
-        z = model.generate_vector(CONTROL)
-        c_val = risk.cost()
-        print("Before computing: ", c_val)
-        risk.computeComponents(z)
-        c_val = risk.cost()
-        print("After computing: ", c_val)
         
     def testSavedSolution(self):
-        IS_FWD_LINEAR = False
-        SAMPLE_SIZE = 5
+        IS_FWD_LINEAR = False 
+        SAMPLE_SIZE = 10
         BETA = 0.5 
 
         pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
@@ -159,17 +166,15 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         self.assertTrue(risk.has_adjoint_solve)
 
 
-
-
     def finiteDifferenceCheck(self, sample_size, is_fwd_linear=True):
+        BETA = 0.5
         print("-" * 80)
         print("Finite difference check with %d samples" %(sample_size))
         if is_fwd_linear:
             print("Linear problem")
         else:
             print("Nonlinear problem")
-        
-        BETA = 0.5
+
         pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
         qoi, model = self._setup_control_model(pde, qoi_for_testing)
         risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
@@ -194,7 +199,7 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         risk.costHessian(dz, Hdz)
 
         rng = hp.Random()        
-        risk.computeComponents(z1, order=1, sample_size=sample_size)
+        risk.computeComponents(z1, order=1)
 
         c1 = risk.cost()
         risk.costGrad(g1)
@@ -219,19 +224,45 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
 
     def testFiniteDifferenceLinearProblem(self):
         is_fwd_linear = True
-        n_samples = 1
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
-
-        n_samples = 10
+        n_samples = 100
         self.finiteDifferenceCheck(n_samples, is_fwd_linear)
 
     def testFiniteDifferenceNonlinearProblem(self):
         is_fwd_linear = False
-        n_samples = 1
+        n_samples = 100
         self.finiteDifferenceCheck(n_samples, is_fwd_linear)
 
-        n_samples = 10
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
+    def checkGatherSamples(self, sample_size):
+        """
+        Check that gather samples is collecting the samples properly \
+            and that the correct number of samples is being collected
+        """
+
+        IS_FWD_LINEAR = False 
+        BETA = 0.5 
+
+        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        qoi, model = self._setup_control_model(pde, l2_norm)
+        risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
+
+        rank_sampler = self.comm_sampler.Get_rank()
+        risk.q_samples = np.zeros(risk.q_samples.shape) + rank_sampler
+
+        q_all = risk.gatherSamples()
+        number_equal_to_rank = np.sum(np.isclose(q_all, rank_sampler))
+
+        print("Testing samples are gathering correctly")
+        print("Number of samples equal to rank (%d): %d" %(rank_sampler, number_equal_to_rank))
+        print("Should have %g" %(risk.sample_size_allprocs[rank_sampler]))
+        self.assertTrue(np.isclose(number_equal_to_rank, risk.sample_size_allprocs[rank_sampler]))
+        self.assertTrue(len(q_all) == sample_size)
+
+
+    def testGatherSamples(self):
+        SAMPLE_SIZE_ODD = 2017
+        SAMPLE_SIZE_EVEN = 720
+        self.checkGatherSamples(SAMPLE_SIZE_ODD)
+        self.checkGatherSamples(SAMPLE_SIZE_EVEN)
 
 
 if __name__ == "__main__":

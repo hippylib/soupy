@@ -28,7 +28,7 @@ sys.path.append('../../')
 from soupy import PDEVariationalControlProblem, \
     STATE, PARAMETER, ADJOINT, CONTROL
 
-from poissonControlProblem import PoissonVarfHandler, poisson_control_settings, \
+from setupPoissonControlProblem import PoissonVarfHandler, poisson_control_settings, \
     UniformDistribution
 
 

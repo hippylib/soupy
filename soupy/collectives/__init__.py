@@ -13,3 +13,5 @@
 
 from .collective import NullCollective, MultipleSerialPDEsCollective, MultipleSamePartitioningPDEsCollective
 
+from .mpiUtils import allocate_process_sample_sizes
+

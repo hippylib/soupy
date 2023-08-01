@@ -17,7 +17,11 @@ from .augmentedVector import AugmentedVector
 
 from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional
 
+from .controlCostHessian import ControlCostHessian 
+
 from .controlModel import ControlModel
+
+from .controlModelHessian import ControlModelHessian
 
 from .controlQoI import ControlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI
 
@@ -27,7 +31,9 @@ from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMea
 
 from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization
 
-from . smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
+from .riskMeasure import RiskMeasure
+
+from .smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
 
 from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA_MPI, superquantileRiskMeasureSAASettings, sampleSuperquantile, sampleSuperquantileByMinimization
 

@@ -190,10 +190,11 @@ class BFGS_operator:
 
 class BFGS:
     """
-    Implement BFGS technique with backtracking inexact line search and damped updating
-    See `Nocedal & Wright (06), ch.6.2, ch.7.3, ch.18.3`
-    The user must provide a model that describes the forward problem, cost functionals, and all the
-    derivatives for the gradient and the Hessian.
+    Implement BFGS technique with backtracking inexact line search and damped updating \
+        See `Nocedal & Wright (06), ch.6.2, ch.7.3, ch.18.3` \
+        The user must provide a :py:class:`ControlCostFunctional` that describes the forward problem, \
+        cost functional, and all the \
+        derivatives for the gradient and the Hessian.
     """
     termination_reasons = [
                            "Maximum number of Iteration reached",      #0
@@ -292,7 +293,7 @@ class BFGS:
                 self.BFGSop.H0inv.setPoint(z)
 
             g_old = g.copy()            
-            gradnorm = self.cost_functional.costGrad(z, g)
+            gradnorm = self.cost_functional.costGrad(g)
             if gradnorm is None:
                 gradnorm = np.sqrt(g.inner(g))
             gradnorms.append(gradnorm)

@@ -36,17 +36,18 @@ class QuadraticCost:
         assert component == CONTROL
         return dl.Function(self.Vz).vector()
 
-
     def cost(self, z, order=0, sample_size=1, rng=None):
+        self.z = z 
         return z.inner(z)
 
-    def costGrad(self, z, out):
-        out.zero()
-        out.axpy(2.0, z)
+    def costGrad(self, g):
+        g.zero()
+        g.axpy(2.0, self.z)
+        return g.inner(g)
 
-    def costHessian(self, z, zhat, out):
-        out.zero()
-        out.axpy(zhat)
+    def costHessian(self, zhat, Hzhat):
+        Hzhat.zero()
+        Hzhat.axpy(1.0, zhat)
 
 
 
@@ -64,6 +65,7 @@ class TestSGD(unittest.TestCase):
         sgd_param["alpha"] = step_size
         sgd_param["stochastic_approximation"] = use_sa
         sgd_param["print_level"] = 0
+        sgd_param["rel_tolerance"] = 1e-8
 
         sgd_solver = SGD(self.cost, sgd_param)
 

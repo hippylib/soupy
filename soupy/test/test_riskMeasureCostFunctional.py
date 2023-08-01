@@ -33,7 +33,7 @@ from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     RiskMeasureControlCostFunctional, \
     STATE, PARAMETER, ADJOINT, CONTROL
     
-from poissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
+from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
 
 class TestControlCostFunctional(unittest.TestCase):
     def setUp(self):
@@ -148,7 +148,7 @@ class TestControlCostFunctional(unittest.TestCase):
 
         rng = hp.Random()
         c0 = costFun.cost(z0, order=1, sample_size=sample_size, rng=rng)
-        costFun.costGrad(z0, g0)
+        costFun.costGrad(g0)
 
         rng = hp.Random()
         c1 = costFun.cost(z1, order=0, sample_size=sample_size, rng=rng)

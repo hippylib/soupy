@@ -30,7 +30,7 @@ sys.path.append('../../')
 from soupy import PDEVariationalControlProblem, \
     STATE, ADJOINT, PARAMETER, CONTROL
 
-from poissonControlProblem import poisson_control_settings, \
+from setupPoissonControlProblem import poisson_control_settings, \
     PoissonVarfHandler, UniformDistribution, setupPoissonPDEProblem
 
 

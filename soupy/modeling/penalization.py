@@ -17,6 +17,9 @@ from .augmentedVector import AugmentedVector
 
 
 class Penalization:
+    """
+    Abstract class for the penalization on the control variable :math:`z`
+    """
     def init_vector(self, z):
         raise NotImplementedError("Child class should implement init_vector")
 
@@ -32,7 +35,7 @@ class Penalization:
 
 class MultiPenalization(Penalization):
     """
-    Class for a sum of penalization terms 
+    Penalization term for the sum of individual penalties
 
         .. math:: P(z) = \sum_{i=1}^{n} \\alpha_i P_i(z)
 

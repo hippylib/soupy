@@ -13,6 +13,7 @@
 
 import numpy as np 
 import dolfin as dl 
+import logging 
 
 import sys, os
 from hippylib import ParameterList, parRandom
@@ -140,7 +141,7 @@ class MeanVarRiskMeasure(RiskMeasure):
 
     def costGrad(self, g):
         """
-        Evaluates the value of the risk measure once components have been computed
+        Evaluates the gradient of the risk measure once components have been computed
 
         :param g: (Dual of) the gradient of the risk measure to store result in
         :type g: :py:class:`dolfin.Vector`
@@ -153,17 +154,4 @@ class MeanVarRiskMeasure(RiskMeasure):
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
     def costHessian(self, zhat, Hzhat):
-        self.model.setPointForHessianEvaluations(self.x)
-        self.model.applyCz(zhat, self.rhs_fwd)
-        self.model.solveFwdIncremental(self.uhat, self.rhs_fwd)
-        self.model.applyWuu(self.uhat, self.rhs_adj)
-        self.model.applyWuz(zhat, self.rhs_adj2)
-        self.rhs_adj.axpy(-1., self.rhs_adj2)
-        self.model.solveAdjIncremental(self.phat, self.rhs_adj)
-        self.model.applyWzz(zhat, Hzhat)
-
-        self.model.applyCzt(self.phat, self.zhelp)
-        Hzhat.axpy(1., self.zhelp)
-        self.model.applyWzu(self.uhat, self.zhelp)
-        Hzhat.axpy(-1., self.zhelp)
-
+        logging.warning("Hessian not implemented for MeanVarRiskMeasure")
