@@ -22,7 +22,7 @@ from mpi4py import MPI
 
 import hippylib as hp 
 
-def applyBC(bcs, u):
+def apply_BC(bcs, u):
     """
     Applies a single or a list of :code:`dolfin.DirichletBC` 
     to the vector :code:`u`
@@ -35,7 +35,7 @@ def applyBC(bcs, u):
     else:
         bcs.apply(u)
 
-def homogenizeBC(bcs):
+def homogenize_BC(bcs):
     """
     Converts a single or a list of :code:`dolfin.DirichletBC` 
     to their homogenized (zeroed) forms
@@ -131,14 +131,14 @@ class NewtonBacktrackSolver:
         my_rank = MPI.COMM_WORLD.Get_rank()
 
         # Apply BC to initial guess
-        applyBC(bcs, u.vector()) 
+        apply_BC(bcs, u.vector()) 
 
         # Homogenize the dirichlet BCs if they exist 
-        bcs0 = homogenizeBC(bcs)
+        bcs0 = homogenize_BC(bcs)
 
         # Assemble initial residual
         residual = dl.assemble(residual_form)
-        # applyBC(bcs0, residual)
+        # apply_BC(bcs0, residual)
         r_norm = residual.norm("l2")
         tol = max(r_norm*rtol, atol)
         if energy_form is not None:
@@ -204,7 +204,7 @@ class NewtonBacktrackSolver:
                 else:
                     # Backtrack on residual norm 
                     residual_new = dl.assemble(residual_form)
-                    applyBC(bcs0, residual_new)
+                    apply_BC(bcs0, residual_new)
                     r_new_norm = residual_new.norm('l2')
                     if r_new_norm < r_norm:
                         backtrack_converged = True
@@ -226,7 +226,7 @@ class NewtonBacktrackSolver:
 
             # Compute residual norm 
             residual = dl.assemble(residual_form)
-            applyBC(bcs0, residual)
+            apply_BC(bcs0, residual)
             r_norm = residual.norm("l2")
 
             # Print new residual norms
