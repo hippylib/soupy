@@ -62,10 +62,10 @@ soupy.modeling.riskMeasure
     :show-inheritance:
 
 
-soupy.modeling.meanVarRiskMeasure
----------------------------------------
+soupy.modeling.meanVarRiskMeasureStochastic
+--------------------------------------------
 
-.. automodule:: soupy.modeling.meanVarRiskMeasure
+.. automodule:: soupy.modeling.meanVarRiskMeasureStochastic
     :members:
     :undoc-members:
     :show-inheritance:

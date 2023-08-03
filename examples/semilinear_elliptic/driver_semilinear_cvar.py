@@ -139,7 +139,7 @@ if __name__ == "__main__":
     rm_param["sample_size"] = args.N_sample
     rm_param["seed"] = seed 
     rm_param["epsilon"] = 1e-4
-    pde_rm = soupy.SuperquantileRiskMeasureSAA_MPI(control_model, prior, settings=rm_param, comm_sampler=comm_sampler)
+    pde_rm = soupy.SuperquantileRiskMeasureSAA(control_model, prior, settings=rm_param, comm_sampler=comm_sampler)
     pde_cost = soupy.RiskMeasureControlCostFunctional(pde_rm, None)
 
     # Scipy cost 

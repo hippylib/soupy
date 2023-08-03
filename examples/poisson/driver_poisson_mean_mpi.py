@@ -93,7 +93,7 @@ control_model = soupy.ControlModel(pde, qoi)
 risk_settings = soupy.meanVarRiskMeasureSAASettings()
 risk_settings["beta"] = VARIANCE_WEIGHT
 risk_settings["sample_size"] = SAMPLE_SIZE 
-risk_measure = soupy.MeanVarRiskMeasureSAA_MPI(control_model, prior, risk_settings, comm_sampler=comm_sampler)
+risk_measure = soupy.MeanVarRiskMeasureSAA(control_model, prior, risk_settings, comm_sampler=comm_sampler)
 
 # 7. Define the penalization term 
 penalty = soupy.L2Penalization(Vh, PENALTY_WEIGHT)

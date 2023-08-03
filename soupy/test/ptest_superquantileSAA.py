@@ -313,7 +313,7 @@ class TestSuperquantileSAA(unittest.TestCase):
 
         rank_sampler = self.comm_sampler.Get_rank()
         risk.q_samples = np.zeros(risk.q_samples.shape) + rank_sampler
-        q_all = risk.gatherSamples()
+        q_all = risk.gather_samples()
         number_equal_to_rank = np.sum(np.isclose(q_all, rank_sampler))
 
         print("Testing samples are gathering correctly")
@@ -369,7 +369,7 @@ class TestSuperquantileSAA(unittest.TestCase):
             sample_zt_and_bcast(control_dist, zt, self.collective_sampler)
 
             risk.computeComponents(zt, order=0)
-            quantile = np.percentile(risk.gatherSamples(), BETA * 100)
+            quantile = np.percentile(risk.gather_samples(), BETA * 100)
             zt.set_scalar(quantile)
 
             risk.computeComponents(zt, order=0)

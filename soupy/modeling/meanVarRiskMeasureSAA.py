@@ -291,7 +291,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         Hzhat.axpy(-mean_gradient_scale_factor, self.g_bar)
 
 
-    def gatherSamples(self):
+    def gather_samples(self):
         """
         Gather the QoI samples from all processes
 

@@ -34,7 +34,7 @@ def main():
     N_ELEMENTS_Y = 20
     TOL = 1e-12
 
-    RESULTS_DIRECTORY_MPI = "results_mpi"
+    RESULTS_DIRECTORY = "results_mpi"
     RESULTS_DIRECTORY_SERIAL = "results_serial"
 
     mesh = dl.UnitSquareMesh(N_ELEMENTS_X, N_ELEMENTS_Y)
@@ -46,7 +46,7 @@ def main():
         load_file.read(z_opt_no_mpi, "control")
 
     z_opt_with_mpi = dl.Function(Vh_STATE)
-    with dl.HDF5File(mesh.mpi_comm(), "%s/z_opt.h5" %(RESULTS_DIRECTORY_MPI), "r") as load_file:
+    with dl.HDF5File(mesh.mpi_comm(), "%s/z_opt.h5" %(RESULTS_DIRECTORY), "r") as load_file:
         load_file.read(z_opt_with_mpi, "control")
 
     z_diff = z_opt_no_mpi.vector().copy()

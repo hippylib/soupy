@@ -248,7 +248,7 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         rank_sampler = self.comm_sampler.Get_rank()
         risk.q_samples = np.zeros(risk.q_samples.shape) + rank_sampler
 
-        q_all = risk.gatherSamples()
+        q_all = risk.gather_samples()
         number_equal_to_rank = np.sum(np.isclose(q_all, rank_sampler))
 
         print("Testing samples are gathering correctly")

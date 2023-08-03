@@ -35,7 +35,7 @@ from .riskMeasure import RiskMeasure
 
 from .smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
 
-from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA, superquantileRiskMeasureSAASettings, sampleSuperquantile, sampleSuperquantileByMinimization
+from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA, superquantileRiskMeasureSAASettings, sample_superquantile, sample_superquantile_by_minimization
 
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
