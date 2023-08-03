@@ -9,14 +9,16 @@
 #
 # SOUPy is free software; you can redistribute it and/or modify it under the
 # terms of the GNU General Public License (as published by the Free
-# Software Foundation) version 3.0 dated June 1991.
+# Software Foundation) version 3.0 dated June 2007.
 
 """
 Minimization of the mean risk measure using the SAA approximation for the 
 linear poisson problem with a log-normal conductivity field. 
 
-This driver uses MPI to parallelize the sampling of the parameter field.
-For a purely serial implementation, see :code:`driver_poisson_mean_serial.py`
+This driver supports MPI to parallelize the sampling of the parameter field.
+e.g. 
+
+mpirun -n 4 python driver_poisson_mean.py
 """
 
 import sys 
