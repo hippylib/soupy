@@ -60,7 +60,7 @@ def superquantileRiskMeasureSAASettings(data = {}):
     return ParameterList(data)
 
 
-class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
+class SuperquantileRiskMeasureSAA(RiskMeasure):
     """
     Risk measure for the sample average approximation of the superquantile risk measure (CVaR) 
     with sample parallelism using MPI 

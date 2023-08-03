@@ -29,7 +29,7 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     VariationalControlQoI, L2Penalization, \
-    ControlModel, MeanVarRiskMeasure, meanVarRiskMeasureSettings, \
+    ControlModel, MeanVarRiskMeasureStochastic, meanVarRiskMeasureStochasticSettings, \
     RiskMeasureControlCostFunctional, \
     STATE, PARAMETER, ADJOINT, CONTROL
     
@@ -67,7 +67,7 @@ class TestControlCostFunctional(unittest.TestCase):
 
         qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
         model = ControlModel(pde, qoi)
-        risk = MeanVarRiskMeasure(model, prior)
+        risk = MeanVarRiskMeasureStochastic(model, prior)
         alpha = 2.0
         if use_penalization:
             penalty = L2Penalization(self.Vh, alpha)
@@ -84,7 +84,7 @@ class TestControlCostFunctional(unittest.TestCase):
         rng = hp.Random()
         c_val = costFun.cost(z, order=0, sample_size=sample_size, rng=rng)
         
-        if isinstance(risk, MeanVarRiskMeasure):
+        if isinstance(risk, MeanVarRiskMeasureStochastic):
             print("Stochastic approximation risk measure")
             print("Sample size = %d" %(len(risk.q_samples)))
             self.assertEqual(len(risk.q_samples), sample_size)
@@ -127,10 +127,10 @@ class TestControlCostFunctional(unittest.TestCase):
         qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
-        rm_settings = meanVarRiskMeasureSettings()
+        rm_settings = meanVarRiskMeasureStochasticSettings()
         rm_settings['beta'] = 0.5
 
-        risk = MeanVarRiskMeasure(model, prior, rm_settings)
+        risk = MeanVarRiskMeasureStochastic(model, prior, rm_settings)
         alpha = 2.0
         penalty = L2Penalization(self.Vh, alpha)
         costFun = RiskMeasureControlCostFunctional(risk, penalty)

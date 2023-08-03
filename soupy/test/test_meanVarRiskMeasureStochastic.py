@@ -27,7 +27,7 @@ import hippylib as hp
 
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
-    meanVarRiskMeasureSettings, MeanVarRiskMeasure,\
+    meanVarRiskMeasureStochasticSettings, MeanVarRiskMeasureStochastic,\
     STATE, PARAMETER, ADJOINT, CONTROL
 
 from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
@@ -66,7 +66,7 @@ class TestControlCostFunctional(unittest.TestCase):
         qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
-        risk = MeanVarRiskMeasure(model, prior)
+        risk = MeanVarRiskMeasureStochastic(model, prior)
         z = model.generate_vector(CONTROL)
         c_val = risk.cost()
         print("Before computing: ", c_val)
@@ -94,10 +94,10 @@ class TestControlCostFunctional(unittest.TestCase):
         qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
-        rm_settings = meanVarRiskMeasureSettings()
+        rm_settings = meanVarRiskMeasureStochasticSettings()
         rm_settings['beta'] = 0.5
 
-        risk = MeanVarRiskMeasure(model, prior, rm_settings)
+        risk = MeanVarRiskMeasureStochastic(model, prior, rm_settings)
 
         z0 = model.generate_vector(CONTROL)
         dz = model.generate_vector(CONTROL)

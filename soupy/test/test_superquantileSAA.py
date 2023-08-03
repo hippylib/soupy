@@ -29,7 +29,7 @@ import hippylib as hp
 
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
-                        superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA_MPI, \
+                        superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA, \
                         STATE, PARAMETER, ADJOINT, CONTROL
 
 from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
@@ -84,7 +84,7 @@ class TestSuperquantileSAA(unittest.TestCase):
         rm_settings['beta'] = beta
         rm_settings['smoothplus_type']
         rm_settings['epsilon']
-        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings)
+        risk = SuperquantileRiskMeasureSAA(model, prior, rm_settings)
         return risk 
 
     def testSavedSolution(self):

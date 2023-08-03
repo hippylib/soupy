@@ -28,7 +28,7 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
                         meanVarRiskMeasureSAASettings, \
-                        MeanVarRiskMeasureSAA_MPI,\
+                        MeanVarRiskMeasureSAA,\
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, CONTROL
 
@@ -43,7 +43,7 @@ def qoi_for_testing(u,m,z):
     return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
 
 
-class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
+class TestMeanVarRiskMeasureSAA(unittest.TestCase):
     def setUp(self):
         self.reltol = 1e-3
         self.fdtol = 1e-2
@@ -78,7 +78,7 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
         qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
-        risk = MeanVarRiskMeasureSAA_MPI(model, prior, comm_sampler=self.comm_sampler)
+        risk = MeanVarRiskMeasureSAA(model, prior, comm_sampler=self.comm_sampler)
         z = model.generate_vector(CONTROL)
         c_val = risk.cost()
         print("Before computing: ", c_val)
@@ -104,7 +104,7 @@ class TestMeanVarRiskMeasureSAA_MPI(unittest.TestCase):
         rm_settings = meanVarRiskMeasureSAASettings()
         rm_settings['sample_size'] = sample_size
         rm_settings['beta'] = beta
-        risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        risk = MeanVarRiskMeasureSAA(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         return risk
         
     def testSavedSolution(self):

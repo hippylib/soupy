@@ -31,7 +31,7 @@ import hippylib as hp
 
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
-                        superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA_MPI, \
+                        superquantileRiskMeasureSAASettings, SuperquantileRiskMeasureSAA, \
                         STATE, PARAMETER, ADJOINT, CONTROL, MultipleSerialPDEsCollective
 
 from setupPoissonControlProblem import poisson_control_settings, setupPoissonPDEProblem
@@ -65,9 +65,9 @@ def qoi_for_testing(u,m,z):
     return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
 
 
-class TestSuperquantileSAA_MPI(unittest.TestCase):
+class TestSuperquantileSAA(unittest.TestCase):
     """
-    Testing :code:`soupy.SuperquantileRiskMeasureSAA_MPI` with MPI \
+    Testing :code:`soupy.SuperquantileRiskMeasureSAA` with MPI \
             capabilities enabled
     """
     def setUp(self):
@@ -115,7 +115,7 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         rm_settings['beta'] = beta
         rm_settings['smoothplus_type']
         rm_settings['epsilon']
-        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        risk = SuperquantileRiskMeasureSAA(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         return risk 
 
     def testSavedSolution(self):
@@ -265,7 +265,7 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
 
     def computeSuperquantileValue(self, sample_size, beta):
         """
-        Evaluate superquantile using :code:`soupy.SuperquantileRiskMeasureSAA_MPI.superquantile` \
+        Evaluate superquantile using :code:`soupy.SuperquantileRiskMeasureSAA.superquantile` \
                 for samples drawn from a normal distribution 
         
         """
@@ -285,7 +285,7 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         rm_settings = superquantileRiskMeasureSAASettings()
         rm_settings['sample_size'] = sample_size
         rm_settings['beta'] = beta
-        risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        risk = SuperquantileRiskMeasureSAA(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         
         np.random.seed(1)
         # Sample all of the samples 
@@ -343,47 +343,43 @@ class TestSuperquantileSAA_MPI(unittest.TestCase):
         self.assertTrue(np.abs(sq_normal - sq) < tol)
         
     
-#     def testCostValue(self):
-#         beta = 0.95
-#         sample_size = 100
-#         smoothplus_types = ["softplus", "quartic"]
-#         epsilons = [1e-3, 1e-4]
-#         settings = poisson_control_settings()
-#         settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-# 
-#         tol = 5e-2
-#         def l2norm(u,m,z):
-#             return u**2*dl.dx
-# 
-#         for epsilon, smoothplus_type in zip(epsilons, smoothplus_types):
-#             rm_settings = superquantileRiskMeasureSAASettings()
-#             rm_settings['sample_size'] = sample_size
-#             rm_settings['beta'] = beta
-#             rm_settings['smoothplus_type'] = smoothplus_type
-#             rm_settings['epsilon'] = epsilon
-# 
-#             pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings)
-#             qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
-#             model = ControlModel(pde, qoi)
-#             risk = SuperquantileRiskMeasureSAA_MPI(model, prior, rm_settings)
-# 
-#             zt = risk.generate_vector(CONTROL)
-#             z = zt.get_vector()
-#             control_dist.sample(z)
-#             # z.set_local(np.random.randn(len(z.get_local())))
-# 
-#             risk.computeComponents(zt, order=0)
-#             quantile = np.percentile(risk.q_samples, beta * 100)
-#             zt.set_scalar(quantile)
-# 
-#             risk.computeComponents(zt, order=0)
-#             sq_by_cost = risk.cost()
-#             sq_by_samples = risk.superquantile()
-# 
-#             print("Superquantile from cost: ", sq_by_cost)
-#             print("Superquantile from samples: ", sq_by_samples)
-#             err = np.abs(sq_by_cost - sq_by_samples)
-#             self.assertTrue(err/np.abs(sq_by_samples) < tol)
+    def testCostValue(self):
+        BETA = 0.95
+        SAMPLE_SIZE = 100
+        IS_FWD_LINEAR = False
+
+        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        qoi, model = self._setup_control_model(pde, l2_norm)
+
+
+        smoothplus_types = ["softplus", "quartic"]
+        epsilons = [1e-3, 1e-4]
+        settings = poisson_control_settings()
+        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
+
+        tol = 5e-2
+        def l2norm(u,m,z):
+            return u**2*dl.dx
+
+        for epsilon, smoothplus_type in zip(epsilons, smoothplus_types):
+            risk = self._setup_superquantile_risk_measure(model, prior, 
+                SAMPLE_SIZE, BETA, smoothplus_type=smoothplus_type, epsilon=epsilon)
+
+            zt = risk.generate_vector(CONTROL)
+            sample_zt_and_bcast(control_dist, zt, self.collective_sampler)
+
+            risk.computeComponents(zt, order=0)
+            quantile = np.percentile(risk.gatherSamples(), BETA * 100)
+            zt.set_scalar(quantile)
+
+            risk.computeComponents(zt, order=0)
+            sq_by_cost = risk.cost()
+            sq_by_samples = risk.superquantile()
+
+            print("Superquantile from cost: ", sq_by_cost)
+            print("Superquantile from samples: ", sq_by_samples)
+            err = np.abs(sq_by_cost - sq_by_samples)
+            self.assertTrue(err/np.abs(sq_by_samples) < tol)
 
 
 if __name__ == "__main__":
