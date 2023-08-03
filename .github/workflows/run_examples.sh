@@ -7,5 +7,5 @@ cd examples/poisson
 
 python3 driver_poisson_mean.py
 
-mpirun -n 2 python3 driver_poisson.py
+mpirun -n 2 python3 driver_poisson_mean.py
 
