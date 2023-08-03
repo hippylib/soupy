@@ -114,7 +114,7 @@ class TestControlCostFunctional(unittest.TestCase):
         risk.computeComponents(z0, order=1, sample_size=sample_size, rng=rng)
 
         c0 = risk.cost()
-        risk.costGrad(g0)
+        risk.grad(g0)
 
         rng = hp.Random()        
         risk.computeComponents(z1, order=0, sample_size=sample_size, rng=rng)

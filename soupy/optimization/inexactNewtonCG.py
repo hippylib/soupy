@@ -83,8 +83,8 @@ class InexactNewtonCG:
     
     More specifically the model object should implement following methods:
         - :code:`cost(z)` -> evaluate the cost functional
-        - :code:`costGrad(g)` -> evaluate the gradient and store to :code:`g`
-        - :code:`costHessian(zhat, Hzhat)` -> apply the cost Hessian
+        - :code:`grad(g)` -> evaluate the gradient and store to :code:`g`
+        - :code:`hessian(zhat, Hzhat)` -> apply the cost Hessian
        
     Type :code:`help(Model)` for additional information
     """
@@ -174,7 +174,7 @@ class InexactNewtonCG:
         
         while (self.it < max_iter) and (self.converged == False):
             # Compute the gradient 
-            gradnorm = self.cost_functional.costGrad(mg)
+            gradnorm = self.cost_functional.grad(mg)
             
             if self.it == 0:
                 gradnorm_ini = gradnorm
@@ -292,7 +292,7 @@ class InexactNewtonCG:
         cost_old = self.cost_functional.cost(z, order=2)
 
         while (self.it < max_iter) and (self.converged == False):
-            gradnorm = self.cost_functional.costGrad(mg)
+            gradnorm = self.cost_functional.grad(mg)
             
             if self.it == 0:
                 gradnorm_ini = gradnorm

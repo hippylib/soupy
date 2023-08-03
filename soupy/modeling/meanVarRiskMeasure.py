@@ -139,7 +139,7 @@ class MeanVarRiskMeasure(RiskMeasure):
         """
         return self.q_bar + self.beta * np.std(self.q_samples)**2
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Evaluates the gradient of the risk measure once components have been computed
 
@@ -153,5 +153,5 @@ class MeanVarRiskMeasure(RiskMeasure):
         g.axpy(2*self.beta, self.qg_bar)
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         logging.warning("Hessian not implemented for MeanVarRiskMeasure")

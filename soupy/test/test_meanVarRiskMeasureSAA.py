@@ -190,14 +190,14 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         risk.computeComponents(z0, order=1)
 
         c0 = risk.cost()
-        risk.costGrad(g0)
-        risk.costHessian(dz, Hdz)
+        risk.grad(g0)
+        risk.hessian(dz, Hdz)
 
         rng = hp.Random()        
         risk.computeComponents(z1, order=1, sample_size=sample_size)
 
         c1 = risk.cost()
-        risk.costGrad(g1)
+        risk.grad(g1)
 
         # Test gradients
         dcdz_fd = (c1 - c0)/self.delta

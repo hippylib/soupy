@@ -293,7 +293,7 @@ class BFGS:
                 self.BFGSop.H0inv.setPoint(z)
 
             g_old = g.copy()            
-            gradnorm = self.cost_functional.costGrad(g)
+            gradnorm = self.cost_functional.grad(g)
             if gradnorm is None:
                 gradnorm = np.sqrt(g.inner(g))
             gradnorms.append(gradnorm)

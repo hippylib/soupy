@@ -148,7 +148,7 @@ class TestControlCostFunctional(unittest.TestCase):
 
         rng = hp.Random()
         c0 = costFun.cost(z0, order=1, sample_size=sample_size, rng=rng)
-        costFun.costGrad(g0)
+        costFun.grad(g0)
 
         rng = hp.Random()
         c1 = costFun.cost(z1, order=0, sample_size=sample_size, rng=rng)

@@ -177,13 +177,13 @@ class TestSuperquantileSAA(unittest.TestCase):
 
         risk.computeComponents(zt0, order=1)
         c0 = risk.cost()
-        risk.costGrad(gt0)
-        risk.costHessian(dzt, Hdzt)
+        risk.grad(gt0)
+        risk.hessian(dzt, Hdzt)
 
         rng = hp.Random()        
         risk.computeComponents(zt1, order=1)
         c1 = risk.cost()
-        risk.costGrad(gt1)
+        risk.grad(gt1)
 
         dcdz_fd = (c1 - c0)/self.delta
         dcdz_ad = gt0.inner(dzt)

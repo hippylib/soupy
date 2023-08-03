@@ -263,7 +263,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         t = self.zt.get_scalar()
         return  t + 1/(1-self.beta) * self.s_bar
 
-    def costGrad(self, gt):
+    def grad(self, gt):
         """
         Evaluates the gradient of the risk measure once components have been computed
 
@@ -279,7 +279,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         gt.set_local(dz_np) 
 
 
-    def costHessian(self, zt_hat, Hzt_hat):
+    def hessian(self, zt_hat, Hzt_hat):
         """
         Apply the hessian of the risk measure once components have been computed \
             in the direction :code:`zhat`

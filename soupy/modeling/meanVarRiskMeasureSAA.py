@@ -235,7 +235,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         """
         return self.q_bar + self.beta * (self.q2_bar - self.q_bar**2)
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Evaluates the gradient of the risk measure once components have been computed
 
@@ -250,7 +250,7 @@ class MeanVarRiskMeasureSAA_MPI(RiskMeasure):
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         """
         Apply the hessian of the risk measure once components have been computed \
             in the direction :code:`zhat`
@@ -462,7 +462,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         """
         return self.q_bar + self.beta * np.std(self.q_samples)**2
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Compute the gradient of the risk measure once components have been computed
 
@@ -476,7 +476,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         g.axpy(2*self.beta, self.qg_bar)
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         """
         Apply the hessian of the risk measure once components have been computed \
             in the direction :code:`zhat`

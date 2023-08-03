@@ -48,7 +48,7 @@ class SGD:
     More specifically the cost functional object should implement following methods:
        - :code:`generate_vector()` -> generate the object containing state, parameter, adjoint, and control.
        - :code:`cost(z, order, rng)` -> evaluate the cost functional which allows a given :code:`rng`
-       - :code:`costGrad(g)` -> evaluate the gradient of the cost functional
+       - :code:`grad(g)` -> evaluate the gradient of the cost functional
     """
     termination_reasons = [
                            "Maximum number of Iteration reached",      #0
@@ -136,7 +136,7 @@ class SGD:
         
         # Run optimization 
         while (self.it < max_iter) and (self.converged == False):
-            gradnorm = self.cost_functional.costGrad(g)
+            gradnorm = self.cost_functional.grad(g)
             if gradnorm is None:
                 gradnorm = np.sqrt(g.inner(g))
 
