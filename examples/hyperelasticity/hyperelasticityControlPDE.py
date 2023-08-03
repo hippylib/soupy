@@ -81,11 +81,11 @@ class HyperelasticityVarfHandler:
         Control variable to elastic modulus form
         """
         percentage = z**3
-        E = self.E0 + percentage * (self.E1 - self.E0) + m 
+        E = self.E0 + percentage * (self.E1 - self.E0)
         return E 
 
     def parameterControl2Traction(self, m, z):
-        return self.t_nominal
+        return self.t_nominal * dl.exp(m)
 
     def energy(self, u, m, p, z, load_step=1.0):
         """

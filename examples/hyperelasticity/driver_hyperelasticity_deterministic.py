@@ -48,11 +48,6 @@ from setupHyperelasticityProblem import hyperelasticity_problem_settings, setup_
 # Optimization options for the form compiler
 dl.parameters["form_compiler"]["cpp_optimize"] = True
 dl.parameters["form_compiler"]["quadrature_degree"] = 4
-ffc_options = {"optimize": True, \
-               "eliminate_zeros": True, \
-               "precompute_basis_const": True, \
-               "precompute_ip_const": True}
-
 dl.set_log_active(False)
 
 
