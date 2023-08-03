@@ -45,7 +45,7 @@ VARIANCE_WEIGHT = 0.0
 SAMPLE_SIZE = 4
 PENALTY_WEIGHT = 1e-3
 
-RESULTS_DIRECTORY = "results_mpi"
+RESULTS_DIRECTORY = "results"
 
 # 0. MPI Communicators
 comm_mesh = MPI.COMM_SELF
@@ -103,7 +103,7 @@ cost_functional = soupy.RiskMeasureControlCostFunctional(risk_measure, penalty)
 
 
 # 9. Define the optimizer 
-optimizer = soupy.BFGS(cost_functional)
+optimizer = soupy.InexactNewtonCG(cost_functional)
 
 # 10. Provide initial guess and solve 
 if comm_sampler.rank == 0 :
