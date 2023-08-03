@@ -15,5 +15,7 @@ Documentation
    :titlesonly:
    :maxdepth: 1
    
-   install
+   Installation <install>
+   Change log <changelog>
+   How to contribute <contributing>
    Complete API reference <soupy>

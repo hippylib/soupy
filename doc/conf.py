@@ -22,8 +22,8 @@ autoclass_content = 'both'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'SOUPy'
-copyright = "2023, Peng Chen, Dingcheng Luo, Thomas O'Leary-Roseberry, Umberto Villa"
-author = "Peng Chen, Dingcheng Luo, Thomas O'Leary-Roseberry, Umberto Villa"
+copyright = "2023, Peng Chen, Dingcheng Luo, Thomas O'Leary-Roseberry, Umberto Villa, Omar Ghattas"
+author = "Peng Chen, Dingcheng Luo, Thomas O'Leary-Roseberry, Umberto Villa, Omar Ghattas"
 release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------

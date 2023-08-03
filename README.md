@@ -1,19 +1,15 @@
 # Stochastic Optimization under high-dimensional Uncertainty in Python
 
 **S**tochastic **O**ptimization under high-dimensional **U**ncertainty in **Py**thon&mdash;**SOUPy**, 
-implements scalable algorithms to solve problems of PDE-constrained optimization under uncertainty, with the computational complexity measured in terms of PDE solves independent of the uncertain parameter dimension and optimization variable dimension.
+is implements scalable algorithms for the optimization of risk measures such as mean, variance, and superquantile/condition-value-at-risk, subject to PDE constraints. 
+SOUPy enables efficient PDE-constrained optimization under uncertainty through parallel computation of risk measures and their derivatives (gradients and Hessians).
+The library provides built-in implementations of large-scale optimization algorithms (e.g. BFGS, Inexact Newton CG), as well as an interface to the `scipy.optimize` module in [SciPy](https://scipy.org/).
 
-`SOUPy` is built on the open-source `hIPPYlib` library, which provides state-of-the-art scalable adjoint-based methods for deterministic and Bayesian inverse problems governed by PDEs, which in turn makes use of the `FEniCS` library for high-level formulation, discretization, and scalable solution of PDEs.
+SOUPy is built on the open-source [hIPPYlib library](https://hippylib.github.io/), which provides adjoint-based methods for deterministic and Bayesian inverse problems governed by PDEs, and makes use of [FEniCS](https://fenicsproject.org/) for the high-level formulation, discretization, and scalable solution of PDEs.
 
-`SOUPy` implements algorithms for the optimization of probability/risk measures such as mean, variance, and superquantile/condition-value-at-risk, subject to PDE constraints.
-Sample based approximations of risk measures are supported in `SOUPy`, which leverages MPI for rapid parallel sampling.
-Numerical optimization algorithms can be called from `SciPy` or using the built-in optimization algorithms. 
-
-`SOUPy` has been developed and in active development to incorporate advanced approximation algorithms and capabilities, including:
-- PDE-constrained operator/tensor/matrix products,
-- symbolic differentiation (of appropriate Lagrangians) for the derivation of high order mixed derivatives (via the `FEniCS` interface),
-- randomized algorithms for matrix and high order tensor decomposition,
-- decomposition of uncertain parameter spaces by mixture models,
-- Taylor expansion-based high-dimensional control variates, and
-- product convolution approximations,
-- common interfaces for random fields, PDE models, probability/risk measures, and control/design/inversion constraints.
+SOUPy is in active development to incorporate advanced approximation algorithms and capabilities, including:
+- Taylor expansion-based approximations for risk measure evaluation
+- Scalable quadrature methods such as sparse grids and quasi Monte Carlo
+- Decomposition of uncertain parameter spaces by mixture models
+- Multi-fidelity methods and control variates 
+- Interfaces with Bayesian inverse problems 
