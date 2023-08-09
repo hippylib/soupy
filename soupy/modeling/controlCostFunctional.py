@@ -28,21 +28,21 @@ class ControlCostFunctional:
         Given the control variable z evaluate the cost functional. Order specifies \
             the order of derivatives required after the computation of the cost 
         """
-        raise NotImplementedError("Child class should implement method costValue")
+        raise NotImplementedError("Child class should implement method cost")
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Evaluate the gradient of the cost functional. Assumes :code:`cost` is called \
             with order >=1 
         """
-        raise NotImplementedError("Child class should implement method costGrad")
+        raise NotImplementedError("Child class should implement method grad")
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         """
         Evaluate the Hessian of the cost functional acting in direction :code:`zhat`. \
                 Assumes :code:`cost` is called with order >=2 
         """
-        raise NotImplementedError("Child class should implement method costHessian")
+        raise NotImplementedError("Child class should implement method hessian")
 
 
 class DeterministicControlCostFunctional(ControlCostFunctional):
@@ -167,7 +167,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
             penalization = self.penalization.cost(z)
         return objective + penalization 
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Computes the gradient of the cost functional 
 
@@ -186,7 +186,7 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
         gradnorm = np.sqrt(g.inner(g))
         return gradnorm
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         """
         Apply the the reduced Hessian to the vector :math:`zhat`
 
@@ -268,7 +268,7 @@ class RiskMeasureControlCostFunctional:
 
         return cost_risk+cost_penalization
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Computes the gradient of the cost functional 
 
@@ -282,7 +282,7 @@ class RiskMeasureControlCostFunctional:
         g.zero()
 
         # Risk measure gradient
-        self.risk_measure.costGrad(g)
+        self.risk_measure.grad(g)
 
         if self.penalization is not None:
             self.penalization.grad(self.z, self.z_help)
@@ -291,7 +291,7 @@ class RiskMeasureControlCostFunctional:
         gradnorm = np.sqrt(g.inner(g))
         return gradnorm
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         """
         Apply the the reduced Hessian to the vector :math:`zhat`
 
@@ -303,7 +303,7 @@ class RiskMeasureControlCostFunctional:
         .. note:: Assumes :code:`self.cost` has been called with :code:`order >= 2`
         """
         Hzhat.zero()
-        self.risk_measure.costHessian(zhat, Hzhat)
+        self.risk_measure.hessian(zhat, Hzhat)
 
         if self.penalization is not None:
             self.penalization.hessian(self.z, zhat, self.z_help)

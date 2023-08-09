@@ -63,7 +63,7 @@ class ControlCostHessian:
         :type Hzhat: :py:class:`dolfin.Vector` or similar
         """
 
-        self.cost_functional.costHessian(zhat, Hzhat)
+        self.cost_functional.hessian(zhat, Hzhat)
         self._ncalls += 1 
 
 

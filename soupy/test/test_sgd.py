@@ -40,12 +40,12 @@ class QuadraticCost:
         self.z = z 
         return z.inner(z)
 
-    def costGrad(self, g):
+    def grad(self, g):
         g.zero()
         g.axpy(2.0, self.z)
         return g.inner(g)
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         Hzhat.zero()
         Hzhat.axpy(1.0, zhat)
 

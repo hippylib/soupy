@@ -23,12 +23,12 @@ from .riskMeasure import RiskMeasure
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
 
-def meanVarRiskMeasureSettings(data = {}):
+def meanVarRiskMeasureStochasticSettings(data = {}):
     data['beta'] = [0,'Weighting factor for variance']
 
     return ParameterList(data)
 
-class MeanVarRiskMeasure(RiskMeasure):
+class MeanVarRiskMeasureStochastic(RiskMeasure):
     """
     Class for memory efficient evaluation of the Mean + Variance risk measure 
 
@@ -37,7 +37,7 @@ class MeanVarRiskMeasure(RiskMeasure):
     that allows for stochastic approximations and SGD 
     """
 
-    def __init__(self, control_model, prior, settings = meanVarRiskMeasureSettings()):
+    def __init__(self, control_model, prior, settings = meanVarRiskMeasureStochasticSettings()):
         """
         Constructor:
 
@@ -139,7 +139,7 @@ class MeanVarRiskMeasure(RiskMeasure):
         """
         return self.q_bar + self.beta * np.std(self.q_samples)**2
 
-    def costGrad(self, g):
+    def grad(self, g):
         """
         Evaluates the gradient of the risk measure once components have been computed
 
@@ -153,5 +153,5 @@ class MeanVarRiskMeasure(RiskMeasure):
         g.axpy(2*self.beta, self.qg_bar)
         g.axpy(-2*self.beta*self.q_bar, self.g_bar)
 
-    def costHessian(self, zhat, Hzhat):
-        logging.warning("Hessian not implemented for MeanVarRiskMeasure")
+    def hessian(self, zhat, Hzhat):
+        logging.warning("Hessian not implemented for MeanVarRiskMeasureStochastic")

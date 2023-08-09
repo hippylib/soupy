@@ -9,7 +9,7 @@
 #
 # SOUPy is free software; you can redistribute it and/or modify it under the
 # terms of the GNU General Public License (as published by the Free
-# Software Foundation) version 3.0 dated June 1991.
+# Software Foundation) version 3.0 dated June 2007.
 
 """
 Minimization of the CVaR risk measure using the SAA approximation for a 
@@ -29,6 +29,11 @@ more details.
 
 This example also shows how to use the :code:`ScipyCostWrapper` to convert
 a :code:`ControlCostFunctional` to be compatible with :code:`scipy.optimize`
+
+This driver supports MPI to parallelize the sampling of the parameter field.
+e.g. 
+
+mpirun -n 4 python driver_semilinear_cvar.py
 """
 
 import random 
@@ -139,7 +144,7 @@ if __name__ == "__main__":
     rm_param["sample_size"] = args.N_sample
     rm_param["seed"] = seed 
     rm_param["epsilon"] = 1e-4
-    pde_rm = soupy.SuperquantileRiskMeasureSAA_MPI(control_model, prior, settings=rm_param, comm_sampler=comm_sampler)
+    pde_rm = soupy.SuperquantileRiskMeasureSAA(control_model, prior, settings=rm_param, comm_sampler=comm_sampler)
     pde_cost = soupy.RiskMeasureControlCostFunctional(pde_rm, None)
 
     # Scipy cost 

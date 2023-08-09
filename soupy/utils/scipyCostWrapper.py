@@ -16,18 +16,18 @@ from ..modeling import STATE, PARAMETER, ADJOINT, CONTROL
 
 class ScipyCostWrapper:
     """
-    Class to interface the controlCostFunctional with a \
+    Class to interface the :py:class:`soupy.ControlCostFunctional` with a \
         scipy optimizer. Converts inputs to functions taking \
         and returning :code:`numpy` arrays
     """
-    def __init__(self, controlCostFunctional, verbose=False):
+    def __init__(self, cost_functional, verbose=False):
         """
         Constructor
 
-        :param controlCostFunctional: The cost functional to wrap
-        :type controlCostFunctional: :py:class:`ControlCostFunctional`
+        :param cost_functional: The cost functional to wrap
+        :type cost_functional: :py:class:`ControlCostFunctional`
         """
-        self.cost_functional = controlCostFunctional
+        self.cost_functional = cost_functional
         self.z_help = self.cost_functional.generate_vector(CONTROL)
         self.z_hat_help = self.cost_functional.generate_vector(CONTROL)
         self.z_out_help = self.cost_functional.generate_vector(CONTROL)
@@ -70,7 +70,7 @@ class ScipyCostWrapper:
         self.z_help.set_local(z_np)
         self.z_help.apply("")
         self.cost_functional.cost(self.z_help, order=1)
-        self.cost_functional.costGrad(self.z_out_help)
+        self.cost_functional.grad(self.z_out_help)
         if self.verbose and MPI.COMM_WORLD.Get_rank() == 0:
             print("Gradient evaluation")
         self.n_grad += 1
@@ -85,7 +85,7 @@ class ScipyCostWrapper:
         self.z_hat_help.apply("")
 
         self.cost_functional.cost(self.z_help, order=2)
-        self.cost_functional.costHessian(self.z_hat_help, self.z_out_help)
+        self.cost_functional.hessian(self.z_hat_help, self.z_out_help)
         if self.verbose and MPI.COMM_WORLD.Get_rank() == 0:
             print("Hessian action evaluation")
         self.n_hess += 1

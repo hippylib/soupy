@@ -30,7 +30,7 @@ from .augmentedVector import AugmentedVector
 
 
 
-def sampleSuperquantile(samples, beta):
+def sample_superquantile(samples, beta):
     """
     Evaluate superquantile from samples 
     """ 
@@ -38,7 +38,7 @@ def sampleSuperquantile(samples, beta):
     return quantile + np.mean(np.maximum(samples - quantile, 0))/(1-beta)
     
 
-def sampleSuperquantileByMinimization(samples, beta, epsilon=1e-2):
+def sample_superquantile_by_minimization(samples, beta, epsilon=1e-2):
     """
     Evaluate superquantile from samples by minimization 
     """ 
@@ -60,7 +60,7 @@ def superquantileRiskMeasureSAASettings(data = {}):
     return ParameterList(data)
 
 
-class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
+class SuperquantileRiskMeasureSAA(RiskMeasure):
     """
     Risk measure for the sample average approximation of the superquantile risk measure (CVaR) 
     with sample parallelism using MPI 
@@ -263,7 +263,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         t = self.zt.get_scalar()
         return  t + 1/(1-self.beta) * self.s_bar
 
-    def costGrad(self, gt):
+    def grad(self, gt):
         """
         Evaluates the gradient of the risk measure once components have been computed
 
@@ -279,7 +279,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         gt.set_local(dz_np) 
 
 
-    def costHessian(self, zt_hat, Hzt_hat):
+    def hessian(self, zt_hat, Hzt_hat):
         """
         Apply the hessian of the risk measure once components have been computed \
             in the direction :code:`zhat`
@@ -336,7 +336,7 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
         Hzt_hat.set_scalar(Ht_hat_all)
 
 
-    def gatherSamples(self):
+    def gather_samples(self):
         """
         Gather the QoI samples from all processes
 
@@ -356,8 +356,8 @@ class SuperquantileRiskMeasureSAA_MPI(RiskMeasure):
     
         .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
-        q_all = self.gatherSamples()
-        value = sampleSuperquantile(q_all, self.beta)
+        q_all = self.gather_samples()
+        value = sample_superquantile(q_all, self.beta)
         return value 
 
 

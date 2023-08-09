@@ -9,7 +9,7 @@
 #
 # SOUPy is free software; you can redistribute it and/or modify it under the
 # terms of the GNU General Public License (as published by the Free
-# Software Foundation) version 3.0 dated June 1991.
+# Software Foundation) version 3.0 dated June 2007.
 
 import pickle
 import sys, os
@@ -67,7 +67,7 @@ def hyperelasticity_problem_settings():
     settings["geometry"] = {"lx" : 2.0, "ly" : 0.5, "lz" : 0.25, "dim" : 2}
     settings["mesh"] = {"nx" : 96, "ny" : 24, "nz" : 12}
     settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0]}
-    settings["uncertainty"] = {"gamma" : 0.1, "delta" : 1, "robin_bc" : True}
+    settings["uncertainty"] = {"gamma" : 0.2, "delta" : 1.0, "robin_bc" : True}
     return settings
 
 

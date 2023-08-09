@@ -116,15 +116,15 @@ class TestControlCostFunctional(unittest.TestCase):
 
         c0 = cost.cost(z0, order=2)
         g0 = model.generate_vector(CONTROL)
-        cost.costGrad(g0)
-        cost.costHessian(dz, Hdz)
+        cost.grad(g0)
+        cost.hessian(dz, Hdz)
         
         z1.axpy(1.0, z0)
         z1.axpy(self.delta, dz)
         
         c1 = cost.cost(z1, order=1)
         g1 = model.generate_vector(CONTROL)
-        cost.costGrad(g1)
+        cost.grad(g1)
 
         dcdz_fd = (c1 - c0)/self.delta
         dcdz_ad = g0.inner(dz)

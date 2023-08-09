@@ -30,7 +30,7 @@ import hippylib as hp
 sys.path.append('../../')
 from soupy import ControlCostFunctional, PDEVariationalControlProblem, \
     VariationalControlQoI, L2Penalization, \
-    ControlModel, MeanVarRiskMeasureSAA_MPI, meanVarRiskMeasureSAASettings, \
+    ControlModel, MeanVarRiskMeasureSAA, meanVarRiskMeasureSAASettings, \
     RiskMeasureControlCostFunctional, ScipyCostWrapper, \
     STATE, PARAMETER, ADJOINT, CONTROL, \
     MultipleSerialPDEsCollective
@@ -101,7 +101,7 @@ class TestControlCostFunctional(unittest.TestCase):
         rm_settings = meanVarRiskMeasureSAASettings()
         rm_settings['sample_size'] = sample_size
         rm_settings['beta'] = beta
-        risk = MeanVarRiskMeasureSAA_MPI(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+        risk = MeanVarRiskMeasureSAA(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         return risk
 
 

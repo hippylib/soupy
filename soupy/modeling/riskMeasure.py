@@ -44,7 +44,7 @@ class RiskMeasure:
         """
         raise NotImplementedError("Child class should implement method costValue")
 
-    def costGrad(self):
+    def grad(self):
         """
         Evaluates the gradient of the risk measure once components have been computed
 
@@ -53,9 +53,9 @@ class RiskMeasure:
 
         .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
-        raise NotImplementedError("Child class should implement method costGrad")
+        raise NotImplementedError("Child class should implement method grad")
 
-    def costHessian(self, zhat, Hzhat):
+    def hessian(self, zhat, Hzhat):
         """
         Apply the hessian of the risk measure once components have been computed \
             in the direction :code:`zhat`

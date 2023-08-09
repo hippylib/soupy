@@ -25,9 +25,9 @@ from .controlModelHessian import ControlModelHessian
 
 from .controlQoI import ControlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI
 
-from .meanVarRiskMeasure import meanVarRiskMeasureSettings, MeanVarRiskMeasure
+from .meanVarRiskMeasureStochastic import meanVarRiskMeasureStochasticSettings, MeanVarRiskMeasureStochastic
 
-from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA, MeanVarRiskMeasureSAA_MPI
+from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA 
 
 from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization
 
@@ -35,7 +35,7 @@ from .riskMeasure import RiskMeasure
 
 from .smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
 
-from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA_MPI, superquantileRiskMeasureSAASettings, sampleSuperquantile, sampleSuperquantileByMinimization
+from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA, superquantileRiskMeasureSAASettings, sample_superquantile, sample_superquantile_by_minimization
 
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
