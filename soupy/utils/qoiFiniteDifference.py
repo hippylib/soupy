@@ -37,7 +37,7 @@ def qoiFiniteDifference(Vh, qoi, x, du, order=1, delta=1e-4, plotting=False):
     :type order: int
     :param delta: The finite difference step size
     :type delta: float
-    :plotting: If :code:`true`, plots the finite difference Hessian and analytic Hessian
+    :param plotting: If :code:`true`, plots the finite difference Hessian and analytic Hessian
     :type plotting: bool
     """
     x2 = [None, None, None, None]

@@ -21,16 +21,20 @@ from soupy import STATE, PARAMETER, ADJOINT, CONTROL, PDEVariationalControlProbl
 
 class UniformDistribution:
     """
-    Class for sampling from a uniform distribution to `dl.Vector`
-    Used only for tests 
+    Class for sampling from a uniform distribution to `dl.Vector` \
+        Sampling uses the numpy class and hence is not mesh parallel safe \
+        
+    .. note:: Used only for tests 
     """
     def __init__(self, Vh, a, b, rng_seed=1):
         """ 
-        Constructor:
-            :code: `Vh`: Function space for sample vectors
-            :code: `a`: Lower bound
-            :code: `b`: Upper bound
-            :code: `ndim`: Dimension of sample vectors
+        Constructor  
+
+        :param Vh: Function space for sample vectors
+        :param a: Lower bound
+        :param b: Upper bound
+        :param ndim: Dimension of sample vectors
+        :param rng_seed: Seed for the random state 
         """
         assert Vh.mesh().mpi_comm().size == 1
         self.Vh = Vh
@@ -55,6 +59,10 @@ def u_boundary(x, on_boundary):
 
 
 def setupPoissonPDEProblem(Vh, settings):
+    """
+    Set up the Poisson PDE problem. Used as an example PDE for unit tests 
+    """
+
     anis_diff = dl.CompiledExpression(hp.ExpressionModule.AnisTensor2D(), degree = 1)
     anis_diff.set(settings['THETA0'], settings['THETA1'], settings['ALPHA'])
     m_mean_fun = dl.Function(Vh[PARAMETER])
@@ -77,6 +85,9 @@ def setupPoissonPDEProblem(Vh, settings):
 
 
 def poisson_control_settings():
+    """
+    Settings for the poisson PDE problem 
+    """
     settings = {}
     settings['nx'] = 20
     settings['ny'] = 20
@@ -102,9 +113,14 @@ def poisson_control_settings():
 
 class PoissonVarfHandler:
     """
+    Variational form for the poisson PDE 
     """
     def __init__(self,Vh,settings = poisson_control_settings()):
         """
+        Constructor:
+
+        :param Vh: List of function spaces for state, adjoint, parameter, control 
+        :param settings: Dictionary for settings for the PDE problem 
         """
         self.linear = settings['LINEAR']
 

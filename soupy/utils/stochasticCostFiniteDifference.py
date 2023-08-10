@@ -22,6 +22,12 @@ from ..modeling.augmentedVector import AugmentedVector
 def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
     """
     Finite difference check for a stochastic cost function by fixing the random number generator seed
+
+    :param pde_cost: Stochastic cost functional to check 
+    :param z: Point of cost and derivative evaluation 
+    :param dz: Direction for finite difference derivative
+    :param delta: Step size
+    :param sample_size: sample size for expectation computations
     """
     gz = pde_cost.generate_vector(CONTROL)
 
@@ -51,9 +57,16 @@ def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
     print("Analytic gradient: %g" %ad_grad)
     print("Finite diff gradient: %g" %fd_grad)
 
+
 def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
     """
     Finite difference check for a deterministic/SAA cost functional
+
+    :param pde_cost: Stochastic cost functional to check 
+    :param z: Point of cost and derivative evaluation 
+    :param dz: Direction for finite difference derivative
+    :param delta: Step size
+    :param sample_size: sample size for expectation computations
     """
     gz = pde_cost.generate_vector(CONTROL)
 
@@ -82,3 +95,7 @@ def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
 
     print("Analytic gradient: %g" %ad_grad)
     print("Finite diff gradient: %g" %fd_grad)
+
+
+
+
