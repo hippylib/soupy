@@ -16,3 +16,5 @@ SOUPy is in active development to incorporate advanced approximation algorithms 
 - Decomposition of uncertain parameter spaces by mixture models
 - Multi-fidelity methods and control variates 
 - Interfaces with Bayesian inverse problems 
+
+See the [SOUPy documentation](https://hippylibsoupy.readthedocs.io/en/latest/) for more information.
