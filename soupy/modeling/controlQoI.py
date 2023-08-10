@@ -100,11 +100,10 @@ class VariationalControlQoI(ControlQoI):
     """
     Class for a QoI defined by its variational form 
     """
-    def __init__(self, mesh, Vh, form_handler):
+    def __init__(self, Vh, form_handler):
         """
         Constructor
 
-        :param mesh: The mesh object
         :param Vh: List of function spaces for the state, parameter, 
             adjoint, and optimization variables
         :type Vh: list of :py:class:`dolfin.FunctionSpace`
@@ -112,7 +111,6 @@ class VariationalControlQoI(ControlQoI):
             :code:`__call__` method that takes as input the state, parameter, and control variables
             as functions and returns the variational form 
         """
-        self.mesh = mesh
         self.Vh = Vh
         self.x = [dl.Function(Vh[STATE]).vector(), dl.Function(Vh[PARAMETER]).vector(),
                   dl.Function(Vh[ADJOINT]).vector(), dl.Function(Vh[CONTROL]).vector()]
@@ -254,18 +252,16 @@ class L2MisfitControlQoI(ControlQoI):
 
     where :math:`u_d` is the reference state.
     """
-    def __init__(self, mesh, Vh, ud):
+    def __init__(self, Vh, ud):
         """
         Constructor
 
-        :param mesh: The mesh object
         :param Vh: List of function spaces for the state, parameter, 
             adjoint, and optimization variables
         :type Vh: list of :py:class:`dolfin.FunctionSpace`
         :param ud: The reference state as a vector
         :type ud: :py:class:`dolfin.Vector`
         """
-        self.mesh = mesh
         self.Vh = Vh
         self.x = [dl.Function(Vh[STATE]).vector(), dl.Function(Vh[PARAMETER]).vector(),
                   dl.Function(Vh[ADJOINT]).vector(), dl.Function(Vh[CONTROL]).vector()]

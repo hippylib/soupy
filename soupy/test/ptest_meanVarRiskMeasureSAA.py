@@ -75,7 +75,7 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
         risk = MeanVarRiskMeasureSAA(model, prior, comm_sampler=self.comm_sampler)
@@ -96,7 +96,7 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         return pde, prior, control_dist
 
     def _setup_control_model(self, pde, qoi_varf):
-        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
+        qoi = VariationalControlQoI(self.Vh, qoi_varf)
         model = ControlModel(pde, qoi)
         return qoi, model
 

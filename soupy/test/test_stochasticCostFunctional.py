@@ -65,7 +65,7 @@ class TestControlCostFunctional(unittest.TestCase):
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.Vh, l2norm)
         model = ControlModel(pde, qoi)
         risk = MeanVarRiskMeasureStochastic(model, prior)
         alpha = 2.0
@@ -124,7 +124,7 @@ class TestControlCostFunctional(unittest.TestCase):
         def l2norm(u,m,z):
             return u**2*dl.dx
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
         rm_settings = meanVarRiskMeasureStochasticSettings()

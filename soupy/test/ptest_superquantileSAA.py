@@ -103,7 +103,7 @@ class TestSuperquantileSAA(unittest.TestCase):
         return pde, prior, control_dist
 
     def _setup_control_model(self, pde, qoi_varf):
-        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
+        qoi = VariationalControlQoI(self.Vh, qoi_varf)
         model = ControlModel(pde, qoi)
         return qoi, model
 
@@ -279,7 +279,7 @@ class TestSuperquantileSAA(unittest.TestCase):
         def l2norm(u,m,z):
             return u**2*dl.dx
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.Vh, l2norm)
         model = ControlModel(pde, qoi)
 
         rm_settings = superquantileRiskMeasureSAASettings()
