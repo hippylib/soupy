@@ -42,10 +42,16 @@ This example also shows how to use the :code:`ScipyCostWrapper` to convert
 a :code:`ControlCostFunctional` to be compatible with :code:`scipy.optimize`
 
 This driver supports MPI to parallelize the sampling of the parameter field.
-e.g. 
 
-mpirun -n 4 python driver_hyperelasticity.py
+To run deterministic: 
+python driver_hyperelasticity.py
 
+
+To run with mean + variance risk measure:
+python driver_hyperelasticity.py -r mean_var
+
+To run with mean + variance risk measure and parllel sampling (e.g.):
+mpirun -n 4 python driver_hyperelasticity.py -r mean_var
 """
 
 

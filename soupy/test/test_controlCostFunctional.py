@@ -76,7 +76,7 @@ class TestControlCostFunctional(unittest.TestCase):
         def l2norm(u,m,z):
             return u**2*dl.dx + (m - dl.Constant(2.0))**2*dl.dx 
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.Vh, l2norm)
         model = ControlModel(pde, qoi)
         cost = DeterministicControlCostFunctional(model, prior, penalization=None)
         z = model.generate_vector(CONTROL)
@@ -102,7 +102,7 @@ class TestControlCostFunctional(unittest.TestCase):
         settings['LINEAR'] = is_fwd_linear
 
         pde, prior, control_dist = setupPoissonPDEProblem(self.Vh, settings) 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
+        qoi = VariationalControlQoI(self.Vh, qoi_varf)
         model = ControlModel(pde, qoi)
         cost = DeterministicControlCostFunctional(model, prior, penalization=None)
 
@@ -196,7 +196,7 @@ class TestControlCostFunctional(unittest.TestCase):
         def l2norm(u,m,z):
             return u**2*dl.dx
 
-        qoi = VariationalControlQoI(self.mesh, self.Vh, l2norm)
+        qoi = VariationalControlQoI(self.Vh, l2norm)
         model = ControlModel(pde, qoi)
         cost = DeterministicControlCostFunctional(model, prior, penalization=None)
 

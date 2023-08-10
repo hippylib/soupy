@@ -68,7 +68,7 @@ class TestControlCostFunctional(unittest.TestCase):
         return pde, prior, control_dist
 
     def _setup_control_model(self, pde, qoi_varf):
-        qoi = VariationalControlQoI(self.mesh, self.Vh, qoi_varf)
+        qoi = VariationalControlQoI(self.Vh, qoi_varf)
         model = ControlModel(pde, qoi)
         return qoi, model
 

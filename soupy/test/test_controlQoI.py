@@ -58,7 +58,7 @@ class TestControlQoI(unittest.TestCase):
 
         # ud = dl.Function(self.Vh[STATE])
         # ud.interpolate(dl.Expression("sin(k*x[0])*cos(k*x[1])", k=math.pi, degree=2))
-        # nonlinear_qoi = VariationalControlQoI(self.mesh, self.Vh, varf)
+        # nonlinear_qoi = VariationalControlQoI(self.Vh, varf)
 
 
         u_fun = dl.Function(self.Vh[STATE])
@@ -137,7 +137,7 @@ class TestControlQoI(unittest.TestCase):
         ud = dl.Function(self.Vh[STATE])
         ud.interpolate(dl.Expression("sin(k*x[0])*cos(k*x[1])", k=math.pi, degree=2))
         for varf in varfs:
-            nonlinear_qoi = VariationalControlQoI(self.mesh, self.Vh, varf)
+            nonlinear_qoi = VariationalControlQoI(self.Vh, varf)
             for i in [STATE, PARAMETER, CONTROL]:
                 self.finiteDifferenceGradient(nonlinear_qoi, i)
                 for j in [STATE, PARAMETER, CONTROL]:
@@ -150,7 +150,7 @@ class TestControlQoI(unittest.TestCase):
         ud.interpolate(dl.Expression("sin(k*x[0])*cos(k*x[1])", k=math.pi, degree=5))
         chi = dl.Expression("0.5", degree=5)
         l2varf = L2MisfitVarfHandler(ud, chi=chi)
-        l2qoi = VariationalControlQoI(self.mesh, self.Vh, l2varf)
+        l2qoi = VariationalControlQoI(self.Vh, l2varf)
         u = dl.Function(self.Vh[STATE])
         m = dl.Function(self.Vh[PARAMETER])
         z = dl.Function(self.Vh[CONTROL])
@@ -166,7 +166,7 @@ class TestControlQoI(unittest.TestCase):
     def testL2MisfitQoI(self):
         ud = dl.Function(self.Vh[STATE])
         ud.interpolate(dl.Expression("sin(k*x[0])*cos(k*x[1])", k=math.pi, degree=2))
-        nonlinear_qoi = L2MisfitControlQoI(self.mesh, self.Vh, ud.vector())
+        nonlinear_qoi = L2MisfitControlQoI(self.Vh, ud.vector())
         for i in [STATE, PARAMETER, CONTROL]:
             self.finiteDifferenceGradient(nonlinear_qoi, i)
             for j in [STATE, PARAMETER, CONTROL]:

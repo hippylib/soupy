@@ -86,7 +86,7 @@ prior = hp.BiLaplacianPrior(Vh_PARAMETER, PRIOR_GAMMA, PRIOR_DELTA, mean=mean_ve
 u_target = dl.Expression("x[1] + sin(k*x[0]) * sin(k*x[1])", k=1.5*np.pi, degree=2, mpi_comm=comm_mesh)
 u_target_function = dl.interpolate(u_target, Vh_STATE)
 u_target_vector = u_target_function.vector()
-qoi = soupy.L2MisfitControlQoI(mesh, Vh, u_target_vector)
+qoi = soupy.L2MisfitControlQoI(Vh, u_target_vector)
 
 # 5. Define the ControlModel
 control_model = soupy.ControlModel(pde, qoi)

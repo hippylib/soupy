@@ -135,7 +135,7 @@ if __name__ == "__main__":
     print_on_root("Making target, QoI, and problem", comm_sampler)
     u_target_expr = get_target(args.target, args.param)
     u_target = dl.interpolate(u_target_expr, Vh[hp.STATE])
-    qoi = soupy.L2MisfitControlQoI(mesh, Vh, u_target.vector())
+    qoi = soupy.L2MisfitControlQoI(Vh, u_target.vector())
     control_model = soupy.ControlModel(pde, qoi)
 
     print_on_root("Making SAA risk measure and cost", comm_sampler)

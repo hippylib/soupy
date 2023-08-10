@@ -29,7 +29,7 @@ from .meanVarRiskMeasureStochastic import meanVarRiskMeasureStochasticSettings, 
 
 from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA 
 
-from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization
+from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization, VariationalPenalization
 
 from .riskMeasure import RiskMeasure
 
