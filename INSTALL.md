@@ -11,8 +11,34 @@
  - PETSc dependencies: `parmetis`, `scotch`, `suitesparse`, `superlu_dist`, `ml`, `hypre`
  - (optional): `gmsh`, `mshr`, `jupyter`
 
-## Recommended installation procedures using conda
-1. Install `FEniCS` with appropriate dependencies
+
+## Recommended installation using Anaconda 
+### Installation with pip 
+1. Create an environment with `FEniCS` and appropriate dependencies and activate environment
+```
+conda create -n soupy -c conda-forge fenics==2019.1.0 matplotlib scipy jupyter
+conda activate soupy
+```
+
+2. Install `hIPPYlib` via pip
+```
+pip install hippylib
+```
+
+3. Install `SOUPy` via pip 
+```
+pip install soupy@git+https://github.com/hippylib/soupy
+```
+
+4. Clone the `SOUPy` directory to access examples 
+```
+git clone https://github.com/hippylib/soupy.git
+```
+
+Examples in the `applications` directory can now be run. We refer to the full `FEniCS` [installation instructions](https://hippylib.readthedocs.io/en/3.0.0/installation.html) from `hIPPYlib` for more detail. 
+
+### Installation for developers 
+1. Create an environment with `FEniCS` with appropriate dependencies
 ```
 conda create -n soupy -c conda-forge fenics==2019.1.0 matplotlib scipy jupyter
 ```
@@ -34,8 +60,8 @@ conda env config vars set HIPPYLIB_PATH=path/to/hippylib
 conda env config vars set SOUPY_PATH=path/to/soupy
 ```
 
-Examples in the `applications` directory can now be run. We refer to the full `FEniCS` [installation instructions](https://hippylib.readthedocs.io/en/3.0.0/installation.html) from `hIPPYlib` for more detail. 
- 
+Examples in the `examples` directory can now be run. 
+
 ## Build the SOUPy documentation using Sphinx
 
 Documentation for `SOUPy` can be built using `sphinx`, along with extensions

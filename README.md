@@ -1,4 +1,5 @@
 ![Build Status](https://github.com/hippylib/soupy/actions/workflows/ci.yml/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/hippylibsoupy/badge/?version=latest)](https://hippylibsoupy.readthedocs.io/en/latest/?badge=latest)
 
 # Stochastic Optimization under high-dimensional Uncertainty in Python
 
