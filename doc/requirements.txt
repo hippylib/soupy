@@ -1,2 +1,3 @@
 sphinx 
 myst_parser
+sphinx-rtd-theme
