@@ -197,7 +197,7 @@ Before a PR can be merged, it should satisfy the following:
     - [ ] Does it make sense to create a new section in the `CHANGELOG` to group with other related features?
 - [ ] New examples/applications/tutorials:
     - [ ] All new examples/applications/tutorials run as expected.
-    - [ ] Add a *fast version* of the example/application/tutorial to Travis CI
+    - [ ] If possible a *fast version* of the example/application/tutorial to the CI workflow
 - [ ] New capability:
    - [ ] All significant new classes, methods and functions have sphinx-style documentation in source comments.
    - [ ] Add new examples/applications/tutorials to highlight the new capability.
