@@ -18,3 +18,8 @@ SOUPy is in active development to incorporate advanced approximation algorithms 
 - Interfaces with Bayesian inverse problems 
 
 See the [SOUPy documentation](https://hippylibsoupy.readthedocs.io/en/latest/) for more information.
+
+
+### Acknowledgements
+This project is partially supported by NSF grants [#2012453](https://www.nsf.gov/awardsearch/showAward?AWD_ID=2012453&HistoricalAwards=false) 
+and [#2245674](https://www.nsf.gov/awardsearch/showAward?AWD_ID=2245674).
