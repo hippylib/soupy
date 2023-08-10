@@ -89,13 +89,13 @@ def setup_qoi(mesh, Vh, settings):
     """
     if settings["qoi_type"] == "all":
         u0 = dl.Function(Vh[soupy.STATE]).vector()
-        qoi = soupy.L2MisfitControlQoI(mesh, Vh, u0)
+        qoi = soupy.L2MisfitControlQoI(Vh, u0)
     elif settings["qoi_type"] == "stiffness":
         stiffness = Stiffnessvarf()
-        qoi = soupy.VariationalControlQoI(mesh, Vh, stiffness)
+        qoi = soupy.VariationalControlQoI(Vh, stiffness)
     elif settings["qoi_type"] == "point":
         local_displacement = LocalDisplacementVarf(settings["obs"]["location"], settings["obs"]["width"])
-        qoi = soupy.VariationalControlQoI(mesh, Vh, local_displacement)
+        qoi = soupy.VariationalControlQoI(Vh, local_displacement)
     else:
         raise ValueError("Settings qoi type not available")
 
