@@ -33,6 +33,80 @@ class Penalization:
         raise NotImplementedError("Child class should implement hessian")
 
 
+
+class VariationalPenalization(Penalization):
+    """
+    Penalization given by a variational form in terms of the control variable :math:`z`
+    """
+    def __init__(self, Vh, form_handler):
+        """
+        Constructor: 
+
+        :param Vh: List of function spaces for the state, parameter, 
+            adjoint, and optimization variables
+        :type Vh: list of :py:class:`dolfin.FunctionSpace`
+        :param form_handler: The form handler for the penalization with a
+            :code:`__call__` method that takes the control variable :code:`z` as a :py:class:`dolfin.Function` and returns the variational form. 
+        """
+
+        self.Vh = Vh 
+        self.form_handler = form_handler
+
+        self.z_fun = dl.Function(self.Vh[CONTROL])
+        self.z = self.z_fun.vector()
+
+        self.dz_fun = dl.Function(self.Vh[CONTROL])
+        self.dz = self.dz_fun.vector()
+
+        self.z_trial = dl.TrialFunction(self.Vh[CONTROL])
+        self.z_test = dl.TestFunction(self.Vh[CONTROL])
+
+
+        self.penalization_form = self.form_handler(self.z_fun)
+        self.grad_form = dl.derivative(self.penalization_form, self.z_fun, self.z_test)
+
+    def init_vector(self, z):
+        if isinstance(z, AugmentedVector):
+            pass 
+        else:
+            z.init(self.z_fun.vector().local_range())
+
+    def cost(self, z):
+        if isinstance(z, AugmentedVector):
+            z = z.get_vector()
+
+        self.z.zero()
+        self.z.axpy(1.0, z)
+        return dl.assemble(self.penalization_form)
+
+    def grad(self, z, out):
+        if isinstance(z, AugmentedVector):
+            out.set_scalar(0)
+            z = z.get_vector()
+            out = out.get_vector()
+
+        self.z.zero()
+        self.z.axpy(1.0, z)
+        dl.assemble(self.grad_form, tensor=out)
+
+    def hessian(self, z, zhat, out):
+        if isinstance(z, AugmentedVector):
+            out.set_scalar(0)
+            z = z.get_vector()
+            zhat = zhat.get_vector()
+            out = out.get_vector()
+
+        self.z.zero()
+        self.z.axpy(1.0, z)
+
+        self.dz.zero()
+        self.dz.axpy(1.0, zhat)
+
+        hessian_action = dl.derivative(self.grad_form, self.z_fun, self.dz_fun)
+        dl.assemble(hessian_action, tensor=out)
+
+
+
 class MultiPenalization(Penalization):
     """
     Penalization term for the sum of individual penalties
@@ -61,6 +135,8 @@ class MultiPenalization(Penalization):
         else:
             self.alpha_list = [1.0] * len(self.penalization_list)
 
+    def init_vector(self, z):
+        self.penalization_list[0].init_vector(z)
     
     def cost(self, z):
         """
