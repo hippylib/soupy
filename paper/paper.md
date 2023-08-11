@@ -89,7 +89,7 @@ You can also use plain \LaTeX for equations
 \end{equation}
 and refer to \autoref{eq:fourier} from text. -->
 
-# Citations
+<!-- # Citations
 
 Citations to entries in paper.bib should be in
 [rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
@@ -115,6 +115,6 @@ Figure sizes can be customized by adding an optional second parameter:
 # Acknowledgements
 
 We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+Oh, and support from Kathryn Johnston during the genesis of this project. -->
 
 # References
