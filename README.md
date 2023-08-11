@@ -18,7 +18,6 @@ SOUPy is in active development to incorporate advanced approximation algorithms 
 
 See the [SOUPy documentation](https://hippylibsoupy.readthedocs.io/en/latest/) for more information.
 
-
 Please consider to cite the following papers for using SOUPy
 
 ```
