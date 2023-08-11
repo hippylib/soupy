@@ -34,60 +34,56 @@ bibliography: paper.bib
 ---
 
 # Summary
-Provide a summary of the context 
-<!-- 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration). -->
 
-# Statement of need
-Need for SOUPy
-- What does it do?
-- What is it used for 
-- Citations using SOUPy
+Computational models governed by partial differential equations (PDEs) 
+are frequently used by engineers to optimize the performance of various physical systems 
+through decisions relating to their configuration (optimal design) and operation (optimal control). 
+However, the ability to make optimal choices is often hindered by uncertainty, 
+such as uncertainty in model parameters (e.g. material properties) and operating conditions.
+The need for making robust and risk-informed decisions thus gives rise to problems of optimization under uncertainty (OUU). 
 
-<!-- `Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
+SOUPy is a python library for solving PDE-constrained optimization problems with uncertain parameters,
+in which the optimization objective is defined by a risk measure over a given quantity of interest (QoI).
+Specific attention is given to the case where the uncertain parameter is formally infinite dimensional (e.g. Gaussian random fields).
+The software allows users to supply the underlying PDE model, quantity of interest, and penalization terms, 
+while providing implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional-value-at-risk (CVaR).
+as well as derivative-based optimizers. 
+SOUPy leverages FEniCS for the formulation, discretization, and solution of PDEs, 
+and the framework of hIPPYlib for sampling and adjoint-based derivative computation, 
+while also providing interfaces to existing optimization algorithms in SciPy.
 
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike. -->
 
-# Mathematics
-<!-- 
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
+# Statement of need 
 
-Double dollars make self-standing equations:
+Problems of PDE-constrained optimization under uncertainty arise due to the need to make risk-informed decisions in the presence of uncertainty.
+In deterministic PDE-constrained optimization, the goal is typically to minimize a quantity of interest (QoI) that is a function of the system's state and quantifies its performance, where the optimization and state variables are related through the underlying PDE model. 
+Compared to this deterministic counterpart, PDE-constrained OUU represents an added layer of complexity, 
+as the QoI becomes a random variable due to its dependence on the uncertain model parameters.
+In OUU, the optimization problem instead aims to minimize a risk measure, which is a statistical quantity summarizing the QoI's distribution. 
+A canonical example of such a risk measure is the expected value of the QoI, 
+though other measures that account for the tail behavior of the distribution such as 
+the variance, or superquantile/CVaR are common choices.
+Computation of risk measures typically requires sampling or other forms of quadrature over the distribution of the uncertain parameter.
+This results in a complex optimization problem in which each evaluation of the optimization objective requires numerous solutions of the underlying PDE.
 
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
+SOUPy provides a platform to formulate and solve such PDE-constrained OUU problems using efficient derivative-based optimization methods. 
+SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
+The unified form language used by FEniCS allows users to conveniently define the PDE in its weak form, 
+as well as the form of the QoI and any additional penalization terms on the optimization variable. 
+SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
+adopting its framework for adjoint-based computation of derivatives and efficient sampling of random fields.
+At its core, SOUPy implements sample-based evaluation of risk measures and their derivatives, where parallel-in-sample computation is supported through MPI. 
+The risk measures are used to define cost functions, 
+which can be minimized using custom implementations of large-scale optimization algorithms such as BFGS and Inexact Newton-CG, 
+or through algorithms available in SciPy using the provided interface. 
 
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text. -->
+Additionally, SOUPy aims to facilitate the development and testing of novel algorithms for PDE-constrained OUU. 
+For example, SOUPy has been used in the development of methods for the optimization of turbulent flows, metamaterial design, and groundwater extraction.
+It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU.
+
+# Acknowledgements
+This project is partially supported by NSF grants #2012453 and #2245674.
+
 
 <!-- # Citations
 
