@@ -68,7 +68,7 @@ This results in a complex optimization problem in which each evaluation of the o
 
 SOUPy provides a platform to formulate and solve such PDE-constrained OUU problems using efficient derivative-based optimization methods. 
 Users supply the definitions for the PDE constraint, QoI, and additional penalization terms for the optimization variable, and are given the option to choose from a suite of used risk measures.
-At its core, SOUPy implements sample-based evaluation of risk measures and their derivatives, where parallel-in-sample computation is supported through MPI. 
+At a core functionality, SOUPy implements sample-based evaluation of risk measures and their derivatives, where parallel-in-sample computation is supported through MPI. 
 The resulting cost functionals can then be minimized using SOUPy's implementations of large-scale optimization algorithms, such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
 or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. \autoref{fig:diagram} shows the key components of a PDE-constrained OUU problem and their corresponding classes in the SOUPy.
 
