@@ -48,8 +48,8 @@ Specific attention is given to the case where the uncertain parameter is formall
 The software allows users to supply the underlying PDE model, quantity of interest, and penalization terms, 
 while providing implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional-value-at-risk (CVaR).
 as well as derivative-based optimizers. 
-SOUPy leverages FEniCS for the formulation, discretization, and solution of PDEs, 
-and the framework of hIPPYlib for sampling and adjoint-based derivative computation, 
+SOUPy leverages FEniCS [@LoggMardalWells12] for the formulation, discretization, and solution of PDEs, 
+and the framework of hIPPYlib [@VillaPetraGhattas18; @VillaPetraGhattas21] for sampling and adjoint-based derivative computation, 
 while also providing interfaces to existing optimization algorithms in SciPy.
 
 
@@ -67,19 +67,21 @@ Computation of risk measures typically requires sampling or other forms of quadr
 This results in a complex optimization problem in which each evaluation of the optimization objective requires numerous solutions of the underlying PDE.
 
 SOUPy provides a platform to formulate and solve such PDE-constrained OUU problems using efficient derivative-based optimization methods. 
-SOUPy makes use of FEniCS @LoggMardalWells12, an open source finite-element library, to create and solve the underlying PDEs. 
+SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
 The unified form language used by FEniCS allows users to conveniently define the PDE in its weak form, 
 as well as the form of the QoI and any additional penalization terms on the optimization variable. 
-SOUPy is also integrated with hIPPYlib @VillaPetraGhattas21, an open source library for large-scale inverse problems, 
+SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
 adopting its framework for adjoint-based computation of derivatives and efficient sampling of random fields.
 At its core, SOUPy implements sample-based evaluation of risk measures and their derivatives, where parallel-in-sample computation is supported through MPI. 
 The risk measures are used to define cost functions, 
-which can be minimized using custom implementations of large-scale optimization algorithms such as L-BFGS and Inexact Newton-CG, 
+which can be minimized using custom implementations of large-scale optimization algorithms such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
 or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. 
 
+Several existing software packages, such as dolfin-adjoint, hIPPYlib, 
+
 Additionally, SOUPy aims to facilitate the development and testing of novel algorithms for PDE-constrained OUU. 
-For example, SOUPy has been used in the development of methods for the optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and groundwater extraction.
-It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU @LuoOLearyRoseberryChenEtAl23.
+For example, SOUPy has been used in the development of methods for the optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and groundwater extraction [@ChenGhattas21].
+It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU [@LuoOLearyRoseberryChenEtAl23].
 
 # Acknowledgements
 This project is partially supported by NSF grants #2012453 and #2245674.
