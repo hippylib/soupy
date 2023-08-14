@@ -67,18 +67,31 @@ Computation of risk measures typically requires sampling or other forms of quadr
 This results in a complex optimization problem in which each evaluation of the optimization objective requires numerous solutions of the underlying PDE.
 
 SOUPy provides a platform to formulate and solve such PDE-constrained OUU problems using efficient derivative-based optimization methods. 
-SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
+Users supply the definitions for the PDE constraint, QoI, and additional penalization terms for the optimization variable, and are given the option to choose from a suite of used risk measures.
+At its core, SOUPy implements sample-based evaluation of risk measures and their derivatives, where parallel-in-sample computation is supported through MPI. 
+The resulting cost functionals can then be minimized using SOUPy's implementations of large-scale optimization algorithms, such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
+or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. \autoref{fig:diagram} shows the key components of a PDE-constrained OUU problem and their corresponding classes in the SOUPy.
+
+![Structure of a PDE-constrained OUU problem, illustrating the main components and their corresponding classes as implemented in SOUPy.](diagram.pdf)
+
+
+
+Several open-source software packages such as dolfin-adjoint [@MituschFunkeDokken2019] and hIPPYlib 
+provide the capabilities for solving PDE-constrained optimization problems with generic PDEs through adjoint-based computation of derivatives. 
+However, these packages largely focus on the deterministic setting. 
+Instead, SOUPY integrates these capabilities with risk measures approximations to address problems in PDE-constrained OUU.
+To this end, SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
+The unified form language used by FEniCS also allows users to conveniently define the PDE, QoI, and penalization terms using their variational forms.
+SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
+adopting its framework for adjoint-based derivative computation and algorithms for efficient sampling of random fields.
+
+<!-- To this end, SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
 The unified form language used by FEniCS allows users to conveniently define the PDE in its weak form, 
 as well as the form of the QoI and any additional penalization terms on the optimization variable. 
 SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
-adopting its framework for adjoint-based computation of derivatives and efficient sampling of random fields.
-At its core, SOUPy implements sample-based evaluation of risk measures and their derivatives, where parallel-in-sample computation is supported through MPI. 
-The risk measures are used to define cost functions, 
-which can be minimized using custom implementations of large-scale optimization algorithms such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
-or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. 
+adopting its framework for adjoint-based computation of derivatives and efficient sampling of random fields. -->
 
-Several existing software packages, such as dolfin-adjoint, hIPPYlib, 
-
+SOUPy can be used by researchers to rapidly prototype formulations and solutions PDE-constrained OUU problems.
 Additionally, SOUPy aims to facilitate the development and testing of novel algorithms for PDE-constrained OUU. 
 For example, SOUPy has been used in the development of methods for the optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and groundwater extraction [@ChenGhattas21].
 It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU [@LuoOLearyRoseberryChenEtAl23].
