@@ -8,21 +8,21 @@ tags:
   - Optimal design 
 authors:
   - name: Peng Chen 
-    affiliation: 3
+    affiliation: 1
   - name: Dingcheng Luo 
-    affiliation: 1
+    affiliation: 2
   - name: Thomas O'Leary-Roseberry 
-    affiliation: 1
+    affiliation: 2
   - name: Umberto Villa 
-    affiliation: 1
+    affiliation: 2
   - name: Omar Ghattas
-    affiliation: "1 2"
+    affiliation: "2 3"
 affiliations:
- - name: Oden Institute for Computational Engineering and Sciences, University of Texas at Austin, USA 
-   index: 1
- - name: Walker Department of Mechanical Engineering, University of Texas at Austin, USA 
-   index: 2
  - name: School of Computational Science and Engineering, Georgia Institute of Technology, USA
+   index: 1
+ - name: Oden Institute for Computational Engineering and Sciences, University of Texas at Austin, USA 
+   index: 2
+ - name: Walker Department of Mechanical Engineering, University of Texas at Austin, USA 
    index: 3
 date: 11 August 2023
 bibliography: paper.bib
@@ -72,7 +72,7 @@ At its core, SOUPy implements sample-based evaluation of risk measures and their
 The resulting cost functionals can then be minimized using SOUPy's implementations of large-scale optimization algorithms, such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
 or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. \autoref{fig:diagram} shows the key components of a PDE-constrained OUU problem and their corresponding classes in the SOUPy.
 
-![Structure of a PDE-constrained OUU problem, illustrating the main components and their corresponding classes as implemented in SOUPy.](diagram.pdf)
+![Structure of a PDE-constrained OUU problem, illustrating the main components and their corresponding classes as implemented in SOUPy. \label{fig:diagram}](diagram.pdf)
 
 
 
