@@ -85,17 +85,17 @@ The unified form language used by FEniCS also allows users to conveniently defin
 SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
 adopting its framework for adjoint-based derivative computation and algorithms for efficient sampling of random fields.
 
+
+SOUPy can be used by researchers to rapidly prototype formulations and solutions PDE-constrained OUU problems.
+Additionally, SOUPy aims to facilitate the development and testing of novel algorithms for PDE-constrained OUU. 
+For example, SOUPy has been used in the development of Taylor approximation-based methods for the optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and groundwater extraction [@ChenGhattas21] under uncertainty.
+It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU [@LuoOLearyRoseberryChenEtAl23].
+
 <!-- To this end, SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
 The unified form language used by FEniCS allows users to conveniently define the PDE in its weak form, 
 as well as the form of the QoI and any additional penalization terms on the optimization variable. 
 SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
 adopting its framework for adjoint-based computation of derivatives and efficient sampling of random fields. -->
-
-SOUPy can be used by researchers to rapidly prototype formulations and solutions PDE-constrained OUU problems.
-Additionally, SOUPy aims to facilitate the development and testing of novel algorithms for PDE-constrained OUU. 
-For example, SOUPy has been used in the development of methods for the optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and groundwater extraction [@ChenGhattas21].
-It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU [@LuoOLearyRoseberryChenEtAl23].
-
 # Acknowledgements
 This project is partially supported by NSF grants #2012453 and #2245674.
 
