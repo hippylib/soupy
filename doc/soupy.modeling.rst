@@ -79,6 +79,15 @@ soupy.modeling.meanVarRiskMeasureSAA
     :show-inheritance:
 
 
+soupy.modeling.transformedMeanRiskMeasureSAA
+---------------------------------------------
+
+.. automodule:: soupy.modeling.transformedMeanRiskMeasureSAA
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 soupy.modeling.augmentedVector
 -------------------------------------------
 
@@ -102,7 +111,6 @@ soupy.modeling.penalization
     :members:
     :undoc-members:
     :show-inheritance:
-
 
 
 soupy.modeling.variables
