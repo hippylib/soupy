@@ -134,6 +134,12 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
 
     def generate_vector(self, component = "ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`component` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
         return self.model.generate_vector(component)
 
     def computeComponents(self, z, order=0, **kwargs):
