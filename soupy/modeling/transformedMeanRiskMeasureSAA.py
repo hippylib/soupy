@@ -81,9 +81,9 @@ class TransformedMeanRiskMeasureSAA(RiskMeasure):
     """
     Risk measure defined by transformations of an expectation of the following form
         
-        .. math:: \\rho[Q](z) = \sigma \left( \mathbb{E}_m[f(Q(m,z))] \\right) 
+        .. math:: \\rho[Q](z) = g \left( \mathbb{E}_m[f(Q(m,z))] \\right) 
 
-    with sample parallelism using MPI
+    given user-defined inner/outer functions :math:`f(x)` and :math:`g(x)`, with sample parallelism using MPI.
 
     .. note:: currently does not support simultaneous sample and mesh partition parallelism 
     """
