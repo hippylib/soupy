@@ -15,7 +15,7 @@ from .PDEControlProblem import PDEVariationalControlProblem
 
 from .augmentedVector import AugmentedVector
 
-from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional
+from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional, PenalizationControlCostFunctional
 
 from .controlCostHessian import ControlCostHessian 
 
