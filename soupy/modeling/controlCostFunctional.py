@@ -268,7 +268,6 @@ class RiskMeasureControlCostFunctional:
             return an :py:class:`soupy.AugmentedVector` \
             that augments the control variable :code:`z` with a scalar that can be used \
             for optimization. \
-            
             If :code:`component == "ALL"`, \
             Generate the list of vectors :code:`x = [u,m,p,z]`. \
             Note that in this case, the :code:`CONTROL` variable will not be augmented \
@@ -382,7 +381,6 @@ class PenalizationControlCostFunctional(ControlCostFunctional):
             will return an :py:class:`soupy.AugmentedVector` \
             that augments the control variable :code:`z` with a scalar that can be used \
             for optimization. \
-            
             If :code:`component == "ALL"`, \
             Generate the list of vectors :code:`x = [u,m,p,z]`. \
             Note that in this case, the :code:`CONTROL` variable will not be augmented \

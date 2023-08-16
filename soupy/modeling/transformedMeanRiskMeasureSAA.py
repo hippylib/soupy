@@ -79,11 +79,13 @@ class FunctionWrapper:
 
 class TransformedMeanRiskMeasureSAA(RiskMeasure):
     """
-    Mean + variance risk measure using sample average approximation
+    Sample average approximation for a risk measure of type
         
-        .. math:: \\rho[Q](z) = \sigma \left( \mathbb{E}_m[f\left(Q(m,z))] \right ) 
+        .. math:: \\rho[Q](z) = g \left( \mathbb{E}_m[f(Q(m,z))] \\right) 
 
-    with sample parallelism using MPI
+    with sample parallelism using MPI, where the inner and outer functions, 
+    :math:`f` and :math:`g` 
+    can be supplied by the user 
 
     .. note:: currently does not support simultaneous sample and mesh partition parallelism 
     """
