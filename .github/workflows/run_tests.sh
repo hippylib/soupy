@@ -13,3 +13,4 @@ $PYTHON -m unittest discover -v -p 'ptest_*'
 mpirun -n 4 $PYTHON ptest_meanVarRiskMeasureSAA.py
 mpirun -n 4 $PYTHON ptest_scipyCostWrapper.py
 mpirun -n 4 $PYTHON ptest_superquantileSAA.py
+mpirun -n 4 $PYTHON ptest_transformedMeanRiskMeasureSAA.py
