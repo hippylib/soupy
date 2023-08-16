@@ -20,8 +20,8 @@ from .augmentedVector import AugmentedVector
 
 class ControlCostFunctional:
     """
-    Base class for the cost function for solving an optimal control problem
-    under uncertainty.
+    Base class for the cost function for solving an optimal control problem \
+        under uncertainty.
     """
     def generate_vector(self, component="ALL"):
         """
@@ -264,7 +264,6 @@ class RiskMeasureControlCostFunctional:
             return an :py:class:`soupy.AugmentedVector` \
             that augments the control variable :code:`z` with a scalar that can be used \
             for optimization. \
-            
             If :code:`component == "ALL"`, \
             Generate the list of vectors :code:`x = [u,m,p,z]`. \
             Note that in this case, the :code:`CONTROL` variable will not be augmented \
@@ -347,12 +346,13 @@ class PenalizationControlCostFunctional(ControlCostFunctional):
     def __init__(self, Vh, penalization, augment_control=False):
         """
         Constructor:
-        :param Vh: List of function spaces for the state, parameter, 
-            adjoint, and optimization variables
+
+        :param Vh: List of function spaces for the 
+            state, parameter, adjoint, and optimization variables
         :type param: List of :py:class:`dolfin.FuntionSpace`
         :param penalization: Penalization term defining the cost functional 
         :type param: :py:class`soupy.Penalization`
-        :param augment_control: Set to :code:`True if optimization problem uses a 
+        :param augment_control: Set to :code:`True` if optimization problem uses a 
             :py:class:`soupy.AugmentedVector` as the control/optimization variable.
         :type augment_control: bool 
         """
@@ -371,7 +371,6 @@ class PenalizationControlCostFunctional(ControlCostFunctional):
             will return an :py:class:`soupy.AugmentedVector` \
             that augments the control variable :code:`z` with a scalar that can be used \
             for optimization. \
-            
             If :code:`component == "ALL"`, \
             Generate the list of vectors :code:`x = [u,m,p,z]`. \
             Note that in this case, the :code:`CONTROL` variable will not be augmented \

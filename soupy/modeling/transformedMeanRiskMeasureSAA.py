@@ -79,9 +79,9 @@ class FunctionWrapper:
 
 class TransformedMeanRiskMeasureSAA(RiskMeasure):
     """
-    Mean + variance risk measure using sample average approximation
+    Risk measure defined by transformations of an expectation of the following form
         
-        .. math:: \\rho[Q](z) = \sigma \left( \mathbb{E}_m[f\left(Q(m,z))] \right ) 
+        .. math:: \\rho[Q](z) = \sigma \left( \mathbb{E}_m[f(Q(m,z))] \\right) 
 
     with sample parallelism using MPI
 
