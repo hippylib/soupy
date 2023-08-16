@@ -158,6 +158,18 @@ class SuperquantileRiskMeasureSAA(RiskMeasure):
 
 
     def generate_vector(self, component = "ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            return a vector corresponding to that function space. \
+            If :code:`component == CONTROL`, return an :py:class:`soupy.AugmentedVector` \
+            that augments the control variable :code:`z` with a scalar that can be used \
+            for optimization 
+            
+            If :code:`component == "ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`. \
+            Note that in this case, the :code:`CONTROL` variable will not be augmented \
+            with the scalar, and can be used directly for methods like :code:`solveFwd`.
+        """
         if component == CONTROL:
             return AugmentedVector(self.model.generate_vector(CONTROL), copy_vector=False)
         else:

@@ -18,7 +18,10 @@ class RiskMeasure:
     """
     def generate_vector(self, components="ALL"):
         """
-        Generate the list of vectors :code:`x = [u,m,p,z]`
+        If :code:`components` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`components` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
         """
         raise NotImplementedError("Child class should implement method generate_vector")
 

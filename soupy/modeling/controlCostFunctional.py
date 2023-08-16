@@ -23,6 +23,14 @@ class ControlCostFunctional:
     Base class for the cost function for solving an optimal control problem
     under uncertainty.
     """
+    def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`component` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
+        raise NotImplementedError("Child class should implement method generate_vector")
 
     def cost(self, z, order=0):
         """
@@ -94,6 +102,12 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
         self.has_adjoint_solve = False 
 
     def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`component` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
         return self.model.generate_vector(component)
 
     def objective(self, z):
@@ -243,6 +257,19 @@ class RiskMeasureControlCostFunctional:
         self.z_help = self.risk_measure.generate_vector(CONTROL)
 
     def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, :code:`CONTROL` \
+            return a vector corresponding to that function space. \
+            If :code:`component == CONTROL` and the underlying risk measure uses a :code:`soupy.AugmentedVector`, \
+            return an :py:class:`soupy.AugmentedVector` \
+            that augments the control variable :code:`z` with a scalar that can be used \
+            for optimization. \
+            
+            If :code:`component == "ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`. \
+            Note that in this case, the :code:`CONTROL` variable will not be augmented \
+            with the scalar, and can be used directly for methods like :code:`solveFwd`.
+        """
         return self.risk_measure.generate_vector(component)
 
     def cost(self, z, order=0, **kwargs):
