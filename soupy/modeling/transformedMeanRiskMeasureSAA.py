@@ -35,22 +35,33 @@ def transformedMeanRiskMeasureSAASettings(data = {}):
     return ParameterList(data)
 
 class IdentityFunction:
+    """
+    Scalar function :math:`f(x) = x`
+    """
     def __call__(self, x):
         return x
 
     def grad(self, x):
-        return 1
+        return np.ones_like(x)
 
     def hessian(self, x):
-        return 0
+        return np.zeros_like(x)
 
 
 class FunctionWrapper:
     """
-    Wrapper for a function that can be called with a single argument \
-        Will use finite difference for gradient and Hessian if not provided
+    Wrapper for a scalar function :math:`f(x)` that can be called with a single argument. \
+        Will use finite difference for gradient and Hessian if not provided.
     """
     def __init__(self, function, grad=None, hessian=None, delta=1e-4):
+        """
+        Constructor: 
+
+        :param function: Callable function for :math:`f(x)`
+        :param grad: Optional callable function for the gradient 
+        :param hessian: Optional callable function for the Hessian 
+        :param delta: Finite difference step for derivatives if not provided
+        """
         self._function = function 
         self._grad = grad
         self._hessian = hessian 
@@ -83,7 +94,8 @@ class TransformedMeanRiskMeasureSAA(RiskMeasure):
         
         .. math:: \\rho[Q](z) = g \left( \mathbb{E}_m[f(Q(m,z))] \\right) 
 
-    given user-defined inner/outer functions :math:`f(x)` and :math:`g(x)`, with sample parallelism using MPI.
+    given user-defined inner/outer scalar functions :math:`f(x)` and :math:`g(x)`, \
+        with sample parallelism using MPI.
 
     .. note:: currently does not support simultaneous sample and mesh partition parallelism 
     """
