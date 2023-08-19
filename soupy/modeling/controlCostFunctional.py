@@ -15,13 +15,22 @@ import logging
 import numpy as np
 import dolfin as dl
 
-from .variables import STATE, PARAMETER, ADJOINT, CONTROL
+from .variables import STATE, PARAMETER, ADJOINT, CONTROL 
+from .augmentedVector import AugmentedVector
 
 class ControlCostFunctional:
     """
-    Base class for the cost function for solving an optimal control problem
-    under uncertainty.
+    Base class for the cost function for solving an optimal control problem \
+        under uncertainty.
     """
+    def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`component` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
+        raise NotImplementedError("Child class should implement method generate_vector")
 
     def cost(self, z, order=0):
         """
@@ -93,6 +102,12 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
         self.has_adjoint_solve = False 
 
     def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`component` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
         return self.model.generate_vector(component)
 
     def objective(self, z):
@@ -242,6 +257,18 @@ class RiskMeasureControlCostFunctional:
         self.z_help = self.risk_measure.generate_vector(CONTROL)
 
     def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, :code:`CONTROL` \
+            return a vector corresponding to that function space. \
+            If :code:`component == CONTROL` and the underlying risk measure uses a :code:`soupy.AugmentedVector`, \
+            return an :py:class:`soupy.AugmentedVector` \
+            that augments the control variable :code:`z` with a scalar that can be used \
+            for optimization. \
+            If :code:`component == "ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`. \
+            Note that in this case, the :code:`CONTROL` variable will not be augmented \
+            with the scalar, and can be used directly for methods like :code:`solveFwd`.
+        """
         return self.risk_measure.generate_vector(component)
 
     def cost(self, z, order=0, **kwargs):
@@ -308,5 +335,84 @@ class RiskMeasureControlCostFunctional:
         if self.penalization is not None:
             self.penalization.hessian(self.z, zhat, self.z_help)
             Hzhat.axpy(1.0, self.z_help)
+
+
+class PenalizationControlCostFunctional(ControlCostFunctional):
+    """
+    Cost functional that is defined by a :py:class:`soupy.Penalization` object. \
+        Used for optimization problems where the cost depends only on the \
+        control variable :math:`z` and not the PDE.
+    """
+    def __init__(self, Vh, penalization, augment_control=False):
+        """
+        Constructor:
+
+        :param Vh: List of function spaces for the 
+            state, parameter, adjoint, and optimization variables
+        :type param: List of :py:class:`dolfin.FuntionSpace`
+        :param penalization: Penalization term defining the cost functional 
+        :type param: :py:class`soupy.Penalization`
+        :param augment_control: Set to :code:`True` if optimization problem uses a 
+            :py:class:`soupy.AugmentedVector` as the control/optimization variable.
+        :type augment_control: bool 
+        """
+        self.Vh = Vh 
+        self.penalization = penalization 
+        self.augment_control = augment_control 
+
+        self.z = self.generate_vector(CONTROL)
+
+
+    def generate_vector(self, component="ALL"):
+        """
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, :code:`CONTROL` \
+            return a vector corresponding to that function space. \
+            If :code:`component == CONTROL` and :code:`self.augment_control` is :code:`True`, \
+            will return an :py:class:`soupy.AugmentedVector` \
+            that augments the control variable :code:`z` with a scalar that can be used \
+            for optimization. \
+            If :code:`component == "ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`. \
+            Note that in this case, the :code:`CONTROL` variable will not be augmented \
+            with the scalar, and can be used directly for methods like :code:`solveFwd`.
+        """
+
+
+        if component == "ALL":
+            vector = [dl.Function(self.Vh[ind]).vector() for ind in [STATE, PARAMETER, ADJOINT, CONTROL]]
+        else:
+            vector = dl.Function(self.Vh[component]).vector()
+
+        if self.augment_control and component == CONTROL:
+            # Give the vector as an augmented vector for the CONTROL 
+            vector = AugmentedVector(vector)
+
+        return vector 
+
+
+    def cost(self, z, order=0):
+        """
+        Given the control variable z evaluate the cost functional. Order specifies \
+            the order of derivatives required after the computation of the cost 
+        """
+        self.z.zero()
+        self.z.axpy(1.0, z)
+        return self.penalization.cost(self.z)
+
+    def grad(self, g):
+        """
+        Evaluate the gradient of the cost functional. Assumes :code:`cost` is called \
+            with order >=1 
+        """
+        return self.penalization.grad(self.z, g)
+
+
+    def hessian(self, zhat, Hzhat):
+        """
+        Evaluate the Hessian of the cost functional acting in direction :code:`zhat`. \
+                Assumes :code:`cost` is called with order >=2 
+        """
+        self.penalization.hessian(self.z, zhat, Hzhat)
+
 
 

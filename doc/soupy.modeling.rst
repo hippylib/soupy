@@ -95,6 +95,14 @@ soupy.modeling.superquantileRiskMeasureSAA
     :undoc-members:
     :show-inheritance:
 
+soupy.modeling.transformedMeanRiskMeasureSAA
+----------------------------------------------
+
+.. automodule:: soupy.modeling.transformedMeanRiskMeasureSAA
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 soupy.modeling.penalization
 ---------------------------------------
 

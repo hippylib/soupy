@@ -67,7 +67,7 @@ class ControlQoI(object):
 
 class L2MisfitVarfHandler:
     """
-    Form handler for the L^2 Misfit 
+    Form handler for the :math:`L^2` Misfit 
 
      .. math:: \int_{\Omega} \chi (u - u_d)^2 dx
 
@@ -174,7 +174,7 @@ class VariationalControlQoI(ControlQoI):
 
     def apply_ij(self,i,j, dir, out):
         """
-        Apply the second variation :math:`\\delta_ij` (:code:`i,j` = :code:`soupy.STATE`, \
+        Apply the second variation :math:`\\delta_{ij}` (:code:`i,j` = :code:`soupy.STATE`, \
             :code:`soupy.PARAMETER`, :code:`soupy.CONTROL`) \
             of the QoI in direction :code:`dir`.
 
@@ -333,7 +333,7 @@ class L2MisfitControlQoI(ControlQoI):
 
     def apply_ij(self,i,j, dir, out):
         """
-        Apply the second variation :math:`\\delta_ij` (:code:`i,j` = :code:`soupy.STATE`, \
+        Apply the second variation :math:`\\delta_{ij}` (:code:`i,j` = :code:`soupy.STATE`, \
             :code:`soupy.PARAMETER`, :code:`soupy.CONTROL`) \
             of the QoI in direction :code:`dir`.
 

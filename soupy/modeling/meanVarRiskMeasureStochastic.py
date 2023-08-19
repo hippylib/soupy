@@ -78,6 +78,12 @@ class MeanVarRiskMeasureStochastic(RiskMeasure):
         self.prior.init_vector(self.noise, "noise")
 
     def generate_vector(self, component = "ALL"):
+        """
+        If :code:`components` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+            or :code:`CONTROL`, return a vector corresponding to that function space. \
+            If :code:`components` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
+        """
         return self.model.generate_vector(component)
 
     def computeComponents(self, z, order=0, sample_size=100, rng=None):
