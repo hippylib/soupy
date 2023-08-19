@@ -36,7 +36,8 @@ def transformedMeanRiskMeasureSAASettings(data = {}):
 
 class IdentityFunction:
     """
-    Scalar function :math:`f(x) = x`
+    Scalar function :math:`f(x) = x`. Supports both :code:`x` as a \
+        single scalar or a vector of scalars. 
     """
     def __call__(self, x):
         return x
