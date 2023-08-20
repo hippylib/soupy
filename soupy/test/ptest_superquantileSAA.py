@@ -62,7 +62,7 @@ def l2_norm(u,m,z):
     return u**2*dl.dx 
 
 def qoi_for_testing(u,m,z):
-    return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds
+    return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds - dl.inner(z, z)*dl.dx
 
 
 class TestSuperquantileSAA(unittest.TestCase):
@@ -73,7 +73,7 @@ class TestSuperquantileSAA(unittest.TestCase):
     def setUp(self):
         self.reltol = 1e-3
         self.fdtol = 1e-2
-        self.delta = 1e-3
+        self.delta = 1e-4
         self.n_wells_per_side = 3
         self.nx = 20
         self.ny = 20

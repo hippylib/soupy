@@ -27,8 +27,11 @@ import hippylib as hp
 
 sys.path.append('../../')
 from soupy import VariationalControlQoI, ControlModel, \
+                        TransformedMeanRiskMeasureSAA, \
+                        transformedMeanRiskMeasureSAASettings, \
+                        MeanVarRiskMeasureSAA, \
                         meanVarRiskMeasureSAASettings, \
-                        MeanVarRiskMeasureSAA,\
+                        IdentityFunction, FunctionWrapper, \
                         PDEVariationalControlProblem, \
                         STATE, PARAMETER, CONTROL
 
@@ -40,10 +43,10 @@ def l2_norm(u,m,z):
     return u**2*dl.dx 
 
 def qoi_for_testing(u,m,z):
-    return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds - dl.inner(z, z)*dl.dx
+    return u**2*dl.dx + dl.exp(m) * dl.inner(dl.grad(u), dl.grad(u))*dl.ds - dl.inner(z,z)*dl.dx
 
 
-class TestMeanVarRiskMeasureSAA(unittest.TestCase):
+class TestTransformedMeanRiskMeasureSAA(unittest.TestCase):
     def setUp(self):
         self.reltol = 1e-3
         self.fdtol = 1e-2
@@ -64,27 +67,44 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         self.Vh = [Vh_STATE, Vh_PARAMETER, Vh_STATE, Vh_CONTROL]
 
 
-    def testCostValue(self):
-        settings = poisson_control_settings()
-        settings['nx'] = self.nx
-        settings['ny'] = self.ny
-        settings['N_WELLS_PER_SIDE'] = self.n_wells_per_side
-        settings['LINEAR'] = True
+    def testMeanValue(self):
+        """
+        Test the cost value is correct compared to a mean \
+            :py:class:`TransformedMeanRiskMeasureSAA` should give same results as \
+            :py:class:`MeanVarRiskMeasureSAA` when using the identity function for the \
+            transformation and using zero for the variance weight 
 
-        pde, prior, _ = setupPoissonPDEProblem(self.Vh, settings)
-        def l2norm(u,m,z):
-            return u**2*dl.dx + (m - dl.Constant(1.0))**2*dl.dx 
+        """
+        sample_size = 20
+        is_fwd_linear = False
+        seed = 1 
 
-        qoi = VariationalControlQoI(self.Vh, l2norm)
-        model = ControlModel(pde, qoi)
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
+        qoi, model = self._setup_control_model(pde, qoi_for_testing)
+        rm_settings = transformedMeanRiskMeasureSAASettings()
+        rm_settings['sample_size'] = sample_size
+        rm_settings['seed'] = seed
+        risk = TransformedMeanRiskMeasureSAA(model, prior, settings=rm_settings, comm_sampler=self.comm_sampler)
 
-        risk = MeanVarRiskMeasureSAA(model, prior, comm_sampler=self.comm_sampler)
-        z = model.generate_vector(CONTROL)
-        c_val = risk.cost()
-        print("Before computing: ", c_val)
-        risk.computeComponents(z)
-        c_val = risk.cost()
-        print("After computing: ", c_val)
+        rm_mean_settings = meanVarRiskMeasureSAASettings()
+        rm_mean_settings['beta'] = 0.0 
+        rm_mean_settings['sample_size'] = sample_size
+        rm_mean_settings['seed'] = seed
+        mean_risk = MeanVarRiskMeasureSAA(model, prior, settings=rm_mean_settings, comm_sampler=self.comm_sampler)
+
+        z = risk.generate_vector(CONTROL)
+        control_dist.sample(z)
+    
+        risk.computeComponents(z, order=0)
+        mean_risk.computeComponents(z, order=0)
+        transformed_mean_evaluation = risk.cost()
+        true_mean_evaluation = mean_risk.cost()
+        
+        tol = 1e-10
+        self.assertTrue(abs(transformed_mean_evaluation - true_mean_evaluation) < tol)
+
+
+
 
     def _setup_pde_and_distributions(self, is_fwd_linear):
         settings = poisson_control_settings()
@@ -100,21 +120,35 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         model = ControlModel(pde, qoi)
         return qoi, model
 
-    def _setup_mean_var_risk_measure(self, model, prior, sample_size, beta):
-        rm_settings = meanVarRiskMeasureSAASettings()
+    def _setup_transformed_mean_risk_measure(self, model, prior, sample_size):
+        """
+        Set up the test case for the transformed mean risk measure 
+        """
+        rm_settings = transformedMeanRiskMeasureSAASettings()
         rm_settings['sample_size'] = sample_size
-        rm_settings['beta'] = beta
-        risk = MeanVarRiskMeasureSAA(model, prior, rm_settings, comm_sampler=self.comm_sampler)
+
+        function_value = lambda x : np.sin(x)
+        grad = lambda x : np.cos(x)
+        hess = lambda x : -np.sin(x)
+        function = FunctionWrapper(function_value, grad, hess)
+        rm_settings['inner_function'] = function
+        rm_settings['outer_function'] = function
+
+        risk = TransformedMeanRiskMeasureSAA(model, prior, rm_settings, comm_sampler=self.comm_sampler)
         return risk
         
     def testSavedSolution(self):
+        """
+        Test that the risk measure is storing the correct solutions when evaluating \
+            at different controls
+        """
+
         IS_FWD_LINEAR = False 
         SAMPLE_SIZE = 10
-        BETA = 0.5 
 
         pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
         qoi, model = self._setup_control_model(pde, l2_norm)
-        risk = self._setup_mean_var_risk_measure(model, prior, SAMPLE_SIZE, BETA)
+        risk = self._setup_transformed_mean_risk_measure(model, prior, SAMPLE_SIZE)
 
         z0 = model.generate_vector(CONTROL)
         z1 = model.generate_vector(CONTROL)
@@ -166,25 +200,14 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         self.assertTrue(risk.has_adjoint_solve)
 
 
-    def finiteDifferenceCheck(self, sample_size, is_fwd_linear=True):
-        BETA = 0.5
-        print("-" * 80)
-        print("Finite difference check with %d samples" %(sample_size))
-        if is_fwd_linear:
-            print("Linear problem")
-        else:
-            print("Nonlinear problem")
+    def finiteDifferenceCheck(self, risk, control_dist):
 
-        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
-        qoi, model = self._setup_control_model(pde, qoi_for_testing)
-        risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
-
-        z0 = model.generate_vector(CONTROL)
-        dz = model.generate_vector(CONTROL)
-        z1 = model.generate_vector(CONTROL)
-        g0 = model.generate_vector(CONTROL)
-        g1 = model.generate_vector(CONTROL)
-        Hdz = model.generate_vector(CONTROL)
+        z0 = risk.generate_vector(CONTROL)
+        dz = risk.generate_vector(CONTROL)
+        z1 = risk.generate_vector(CONTROL)
+        g0 = risk.generate_vector(CONTROL)
+        g1 = risk.generate_vector(CONTROL)
+        Hdz = risk.generate_vector(CONTROL)
 
         # np.random.seed(1)
         control_dist.sample(z0)
@@ -222,15 +245,52 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         print("Norm error: %g" %(err_hess))
         self.assertTrue(err_hess/np.linalg.norm(Hdz_ad) < self.fdtol)
 
-    def testFiniteDifferenceLinearProblem(self):
-        is_fwd_linear = True
-        n_samples = 100
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
-
-    def testFiniteDifferenceNonlinearProblem(self):
+    def testMeanFiniteDifference(self):
+        """
+        Tests the finite difference of the :code:`TransformedMeanRiskMeasureSAA` class \
+            when using the identity function 
+        """
+        print(80*"-")
+        print("Finite difference using mean as risk measure")
+        sample_size = 20
         is_fwd_linear = False
-        n_samples = 100
-        self.finiteDifferenceCheck(n_samples, is_fwd_linear)
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
+        qoi, model = self._setup_control_model(pde, qoi_for_testing)
+
+        rm_settings = transformedMeanRiskMeasureSAASettings()
+        rm_settings['sample_size'] = sample_size
+        risk = TransformedMeanRiskMeasureSAA(model, prior, settings=rm_settings, comm_sampler=self.comm_sampler)
+
+        self.finiteDifferenceCheck(risk, control_dist)
+
+    def testTransformedMeanFiniteDifferenceLinearProblem(self):
+        """
+        Tests the finite difference assuming the mean risk measure using a linear PDE 
+        """
+        print(80*"-")
+        print("Finite difference using transformed mean as risk measure (Linear PDE)")
+        sample_size = 20
+        is_fwd_linear = True
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
+        qoi, model = self._setup_control_model(pde, qoi_for_testing)
+        risk = self._setup_transformed_mean_risk_measure(model, prior, sample_size)
+        self.finiteDifferenceCheck(risk, control_dist)
+
+
+    def testTransformedMeanFiniteDifferenceNonlinearProblem(self):
+        """
+        Tests the finite difference assuming the mean risk measure using a nonlinear PDE 
+        
+        """
+        print(80*"-")
+        print("Finite difference using transformed mean as risk measure (Nonlinear PDE)")
+        sample_size = 20
+        is_fwd_linear = False
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
+        qoi, model = self._setup_control_model(pde, qoi_for_testing)
+        risk = self._setup_transformed_mean_risk_measure(model, prior, sample_size)
+        self.finiteDifferenceCheck(risk, control_dist)
+
 
     def checkGatherSamples(self, sample_size):
         """
@@ -238,12 +298,10 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
             and that the correct number of samples is being collected
         """
 
-        IS_FWD_LINEAR = False 
-        BETA = 0.5 
-
-        pde, prior, control_dist = self._setup_pde_and_distributions(IS_FWD_LINEAR)
+        is_fwd_linear = False 
+        pde, prior, control_dist = self._setup_pde_and_distributions(is_fwd_linear)
         qoi, model = self._setup_control_model(pde, l2_norm)
-        risk = self._setup_mean_var_risk_measure(model, prior, sample_size, BETA)
+        risk = self._setup_transformed_mean_risk_measure(model, prior, sample_size)
 
         rank_sampler = self.comm_sampler.Get_rank()
         risk.q_samples = np.zeros(risk.q_samples.shape) + rank_sampler
@@ -257,12 +315,12 @@ class TestMeanVarRiskMeasureSAA(unittest.TestCase):
         self.assertTrue(np.isclose(number_equal_to_rank, risk.sample_size_allprocs[rank_sampler]))
         self.assertTrue(len(q_all) == sample_size)
 
-
     def testGatherSamples(self):
         SAMPLE_SIZE_ODD = 2017
         SAMPLE_SIZE_EVEN = 720
         self.checkGatherSamples(SAMPLE_SIZE_ODD)
         self.checkGatherSamples(SAMPLE_SIZE_EVEN)
+
 
 
 if __name__ == "__main__":

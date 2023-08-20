@@ -1,3 +1,4 @@
+
 # Copyright (c) 2023, The University of Texas at Austin 
 # & Georgia Institute of Technology
 #
@@ -16,7 +17,6 @@ import numpy as np
 import dolfin as dl 
 import mpi4py
 
-import sys, os
 from hippylib import ParameterList, Random
 
 from .riskMeasure import RiskMeasure
@@ -27,25 +27,81 @@ from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective
         MultipleSerialPDEsCollective, allocate_process_sample_sizes
 
 
-def meanVarRiskMeasureSAASettings(data = {}):
+def transformedMeanRiskMeasureSAASettings(data = {}):
     data['sample_size'] = [100,'Number of Monte Carlo samples']
-    data['beta'] = [0,'Weighting factor for variance']
     data['seed'] = [1, 'rng seed for sampling']
-
+    data['inner_function'] = [IdentityFunction(), 'Transformation of Q inside the expectation']
+    data['outer_function'] = [IdentityFunction(), 'Transformation of Q outside the expectation']
     return ParameterList(data)
 
-class MeanVarRiskMeasureSAA(RiskMeasure):
+class IdentityFunction:
     """
-    Mean + variance risk measure using sample average approximation
-        
-        .. math:: \\rho[Q](z) = \mathbb{E}_m[Q(m,z)] + \\beta \mathbb{V}_m[Q(m,z)]
+    Scalar function :math:`f(x) = x`. Supports both :code:`x` as a \
+        single scalar or a vector of scalars. 
+    """
+    def __call__(self, x):
+        return x
 
-    with sample parallelism using MPI
+    def grad(self, x):
+        return np.ones_like(x)
+
+    def hessian(self, x):
+        return np.zeros_like(x)
+
+
+class FunctionWrapper:
+    """
+    Wrapper for a scalar function :math:`f(x)` that can be called with a single argument. \
+        Will use finite difference for gradient and Hessian if not provided.
+    """
+    def __init__(self, function, grad=None, hessian=None, delta=1e-4):
+        """
+        Constructor: 
+
+        :param function: Callable function for :math:`f(x)`
+        :param grad: Optional callable function for the gradient 
+        :param hessian: Optional callable function for the Hessian 
+        :param delta: Finite difference step for derivatives if not provided
+        """
+        self._function = function 
+        self._grad = grad
+        self._hessian = hessian 
+        self._delta = delta
+
+    def __call__(self, x):
+        return self._function(x)
+
+    def grad(self, x):
+        if self._grad is None:
+            f0 = self._function(x)            
+            f1 = self._function(x + self._delta)
+            return (f1 - f0)/self._delta
+        else:
+            return self._grad(x)
+
+    def hessian(self, x):
+        if self._hessian is None:
+            g0 = self.grad(x)
+            g1 = self.grad(x + self._delta)
+            return (g1 - g0)/self._delta
+        else:
+            return self._hessian(x)
+
+
+
+class TransformedMeanRiskMeasureSAA(RiskMeasure):
+    """
+    Risk measure defined by transformations of an expectation of the following form
+        
+        .. math:: \\rho[Q](z) = g \left( \mathbb{E}_m[f(Q(m,z))] \\right) 
+
+    given user-defined inner/outer scalar functions :math:`f(x)` and :math:`g(x)`, \
+        with sample parallelism using MPI.
 
     .. note:: currently does not support simultaneous sample and mesh partition parallelism 
     """
 
-    def __init__(self, control_model, prior, settings = meanVarRiskMeasureSAASettings(), comm_sampler=mpi4py.MPI.COMM_WORLD):
+    def __init__(self, control_model, prior, settings = transformedMeanRiskMeasureSAASettings(), comm_sampler=mpi4py.MPI.COMM_WORLD):
         """
         Constructor:
 
@@ -54,7 +110,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         :type control_model: :py:class:`soupy.ControlModel`
         :param prior: The prior distribution for the random parameter
         :type prior: :py:class:`hippylib.Prior`
-        :param settings: additional settings
+        :param settings: Additional settings
         :type settings: :py:class:`hippylib.ParameterList`
         :param comm_sampler: MPI communicator for sample parallelism 
         :type comm_sampler: :py:class:`mpi4py.MPI.Comm`
@@ -63,7 +119,8 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         self.prior = prior
         self.settings = settings
         self.sample_size = self.settings['sample_size']
-        self.beta = settings['beta']
+        self.inner_function = self.settings['inner_function']
+        self.outer_function = self.settings['outer_function']
 
         assert self.sample_size >= comm_sampler.Get_size(), \
             "Total samples %d needs to be greater than MPI size %d" %(self.sample_size, comm_sampler.Get_size())
@@ -79,15 +136,11 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         # Within process 
         self.q_samples = np.zeros(self.sample_size_proc)
 
-        # self.q_bar_proc = np.array([0.])
-        # self.g_bar_proc = self.model.generate_vector(CONTROL)
-        # self.qg_bar_proc = self.model.generate_vector(CONTROL)
 
         # Aggregate components for computing cost, grad, hess
-        self.q_bar = 0
-        self.q2_bar = 0 
-        self.g_bar = self.model.generate_vector(CONTROL)
-        self.qg_bar = self.model.generate_vector(CONTROL)
+        self.fq_bar = 0 
+
+        self.f_prime_g_bar = self.model.generate_vector(CONTROL)
 
         # For sampling
         self.noise = dl.Vector(self.model.problem.Vh[STATE].mesh().mpi_comm()) # use the mesh mpi comm 
@@ -135,12 +188,13 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
     def generate_vector(self, component = "ALL"):
         """
-        If :code:`components` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
+        If :code:`component` is :code:`STATE`, :code:`PARAMETER`, :code:`ADJOINT`, \
             or :code:`CONTROL`, return a vector corresponding to that function space. \
-            If :code:`components` is :code:`"ALL"`, \
-            generate the list of vectors :code:`x = [u,m,p,z]`
+            If :code:`component` is :code:`"ALL"`, \
+            Generate the list of vectors :code:`x = [u,m,p,z]`
         """
         return self.model.generate_vector(component)
+
 
     def computeComponents(self, z, order=0, **kwargs):
         """
@@ -172,15 +226,13 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         # Check if a new adjoint solve is needed 
         if new_forward_solve:
             # Reset the averages for new solve 
-            self.q_bar = 0 
-            self.q2_bar = 0 
+            self.fq_bar = 0 
 
             # Make sure previous adjoint solve is no longer valid 
             self.has_adjoint_solve = False 
             new_adjoint_solve = True 
             # print("Solving new adjoint")
-            self.g_bar.zero()
-            self.qg_bar.zero()
+            self.f_prime_g_bar.zero()
 
         elif self.has_adjoint_solve:
             # If it's not a new forward solve, check if we already have an adjoint 
@@ -189,8 +241,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
             # If we don't already have an adjoint, compute a new one 
             # print("Solving new adjoint")
             new_adjoint_solve = True 
-            self.g_bar.zero()
-            self.qg_bar.zero()
+            self.f_prime_g_bar.zero()
             # In this case, self.has_adjoint_solve is already False
 
         # Now actually compute the solves
@@ -205,22 +256,18 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
                     # Compute the averages
                     qi = self.model.cost(x) 
                     self.q_samples[i] = qi 
-                    self.q_bar += qi/self.sample_size
-                    self.q2_bar += qi**2/self.sample_size
+                    self.fq_bar += self.inner_function(qi)/self.sample_size
 
                 if order >= 1 and new_adjoint_solve:
                     self.model.solveAdj(x[ADJOINT], x)
                     self.model.evalGradientControl(x, self.g_mc[i])
-                    self.g_bar.axpy(1/self.sample_size, self.g_mc[i])
-                    self.qg_bar.axpy(self.q_samples[i]/self.sample_size, self.g_mc[i])
+                    self.f_prime_g_bar.axpy(self.inner_function.grad(self.q_samples[i])/self.sample_size, self.g_mc[i])
             
             if new_forward_solve:
-                self.q_bar = self.collective.allReduce(self.q_bar, "SUM")
-                self.q2_bar = self.collective.allReduce(self.q2_bar, "SUM")
+                self.fq_bar = self.collective.allReduce(self.fq_bar, "SUM")
             
             if order >= 1 and new_adjoint_solve:
-                self.collective.allReduce(self.g_bar, "SUM")
-                self.collective.allReduce(self.qg_bar, "SUM")
+                self.collective.allReduce(self.f_prime_g_bar, "SUM")
 
                 # We have computed a new adjoint solve 
                 # Don't need to alter if it's any other case 
@@ -237,7 +284,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
 
         .. note:: Assumes :code:`computeComponents` has been called with :code:`order>=0`
         """
-        return self.q_bar + self.beta * (self.q2_bar - self.q_bar**2)
+        return self.outer_function(self.fq_bar)
 
     def grad(self, g):
         """
@@ -249,9 +296,7 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         .. note:: Assumes :code:`self.computeComponents` has been called with :code:`order >= 1`
         """
         g.zero()
-        g.axpy(1.0, self.g_bar)
-        g.axpy(2*self.beta, self.qg_bar)
-        g.axpy(-2*self.beta*self.q_bar, self.g_bar)
+        g.axpy(self.outer_function.grad(self.fq_bar), self.f_prime_g_bar)
 
 
     def hessian(self, zhat, Hzhat):
@@ -270,8 +315,6 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         if self.control_model_hessian is None:
             self.control_model_hessian = ControlModelHessian(self.model)
 
-
-
         Hzhat.zero()
         for i in range(self.sample_size_proc):
             xi = self.x_mc[i] 
@@ -280,21 +323,19 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
             self.model.setLinearizationPoint(xi)
             self.control_model_hessian.mult(zhat, self.Hi_zhat)
 
-            hessian_scale_factor = 1 + 2*self.beta*qi - 2*self.beta*self.q_bar
-            
             # Apply :math:`H_i z` the qoi hessian at sample
-            Hzhat.axpy(hessian_scale_factor/self.sample_size, self.Hi_zhat)
+            hessian_scale_factor = self.inner_function.grad(qi) * self.outer_function.grad(self.fq_bar)
+            Hzhat.axpy(hessian_scale_factor/self.sample_size, self.Hi_zhat) 
 
             # Apply :math:`g_i g_i^T`for qoi gradients at sample
-            gradient_scale_factor = gi.inner(zhat) * 2*self.beta
+            gradient_scale_factor = gi.inner(zhat) * self.inner_function.hessian(qi) * self.outer_function.grad(self.fq_bar)
             Hzhat.axpy(gradient_scale_factor/self.sample_size, gi)
         
-
         self.collective.allReduce(Hzhat, "SUM")
 
         # Apply :math:`\bar{g} \bar{g}^T` for mean qoi gradients
-        mean_gradient_scale_factor = self.g_bar.inner(zhat) * 2*self.beta
-        Hzhat.axpy(-mean_gradient_scale_factor, self.g_bar)
+        mean_gradient_scale_factor = self.f_prime_g_bar.inner(zhat) * self.outer_function.hessian(self.fq_bar)
+        Hzhat.axpy(mean_gradient_scale_factor, self.f_prime_g_bar)
 
 
     def gather_samples(self):
@@ -307,5 +348,4 @@ class MeanVarRiskMeasureSAA(RiskMeasure):
         q_all = np.zeros(self.sample_size) 
         self.comm_sampler.Allgatherv(self.q_samples, [q_all, self.sample_size_allprocs])
         return q_all 
-
 

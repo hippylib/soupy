@@ -168,7 +168,7 @@ class ControlModel:
         self.problem.evalGradientParameter(x, mg)
         self.qoi.grad(PARAMETER,x,tmp)
         mg.axpy(1., tmp)
-        return math.sqrt(mg.inner(tmp))
+        return math.sqrt(mg.inner(mg))
 
     
     def evalGradientControl(self,x, mg):
@@ -192,7 +192,7 @@ class ControlModel:
         # print("MIDFIT GRAD: ", tmp.get_local())
         mg.axpy(1., tmp)
         # print("OVERALL GRAD: ", mg.get_local())
-        return math.sqrt(mg.inner(tmp))
+        return math.sqrt(mg.inner(mg))
 
     
     def setLinearizationPoint(self, x, gauss_newton_approx=False):
