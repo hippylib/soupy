@@ -16,6 +16,7 @@ Documentation
    :maxdepth: 1
    
    Installation <install>
+   Tutorials <tutorials>
    Change log <changelog>
    How to contribute <contributing>
    Complete API reference <soupy>
