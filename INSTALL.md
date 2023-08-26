@@ -65,6 +65,6 @@ Examples in the `examples` directory can now be run.
 ## Build the SOUPy documentation using Sphinx
 
 Documentation for `SOUPy` can be built using `sphinx`, along with extensions
-`myst_parser` and `sphinx_rtd_theme`. These can be installed via `pip`.
+`myst_nb` and `sphinx_rtd_theme`. These can be installed via `pip`.
 
 To build simply run `make html` from `doc` folder.
