@@ -40,7 +40,7 @@ are frequently used by engineers to optimize the performance of various physical
 through decisions relating to their configuration (optimal design) and operation (optimal control). 
 However, the ability to make optimal choices is often hindered by uncertainty, 
 such as uncertainty in model parameters (e.g. material properties) and operating conditions.
-The need for making robust and risk-informed decisions thus gives rise to problems of optimization under uncertainty (OUU). 
+The need to account for these uncertainties in order to arrive at robust and risk-informed decisions thus gives rise to problems of optimization under uncertainty (OUU).
 
 SOUPy is a python library for solving PDE-constrained optimization problems with uncertain parameters,
 in which the optimization objective is defined by a risk measure over a given quantity of interest (QoI).
@@ -49,13 +49,13 @@ The software allows users to supply the underlying PDE model, quantity of intere
 while providing implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional-value-at-risk (CVaR).
 as well as derivative-based optimizers. 
 SOUPy leverages FEniCS [@LoggMardalWells12] for the formulation, discretization, and solution of PDEs, 
-and the framework of hIPPYlib [@VillaPetraGhattas18; @VillaPetraGhattas21] for sampling and adjoint-based derivative computation, 
+and the framework of hIPPYlib [@VillaPetraGhattas18; @VillaPetraGhattas21] for sampling from random fields, adjoint-based and matrix-free derivative computation,
 while also providing interfaces to existing optimization algorithms in SciPy.
 
 
 # Statement of need 
 
-Problems of PDE-constrained optimization under uncertainty arise due to the need to make risk-informed decisions in the presence of uncertainty.
+Problems of PDE-constrained optimization under uncertainty arise due to the ubiquity of uncertainty in physical and engineered systems.
 In deterministic PDE-constrained optimization, the goal is typically to minimize a quantity of interest (QoI) that is a function of the system's state and quantifies its performance, where the optimization and state variables are related through the underlying PDE model. 
 Compared to this deterministic counterpart, PDE-constrained OUU represents an added layer of complexity, 
 as the QoI becomes a random variable due to its dependence on the uncertain model parameters.
