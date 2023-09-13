@@ -83,7 +83,7 @@ or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided i
 Several open-source software packages such as dolfin-adjoint [@MituschFunkeDokken2019] and hIPPYlib 
 provide the capabilities for solving PDE-constrained optimization problems with generic PDEs through adjoint-based computation of derivatives. 
 However, these packages largely focus on the deterministic setting. 
-On the other hand, the Rapid Optimization Library (ROL), released as a part of Trilinos [trilinos-website], provides advanced algorithms for both deterministic and stochastic (risk-measure) optimization, where support for PDE-constrained OUU is enabled by its interfaces with user-supplied state and adjoint PDE solvers. 
+On the other hand, the Rapid Optimization Library (ROL), released as a part of Trilinos [@trilinos-website], provides advanced algorithms for both deterministic and stochastic (risk-measure) optimization, where support for PDE-constrained OUU is enabled by its interfaces with user-supplied state and adjoint PDE solvers. 
 
 As a unified platform, SOUPy can be used by researchers to rapidly prototype formulations for PDE-constrained OUU problems.
 Additionally, SOUPy aims to facilitate the development and testing of novel algorithms.
