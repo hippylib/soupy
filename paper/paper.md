@@ -66,27 +66,26 @@ the variance, or superquantile/CVaR are common choices.
 Computation of risk measures typically requires sampling or other forms of quadrature over the distribution of the uncertain parameter.
 This results in a complex optimization problem in which each evaluation of the optimization objective requires numerous solutions of the underlying PDE.
 
-SOUPy provides a platform to formulate and solve such PDE-constrained OUU problems using efficient derivative-based optimization methods. 
-Users supply the definitions for the PDE constraint, QoI, and additional penalization terms for the optimization variable, and are given the option to choose from a suite of used risk measures.
-As a core functionality, SOUPy implements sample-based evaluation of risk measures as well as their gradients and Hessians, where parallel-in-sample computation is supported through MPI. 
-The resulting cost functionals can then be minimized using SOUPy's implementations of large-scale optimization algorithms, such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
-or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. 
-
 <!-- \autoref{fig:diagram} shows the key components of a PDE-constrained OUU problem and their corresponding classes in the SOUPy.
 
 ![Structure of a PDE-constrained OUU problem, illustrating the main components and their corresponding classes as implemented in SOUPy. \label{fig:diagram}](diagram.pdf) -->
 
-Several open-source software packages such as dolfin-adjoint [@MituschFunkeDokken2019] and hIPPYlib 
-provide the capabilities for solving PDE-constrained optimization problems with generic PDEs through adjoint-based computation of derivatives. 
-However, these packages largely focus on the deterministic setting. 
-Instead, SOUPY integrates these capabilities with risk measures approximations to address problems in PDE-constrained OUU.
+SOUPy aims to provide a platform to formulate and solve PDE-constrained OUU problems using efficient derivative-based optimization methods. 
+Users supply the definitions for the PDE constraint, QoI, and additional penalization terms for the optimization variable, and are given the option to choose from a suite of used risk measures.
 To this end, SOUPy makes use of FEniCS, an open source finite-element library, to create and solve the underlying PDEs. 
 The unified form language [@AlnaesMartinLoggEtAl14] used by FEniCS also allows users to conveniently define the PDE, QoI, and penalization terms using their variational forms.
 SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
 adopting its framework for adjoint-based derivative computation and algorithms for efficient sampling of random fields.
+As a core functionality, SOUPy implements sample-based evaluation of risk measures as well as their gradients and Hessians, where parallel-in-sample computation is supported through MPI. 
+The resulting cost functionals can then be minimized using SOUPy's implementations of large-scale optimization algorithms, such as L-BFGS [@LiuNocedal89] and Inexact Newton-CG [@EisenstatWalker96; @Steihaug83], 
+or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided interface. 
 
+Several open-source software packages such as dolfin-adjoint [@MituschFunkeDokken2019] and hIPPYlib 
+provide the capabilities for solving PDE-constrained optimization problems with generic PDEs through adjoint-based computation of derivatives. 
+However, these packages largely focus on the deterministic setting. 
+On the other hand, the Rapid Optimization Library (ROL), released as a part of Trilinos [trilinos-website], provides advanced algorithms for both deterministic and stochastic (risk-measure) optimization, where support for PDE-constrained OUU is enabled by its interfaces with user-supplied state and adjoint PDE solvers. 
 
-SOUPy can be used by researchers to rapidly prototype formulations for PDE-constrained OUU problems.
+As a unified platform, SOUPy can be used by researchers to rapidly prototype formulations for PDE-constrained OUU problems.
 Additionally, SOUPy aims to facilitate the development and testing of novel algorithms.
 For example, SOUPy has been used in the development of Taylor approximation-based methods for the optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and groundwater extraction [@ChenGhattas21] under uncertainty.
 It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU [@LuoOLearyRoseberryChenEtAl23].
