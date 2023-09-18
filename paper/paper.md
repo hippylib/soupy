@@ -43,7 +43,7 @@ such as uncertainty in model parameters (e.g. material properties) and operating
 The need to account for these uncertainties in order to arrive at robust and risk-informed decisions thus gives rise to problems of optimization under uncertainty (OUU) [@KouriShapiro18].
 
 SOUPy is a Python library for solving PDE-constrained optimization problems with uncertain parameters (which we use broadly to refer to sources, BCs, & ICs, in addition to PDE coefficients).
-The optimization problem is defined by a risk measure over a given quantity of interest (QoI), which is present as either an optimization objective or a constraint (as in chance-constrained optimization).
+The optimization problem is defined by a risk measure over a given quantity of interest (QoI), which is present as either an optimization objective or constraint (as in chance-constrained optimization).
 Specific attention is given to the case where the uncertain parameters are formally infinite dimensional (e.g. Gaussian random fields).
 The software allows users to supply the underlying PDE model, quantity of interest, and penalty terms, 
 while providing implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional-value-at-risk (CVaR), as well as derivative-based optimizers. 
@@ -74,10 +74,10 @@ On the other hand, the Rapid Optimization Library (ROL) [@KouriRidzalWinckel17],
 
 ![Structure of a PDE-constrained OUU problem, illustrating the main components and their corresponding classes as implemented in SOUPy. \label{fig:diagram}](diagram.pdf) -->
 
-SOUPy aims to provide a platform to formulate and solve PDE-constrained OUU problems using efficient derivative-based optimization methods. 
-Users supply the definitions for the PDE constraint, QoI, and additional penalty terms to account for the cost of design/control. 
+SOUPy aims to provide a unified platform to formulate and solve PDE-constrained OUU problems using efficient derivative-based optimization methods. 
+Users supply the definitions for the PDE constraint, QoI, and additional penalty terms that account for the cost of design/control. 
 To this end, SOUPy makes use of FEniCS, an open source finite element library, to create and solve the underlying PDEs. 
-The unified form language (UFL) [@AlnaesMartinLoggEtAl14] used by FEniCS also allows users to define the PDE, QoI, and penalty terms using their variational forms.
+The unified form language (UFL) [@AlnaesMartinLoggEtAl14] used by FEniCS allows users to conveniently define the PDE, QoI, and penalty terms using their variational forms.
 SOUPy is also integrated with hIPPYlib, an open source library for large-scale inverse problems, 
 adopting its framework for adjoint-based derivative computation that leverages the symbolic differentiation capabilities of UFL, and algorithms for efficient sampling of random fields.
 Users are then given the option to choose from a suite of risk measures.
@@ -88,9 +88,9 @@ or through algorithms available in SciPy [@2020SciPy-NMeth] using the provided i
 <!-- Since the problem formulation can be conveniently supplied through their variational forms in SOUPy, the library allows researchers to rapidly prototype formulations for PDE-constrained OUU problems, 
 and automatically handles the risk measure evaluations and derivative computations. -->
 
-As a unified platform, SOUPy allows researchers to rapidly prototype formulations for PDE-constrained OUU problems by simply supplying the variational forms for the problem formulation, and leaving SOUPy to automatically handle the risk measure evaluations and derivative computations.
+Thus, SOUPy allows researchers to rapidly prototype formulations for PDE-constrained OUU problems by simply supplying the variational forms for the problem formulation, and leaving SOUPy to automatically handle the risk measure evaluations and derivative computations.
 Additionally, SOUPy aims to facilitate the development and testing of novel algorithms.
-For example, SOUPy has been used in the development of Taylor approximation-based methods for the risk-averse optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and [@AlghamdiChenKaramehmedovic22], as well as groundwater extraction [@ChenGhattas21] subject to chance constraints.
+For example, SOUPy has been used in the development of Taylor approximation-based methods for the risk-averse optimization of turbulent flows [@ChenVillaGhattas19], metamaterial design [@ChenHabermanGhattas21], and photonic nanojets [@AlghamdiChenKaramehmedovic22], as well as groundwater extraction [@ChenGhattas21] subject to chance constraints.
 It has also been used to obtain baselines for the development of machine learning approaches for PDE-constrained OUU [@LuoOLearyRoseberryChenEtAl23].
 
 # Acknowledgements
