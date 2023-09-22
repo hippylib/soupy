@@ -4,8 +4,8 @@ tags:
   - Python
   - Uncertainty quantification
   - PDE-constrained optimization
-  - Adjoint-based methods 
-  - Optimal design 
+  - Optimization under uncertainty
+  - Adjoint method
 authors:
   - name: Dingcheng Luo 
     affiliation: 1
@@ -42,7 +42,7 @@ However, the ability to make optimal choices is often hindered by uncertainty,
 such as uncertainty in model parameters (e.g. material properties) and operating conditions (e.g. forces on a structure).
 The need to account for these uncertainties in order to arrive at robust and risk-informed decisions thus gives rise to problems of optimization under uncertainty (OUU) [@KouriShapiro18].
 
-SOUPy is a Python library for solving PDE-constrained optimization problems with uncertain parameters, where we use the term *parameters* broadly to refer to the likes of sources and initial/boundary conditions in addition to PDE coefficients.
+SOUPy is a Python library for solving PDE-constrained optimization problems with uncertain parameters, where we use the term *parameters* broadly to refer to sources and initial/boundary conditions in addition to PDE coefficients.
 The optimization problem is defined by a risk measure over a given quantity of interest (QoI), which is present as either an optimization objective or constraint (as in chance-constrained optimization).
 Specific attention is given to the case where the uncertain parameters are formally infinite dimensional (e.g. Gaussian random fields).
 The software allows users to supply the underlying PDE model, quantity of interest, and penalty terms, 
