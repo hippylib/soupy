@@ -126,7 +126,7 @@ class HyperelasticityControlPDE(soupy.PDEVariationalControlProblem):
         self.max_newton_iter_increment = max_newton_iter_increment
         self.backtrack = backtrack
         
-        default_solver_parameters = {'newton_solver': {'linear_solver' : 'lu', 'maximum_iterations': self.max_newton_iter}}
+        default_solver_parameters = {'newton_solver': {'linear_solver' : 'lu', 'maximum_iterations': self.max_newton_iter, 'error_on_nonconvergence' : False}}
         self.default_newton_solver = soupy.NonlinearVariationalSolver(default_solver_parameters)
 
         self.backtrack_newton_solver = soupy.NewtonBacktrackSolver()
@@ -141,25 +141,24 @@ class HyperelasticityControlPDE(soupy.PDEVariationalControlProblem):
             Do load increments using backtracking newton if full solve fails
         """
         self.n_calls["forward"] += 1
-        try:
-            print("Process %d: Try immediate solve" %(MPI.COMM_WORLD.Get_rank()))
-            # Make functions 
-            u = hp.vector2Function(x[soupy.STATE], self.Vh[soupy.STATE])
-            m = hp.vector2Function(x[soupy.PARAMETER], self.Vh[soupy.PARAMETER])
-            p = dl.TestFunction(self.Vh[soupy.ADJOINT])
-            z = hp.vector2Function(x[soupy.CONTROL], self.Vh[soupy.CONTROL])
+        print("Process %d: Try immediate solve" %(MPI.COMM_WORLD.Get_rank()))
+        # Make functions 
+        u = hp.vector2Function(x[soupy.STATE], self.Vh[soupy.STATE])
+        m = hp.vector2Function(x[soupy.PARAMETER], self.Vh[soupy.PARAMETER])
+        p = dl.TestFunction(self.Vh[soupy.ADJOINT])
+        z = hp.vector2Function(x[soupy.CONTROL], self.Vh[soupy.CONTROL])
 
-            # Define full nonlinear problem
-            res_form = self.varf_handler(u, m, p, z)
-            jacobian_form = dl.derivative(res_form, u) 
+        # Define full nonlinear problem
+        res_form = self.varf_handler(u, m, p, z)
+        jacobian_form = dl.derivative(res_form, u) 
 
-            num_iters, converged = self.default_newton_solver.solve(res_form, u, self.bc, jacobian_form)
-            self.n_linear_solves += num_iters
+        num_iters, converged = self.default_newton_solver.solve(res_form, u, self.bc, jacobian_form)
+        self.n_linear_solves += num_iters
 
-            if converged:
-                print("Process %d: Immediate solve succeeded" %(MPI.COMM_WORLD.Get_rank()))
+        if converged:
+            print("Process %d: Immediate solve succeeded" %(MPI.COMM_WORLD.Get_rank()))
 
-        except:
+        else:
             print("Process %d: Increment load instead starting form zero with backtracking" %(MPI.COMM_WORLD.Get_rank()))
 
             # Start with zero initial guess
