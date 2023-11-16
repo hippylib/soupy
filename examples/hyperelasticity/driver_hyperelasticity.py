@@ -154,7 +154,7 @@ if __name__ == "__main__":
     plt.savefig("%s/u_soft.png" %(save_dir))
 
     plt.figure()
-    ax = dl.plot(hp.vector2Function(x[soupy.CONTROL], Vh[soupy.CONTROL]))
+    ax = dl.plot(hp.vector2Function(x[soupy.CONTROL], Vh[soupy.CONTROL]), vmin=0.0, vmax=1.0, extend='max')
     plt.colorbar(ax)
     plt.title("Optimal design")
     plt.savefig("%s/z_opt.png" %(save_dir))
