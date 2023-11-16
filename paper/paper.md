@@ -16,7 +16,7 @@ authors:
   - name: Umberto Villa 
     affiliation: 1
   - name: Omar Ghattas
-    affiliation: "1 3"
+    affiliation: "1, 3"
 affiliations:
  - name: Oden Institute for Computational Engineering and Sciences, The University of Texas at Austin, USA 
    index: 1

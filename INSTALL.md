@@ -11,12 +11,11 @@
  - PETSc dependencies: `parmetis`, `scotch`, `suitesparse`, `superlu_dist`, `ml`, `hypre`
  - (optional): `gmsh`, `mshr`, `jupyter`
 
-
 ## Recommended installation using Anaconda 
 ### Installation with pip 
 1. Create an environment with `FEniCS` and appropriate dependencies and activate environment
 ```
-conda create -n soupy -c conda-forge fenics==2019.1.0 matplotlib scipy jupyter
+conda create -n soupy -c conda-forge python=3.11 fenics==2019.1.0 petsc4py==3.19 matplotlib scipy jupyter
 conda activate soupy
 ```
 
@@ -40,7 +39,7 @@ Examples in the `applications` directory can now be run. We refer to the full `F
 ### Installation for developers 
 1. Create an environment with `FEniCS` with appropriate dependencies
 ```
-conda create -n soupy -c conda-forge fenics==2019.1.0 matplotlib scipy jupyter
+conda create -n soupy -c conda-forge python=3.11 fenics==2019.1.0 petsc4py==3.19 matplotlib scipy jupyter
 ```
 
 2. Clone the `hIPPYlib` [repository](https://github.com/hippylib/hippylib). 
