@@ -28,6 +28,8 @@ def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
     :param dz: Direction for finite difference derivative
     :param delta: Step size
     :param sample_size: sample size for expectation computations
+
+    :Returns: The adjoint directional derivative and the FD directional derivative
     """
     gz = pde_cost.generate_vector(CONTROL)
 
@@ -56,7 +58,7 @@ def stochasticCostFiniteDifference(pde_cost, z, dz, delta=1e-3, sample_size=1):
 
     print("Analytic gradient: %g" %ad_grad)
     print("Finite diff gradient: %g" %fd_grad)
-
+    return ad_grad, fd_grad
 
 def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
     """
@@ -67,6 +69,8 @@ def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
     :param dz: Direction for finite difference derivative
     :param delta: Step size
     :param sample_size: sample size for expectation computations
+
+    :Returns: The adjoint directional derivative and the FD directional derivative
     """
     gz = pde_cost.generate_vector(CONTROL)
 
@@ -86,7 +90,6 @@ def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
     pde_cost.grad(gz)
 
     rng = hp.Random()
-    delta = 1e-3
     z1.axpy(delta, dz)
     c1 = pde_cost.cost(z1, order=0)
 
@@ -96,6 +99,6 @@ def SAACostFiniteDifference(pde_cost, z, dz, delta=1e-3):
     print("Analytic gradient: %g" %ad_grad)
     print("Finite diff gradient: %g" %fd_grad)
 
-
+    return ad_grad, fd_grad
 
 
