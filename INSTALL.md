@@ -14,15 +14,23 @@
 ## Recommended installation using Anaconda 
 ### Installation with pip 
 1. Create an environment with `FEniCS` and appropriate dependencies and activate environment
+
+**For x86 users:** 
 ```
 conda create -n soupy -c conda-forge python=3.11 fenics==2019.1.0 petsc4py==3.19 matplotlib scipy jupyter
 conda activate soupy
 ```
-**Note**: `FEniCS` is only available on x86 systems. When running on an ARM based mac with the ARM version of conda installed, add the flag `--platform osx-64`, i.e. 
+**For ARM users:** `FEniCS` is only available on x86 systems. 
+When running on an ARM based mac with the ARM version of conda installed, add `CONDA_SUBDIR=osx-64` before the conda call, 
 ```
-conda create -n soupy --platform osx64 -c conda-forge python=3.11 fenics==2019.1.0 petsc4py==3.19 matplotlib scipy jupyter
+CONDA_SUBDIR=osx-64 conda create -n soupy -c conda-forge python=3.11 fenics==2019.1.0 petsc4py==3.19 matplotlib scipy jupyter
+```
+Then configure the environment to be an `osx-64` environment
+```
 conda activate soupy
+conda config --env --set subdir osx-64
 ```
+
 
 2. Install `hIPPYlib` via pip
 ```
@@ -38,11 +46,23 @@ pip install soupy@git+https://github.com/hippylib/soupy
 ```
 git clone https://github.com/hippylib/soupy.git
 ```
+Examples in the `applications` directory can now be run. 
+```
+cd soupy/examples/poisson
+```
+Then run in serial
+```
+python driver_poisson_mean.py 
+```
+or with MPI (e.g. using 4 processes)
+```
+mpirun -n 4 python driver_poisson_mean.py 
+```
 
-Examples in the `applications` directory can now be run. We refer to the full `FEniCS` [installation instructions](https://hippylib.readthedocs.io/en/3.0.0/installation.html) from `hIPPYlib` for more detail. 
+We refer to the full `FEniCS` [installation instructions](https://hippylib.readthedocs.io/en/3.0.0/installation.html) from `hIPPYlib` for more detail. 
 
 ### Installation for developers 
-1. Create an environment with `FEniCS` with appropriate dependencies (add `--platform osx64` if using ARM conda, see above)
+1. Create an environment with `FEniCS` with appropriate dependencies (add `CONDA_SUBDIR=osx-64` if using ARM conda, see above)
 ```
 conda create -n soupy -c conda-forge python=3.11 fenics==2019.1.0 petsc4py==3.19 matplotlib scipy jupyter
 ```
@@ -63,20 +83,12 @@ conda activate soupy
 conda env config vars set HIPPYLIB_PATH=path/to/hippylib
 conda env config vars set SOUPY_PATH=path/to/soupy
 ```
-
-Examples in the `examples` directory can now be run. 
-
-## Build the SOUPy documentation using Sphinx
-
-Documentation for `SOUPy` can be built using `sphinx`, along with extensions
-`myst_nb` and `sphinx_rtd_theme`. These can be installed via `pip`.
-
-To build simply run `make html` from `doc` folder.
+Examples in the `examples` directory can now be run after deactivating and activating the environment again. 
 
 ## Installation with Docker
 
 SOUPy (and hIPPYlib) can be used with a Docker image built with FEniCS/dolfin. 
-The [FEniCS documentation](https://fenics.readthedocs.io/projects/containers/en/latest/) provides installation instructions for FEniCS's official images (note these are built on older versions of python). Alternatively, a customized docker image built off the FEniCS 2019.1.0 image with hIPPYlib pre-installed is available [here](https://hub.docker.com/r/hippylib/fenics)
+The [FEniCS documentation](https://fenics.readthedocs.io/projects/containers/en/latest/) provides installation instructions for FEniCS's official images (note these are built on older versions of python). Alternatively, a customized docker image built on the FEniCS 2019.1.0 image with hIPPYlib pre-installed is available [here](https://hub.docker.com/r/hippylib/fenics)
 
 More recent builds of the docker images with FEniCS that are compatible with the [Frontera(https://frontera-portal.tacc.utexas.edu/) HPC system] at the Texas Advanced Computing Center can be found under the `hippylib/tacc-containers` [repository](https://github.com/hippylib/tacc-containers). The repository also provides instructions for usage on Frontera using Apptainer. Here, we will summarize the procedure for using the image on local machines with Docker.
 
@@ -96,13 +108,19 @@ git clone https://github.com/hippylib/soupy.git
 docker run -e MV2_SMP_USE_CMA=0 -e MV2_ENABLE_AFFINITY=0 -ti -v $(pwd):/home1/ uvilla/fenics-2019.1-tacc-mvapich2.3-ib:latest /bin/bash 
 ```
 This will run the container and bind the current working directory to `/home1`.
-The executed container should now have `/home1/hippylib` and `/home1/soupy`. 
+The running container should now have `/home1/hippylib` and `/home1/soupy`. 
 
 4. With the container running, first set the path to hippylib `export HIPPYLIB_PATH=/home1/hippylib`. The examples in the SOUPy repository can then be executed as 
 ```
 cd /home1/soupy/examples/poisson
 python3 driver_poisson_mean.py
 ```
-Compilation can take a while when executing for the first time. 
-
 **Note**: benign MPI warning messages may show up when running on ARM machines. 
+
+
+## Building the SOUPy documentation using Sphinx
+
+Documentation for `SOUPy` can be built using `sphinx`, along with extensions
+`myst_nb` and `sphinx_rtd_theme`. These can be installed via `pip`.
+
+To build simply run `make html` from `doc` folder.
