@@ -58,7 +58,7 @@ Problems of PDE-constrained optimization under uncertainty arise due to the ubiq
 In deterministic PDE-constrained optimization, the goal is typically to optimize a quantity of interest (QoI) that is a function of the system's state and quantifies its performance, where the optimization and state variables are related through the underlying PDE model. 
 Compared to this deterministic counterpart, PDE-constrained OUU involves an added layer of complexity, 
 since the QoI becomes a random variable due to its dependence on the uncertain model parameters.
-In OUU, the cost functional and/or constraints are instead given in terms of risk measures, which are statistical quantity summarizing the QoI's distribution. 
+In OUU, the cost functional and/or constraints are instead given in terms of risk measures, which are statistical quantities summarizing the QoI's distribution. 
 A canonical example of such a risk measure is the expected value of the QoI, 
 though other measures that account for the tail behavior of the distribution such as 
 the variance, or superquantile/CVaR are common choices.
