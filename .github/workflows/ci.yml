@@ -30,6 +30,8 @@ jobs:
           run: whoami 
         - name: Run unit tests 
           run: source .github/workflows/run_tests.sh
+        - name: Run examples
+          run: source .github/workflows/run_examples.sh
             # - name: Activate conda 
           # run: conda init && source ~/.bashrc && conda activate dibasis  
             # - name: Check conda 
