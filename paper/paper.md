@@ -46,7 +46,7 @@ SOUPy is a Python library for solving PDE-constrained optimization problems with
 The optimization problem is defined by a risk measure over a given quantity of interest (QoI), which is present as either an optimization objective or constraint (as in chance-constrained optimization).
 Specific attention is given to the case where the uncertain parameters are formally infinite dimensional (e.g. Gaussian random fields).
 The software allows users to supply the underlying PDE model, quantity of interest, and penalty terms, 
-and provides implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional value-at-risk (CVaR), as well as derivative-based optimizers. 
+and provides implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional value-at-risk (CVaR) [@RockafellarUryasev00], as well as derivative-based optimizers. 
 SOUPy leverages FEniCS [@LoggMardalWells12] for the formulation, discretization, and solution of PDEs, 
 and the framework of hIPPYlib [@VillaPetraGhattas18; @VillaPetraGhattas21] for sampling from random fields and automating adjoint-based derivative computation,
 while also providing interfaces to existing optimization algorithms in SciPy.
