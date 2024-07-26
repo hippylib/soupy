@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ev 
 
-PYTHON=python3
+PYTHON=python
 
 export HIPPYLIB_PATH=$(pwd)/hippylib
 
