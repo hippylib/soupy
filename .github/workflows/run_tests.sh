@@ -12,6 +12,11 @@ export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
 # Run the code
 cd soupy/test
+
+conda init 
+source ~/.bashrc
+conda activate $CONDA_ENV
+
 $PYTHON -m unittest discover -v
 $PYTHON -m unittest discover -v -p 'ptest_*'
 

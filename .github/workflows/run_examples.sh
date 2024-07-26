@@ -15,6 +15,10 @@ export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 # Run poisson example
 cd examples/poisson
 
+conda init 
+source ~/.bashrc
+conda activate $CONDA_ENV
+
 $PYTHON driver_poisson_mean.py
 
 mpirun -n 2 --oversubscribe python driver_poisson_mean.py
