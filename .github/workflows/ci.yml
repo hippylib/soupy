@@ -1,10 +1,12 @@
 name: CI
 
+
 on:
   push:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 defaults:
   run:
@@ -14,18 +16,23 @@ jobs:
    style:
      runs-on: ubuntu-20.04
      container:
-       image: quay.io/fenicsproject/stable:2019.1.0.r3
-       options: --user 1001 --privileged
-     name: SOUPy Unit Tests
+       image: dcluo28/dibasis:latest
+     name: Repo Test
 
      steps:
         - name: Checkout code
-          uses: actions/checkout@v2
+          uses: actions/checkout@v3
         - name: Checkout hippylib
           run: git clone https://github.com/hippylib/hippylib.git
-        - name: See directory
-          run: pwd && ls
+        - name: Check directory 
+          run: ls 
+        - name: Check user
+          run: whoami 
         - name: Run unit tests 
           run: source .github/workflows/run_tests.sh
         - name: Run examples
           run: source .github/workflows/run_examples.sh
+            # - name: Activate conda 
+          # run: conda init && source ~/.bashrc && conda activate dibasis  
+            # - name: Check conda 
+          # run: conda info 
