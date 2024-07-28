@@ -39,12 +39,12 @@ Computational models governed by partial differential equations (PDEs)
 are frequently used by engineers to optimize the performance of various physical systems 
 through decisions relating to their configuration (optimal design) and operation (optimal control). 
 However, the ability to make optimal choices is often hindered by uncertainty, 
-such as uncertainty in model parameters (e.g. material properties) and operating conditions (e.g. forces on a structure).
+such as uncertainty in model parameters (e.g., material properties) and operating conditions (e.g., forces on a structure).
 The need to account for these uncertainties in order to arrive at robust and risk-informed decisions thus gives rise to problems of optimization under uncertainty (OUU) [@KouriShapiro18].
 
 SOUPy is a Python library for solving PDE-constrained optimization problems with uncertain parameters, where we use the term *parameters* broadly to refer to sources and initial/boundary conditions in addition to PDE coefficients.
 The optimization problem is defined by a risk measure over a given quantity of interest (QoI), which is present as either an optimization objective or constraint (as in chance-constrained optimization).
-Specific attention is given to the case where the uncertain parameters are formally infinite dimensional (e.g. Gaussian random fields).
+Specific attention is given to the case where the uncertain parameters are formally infinite dimensional (e.g., Gaussian random fields).
 The software allows users to supply the underlying PDE model, quantity of interest, and penalty terms, 
 and provides implementations for commonly used risk measures, including expectation, variance, and superquantile/conditional value-at-risk (CVaR) [@RockafellarUryasev00], as well as derivative-based optimizers. 
 SOUPy leverages FEniCS [@LoggMardalWells12] for the formulation, discretization, and solution of PDEs, 
