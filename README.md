@@ -1,5 +1,6 @@
 ![Build Status](https://github.com/hippylib/soupy/actions/workflows/ci.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/hippylibsoupy/badge/?version=latest)](https://hippylibsoupy.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06101/status.svg)](https://doi.org/10.21105/joss.06101)
 [![DOI](https://zenodo.org/badge/598860325.svg)](https://zenodo.org/badge/latestdoi/598860325)
 
 # Stochastic Optimization under high-dimensional Uncertainty in Python
@@ -16,29 +17,21 @@ SOUPy is in active development to incorporate advanced approximation algorithms 
 - Multi-fidelity methods and control variates
 - Interfaces with Bayesian inverse problems
 
-See the [SOUPy documentation](https://hippylibsoupy.readthedocs.io/en/latest/) for more information.
+See the [SOUPy documentation](https://hippylibsoupy.readthedocs.io/en/latest/) and our [JOSS paper](https://joss.theoj.org/papers/10.21105/joss.06101#) for more information.
 
-Please consider to cite the following papers for using SOUPy
-
+Please cite SOUPy as 
 ```
-@article{chen2019taylor,
-  title={Taylor approximation and variance reduction for PDE-constrained optimal control under uncertainty},
-  author={Chen, Peng and Villa, Umberto and Ghattas, Omar},
-  journal={Journal of Computational Physics},
-  volume={385},
-  pages={163--186},
-  year={2019},
-  publisher={Elsevier}
-}
-```
-
-
-```
-@article{luo2023efficient,
-  title={Efficient PDE-Constrained optimization under high-dimensional uncertainty using derivative-informed neural operators},
-  author={Luo, Dingcheng and O'Leary-Roseberry, Thomas and Chen, Peng and Ghattas, Omar},
-  journal={arXiv preprint arXiv:2305.20053},
-  year={2023}
+  @article{Luo2024,
+  doi = {10.21105/joss.06101},
+  url = {https://doi.org/10.21105/joss.06101},
+  year = {2024},
+  publisher = {The Open Journal},
+  volume = {9},
+  number = {99},
+  pages = {6101},
+  author = {Dingcheng Luo and Peng Chen and Thomas O'Leary-Roseberry and Umberto Villa and Omar Ghattas},
+  title = {SOUPy: Stochastic PDE-constrained optimization under high-dimensional uncertainty in Python},
+  journal = {Journal of Open Source Software}
 }
 ```
 
