@@ -30,7 +30,7 @@ Please cite SOUPy as
   number = {99},
   pages = {6101},
   author = {Dingcheng Luo and Peng Chen and Thomas O'Leary-Roseberry and Umberto Villa and Omar Ghattas},
-  title = {SOUPy: Stochastic PDE-constrained optimization under high-dimensional uncertainty in Python},
+  title = {{SOUPy}: Stochastic PDE-constrained optimization under high-dimensional uncertainty in Python},
   journal = {Journal of Open Source Software}
 }
 ```
