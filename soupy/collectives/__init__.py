@@ -13,5 +13,5 @@
 
 from .collective import NullCollective, MultipleSerialPDEsCollective, MultipleSamePartitioningPDEsCollective
 
-from .mpiUtils import allocate_process_sample_sizes
+from .mpiUtils import allocate_process_sample_sizes, allgather_vector_as_numpy, set_local_from_global, get_global
 

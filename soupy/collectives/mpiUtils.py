@@ -34,4 +34,59 @@ def allocate_process_sample_sizes(sample_size, comm_sampler):
     return sample_size_allprocs
 
 
+def allgather_vector_as_numpy(v):
+    """
+    All gather a dolfin vector :code:`v` 
+    such that each process has a full copy of the numpy 
+    array representing v 
+
+    :param v: Vector to gather
+    :type v: dl.Vector 
+
+    :returns: A numpy vector :code:`v_np` with the full data of :code:`v` on every process
+    """
+    mpi_comm = v.mpi_comm()
+    vector_size = v.size()
+    v_np = v.gather_on_zero()
+    if mpi_comm.Get_rank() > 0:
+        v_np = np.zeros(vector_size, dtype=np.float64)
+    mpi_comm.Bcast(v_np, root=0)
+    return v_np 
+
+def set_local_from_global(v, v_np):
+    """
+    Set the local components of a dolfin vector :code:`v` 
+    from a global numpy array :code:`v_np` using its local range 
+
+    :param v: Vector to set
+    :type v: dl.Vector 
+    :param v_np: numpy array for global entries
+    :type v: np.ndarray
+    """
+    
+    local_range = v.local_range()
+    if len(local_range) > 0:
+        v.set_local(v_np[local_range[0] : local_range[1]])
+    v.apply("")
+
+def get_global(v):
+    """
+    Retrieves the global representation of :code:`v` as a numpy array
+    """
+    mpi_size = v.mpi_comm().Get_size()
+    if mpi_size == 1:
+        return v.get_local()
+    else:
+        return allgather_vector_as_numpy(v)
+
+
+
+
+
+
+
+
+
+
+
 
