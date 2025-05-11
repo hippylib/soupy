@@ -61,7 +61,7 @@ def set_local_from_global(v, v_np):
     :param v: Vector to set
     :type v: dl.Vector 
     :param v_np: numpy array for global entries
-    :type v: np.ndarray
+    :type v_np: np.ndarray
     """
     
     local_range = v.local_range()
