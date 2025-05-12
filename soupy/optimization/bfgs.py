@@ -332,7 +332,9 @@ class BFGS:
                 z_star.axpy(alpha, zhat)
                 if box_bounds is not None:
                     z_star.set_local(np.maximum(z_star.get_local(), param_min))
+                    z_star.apply("")
                     z_star.set_local(np.minimum(z_star.get_local(), param_max))
+                    z_star.apply("")
                 if constraint_projection is not None:
                     constraint_projection.project(z_star)
 

@@ -13,6 +13,7 @@
 
 from mpi4py import MPI
 from ..modeling import STATE, PARAMETER, ADJOINT, CONTROL
+from ..collectives import get_global, set_local_from_global 
 
 class ScipyCostWrapper:
     """
@@ -46,8 +47,9 @@ class ScipyCostWrapper:
         :returns: The value of the cost functional
         :return type: float
         """
-        self.z_help.set_local(z_np)
-        self.z_help.apply("")
+        # self.z_help.set_local(z_np)
+        # self.z_help.apply("")
+        set_local_from_global(self.z_help, z_np)
         cost_value = self.cost_functional.cost(self.z_help, order=0)
         self.n_func += 1
 
@@ -67,22 +69,26 @@ class ScipyCostWrapper:
         :return type: :py:class:`numpy.ndarray`
         """
 
-        self.z_help.set_local(z_np)
-        self.z_help.apply("")
+        # self.z_help.set_local(z_np)
+        # self.z_help.apply("")
+        set_local_from_global(self.z_help, z_np)
+
         self.cost_functional.cost(self.z_help, order=1)
         self.cost_functional.grad(self.z_out_help)
         if self.verbose and MPI.COMM_WORLD.Get_rank() == 0:
             print("Gradient evaluation")
         self.n_grad += 1
 
-        return self.z_out_help.get_local()
+        return get_global(self.z_out_help)
 
     def hessian(self, z_np, zhat_np):
-        self.z_help.set_local(z_np)
-        self.z_help.apply("")
+        # self.z_help.set_local(z_np)
+        # self.z_help.apply("")
+        set_local_from_global(self.z_help, z_np)
 
-        self.z_hat_help.set_local(zhat_np)
-        self.z_hat_help.apply("")
+        # self.z_hat_help.set_local(zhat_np)
+        # self.z_hat_help.apply("")
+        set_local_from_global(self.z_hat_help, zhat_np)
 
         self.cost_functional.cost(self.z_help, order=2)
         self.cost_functional.hessian(self.z_hat_help, self.z_out_help)
@@ -90,7 +96,7 @@ class ScipyCostWrapper:
             print("Hessian action evaluation")
         self.n_hess += 1
 
-        return self.z_out_help.get_local()
+        return get_global(self.z_out_help)
 
 
     def function(self):
