@@ -29,7 +29,7 @@ class AugmentedVector:
         :param copy_vector: If :code:`True`, copy the vector, otherwise use the same memory
         """
         # assert v.mpi_comm().Get_size() == 1 # Working towards removing this constraint 
-        self.mpi_comm = v.mpi_comm()
+        self._mpi_comm = v.mpi_comm()
         if copy_vector:
             self.v = v.copy()
         else:
@@ -41,7 +41,9 @@ class AugmentedVector:
         x = AugmentedVector(self.v, copy_vector=True)
         x.set_scalar(self.t)
 
-
+    def mpi_comm(self):
+        return self._mpi_comm
+    
     def add_local(self, vt_array):
         self.v.add_local(vt_array[:-1])
         self.v.apply("")
