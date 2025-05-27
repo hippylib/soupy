@@ -13,6 +13,7 @@
 
 import numpy as np 
 from mpi4py import MPI 
+from ..modeling import AugmentedVector
 
 def allocate_process_sample_sizes(sample_size, comm_sampler):
     """
@@ -63,11 +64,23 @@ def set_local_from_global(v, v_np):
     :param v_np: numpy array for global entries
     :type v_np: np.ndarray
     """
-    
-    local_range = v.local_range()
-    if len(local_range) > 0:
-        v.set_local(v_np[local_range[0] : local_range[1]])
-    v.apply("")
+
+    if isinstance(v, AugmentedVector):
+        # Set the vector component 
+        local_range = v.get_vector().local_range()
+        if len(local_range) > 0:
+            v.get_vector().set_local(v_np[local_range[0] : local_range[1]])
+            v.apply("")
+        
+        # Set the scalar component 
+        v.set_scalar(v_np[-1])
+    else:
+        local_range = v.local_range()
+        if len(local_range) > 0:
+            v.set_local(v_np[local_range[0] : local_range[1]])
+            v.apply("")
+
+
 
 def get_global(v):
     """
