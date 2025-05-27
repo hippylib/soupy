@@ -12,7 +12,7 @@
 # Software Foundation) version 3.0 dated June 2007.
 
 
-from .variables import STATE, ADJOINT, PARAMETER, CONTROL 
+from ..modeling import STATE, ADJOINT, PARAMETER, CONTROL 
 
 class ControlCostHessian:
     """

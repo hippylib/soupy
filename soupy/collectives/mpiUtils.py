@@ -13,7 +13,7 @@
 
 import numpy as np 
 from mpi4py import MPI 
-from ..modeling import AugmentedVector
+from ..modeling.augmentedVector import AugmentedVector
 
 def allocate_process_sample_sizes(sample_size, comm_sampler):
     """

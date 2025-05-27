@@ -20,7 +20,7 @@ from hippylib import ParameterList, parRandom
 
 from .riskMeasure import RiskMeasure
 
-from .variables import STATE, PARAMETER, ADJOINT, CONTROL
+from ..modeling import STATE, PARAMETER, ADJOINT, CONTROL
 
 
 def meanVarRiskMeasureStochasticSettings(data = {}):
