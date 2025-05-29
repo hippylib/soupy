@@ -20,9 +20,7 @@ import mpi4py
 from hippylib import ParameterList, Random
 
 from .riskMeasure import RiskMeasure
-from .variables import STATE, PARAMETER, ADJOINT, CONTROL
-from .controlModelHessian import ControlModelHessian
-
+from ..modeling import STATE, PARAMETER, ADJOINT, CONTROL, ControlModelHessian
 from ..collectives import NullCollective, MultipleSamePartitioningPDEsCollective, \
         MultipleSerialPDEsCollective, allocate_process_sample_sizes
 

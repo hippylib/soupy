@@ -15,8 +15,7 @@ import logging
 import numpy as np
 import dolfin as dl
 
-from .variables import STATE, PARAMETER, ADJOINT, CONTROL 
-from .augmentedVector import AugmentedVector
+from ..modeling import STATE, PARAMETER, ADJOINT, CONTROL, AugmentedVector
 
 class ControlCostFunctional:
     """

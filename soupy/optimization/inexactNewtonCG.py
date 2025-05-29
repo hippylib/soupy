@@ -16,7 +16,7 @@ import math
 
 from hippylib import ParameterList 
 
-from ..modeling.controlCostHessian import ControlCostHessian
+from ..cost.controlCostHessian import ControlCostHessian
 from ..modeling.variables import CONTROL
 from .cgSolverSteihaug import CGSolverSteihaug
 

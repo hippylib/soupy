@@ -15,29 +15,11 @@ from .PDEControlProblem import PDEVariationalControlProblem
 
 from .augmentedVector import AugmentedVector
 
-from .controlCostFunctional import ControlCostFunctional, DeterministicControlCostFunctional, RiskMeasureControlCostFunctional, PenalizationControlCostFunctional
-
-from .controlCostHessian import ControlCostHessian 
-
 from .controlModel import ControlModel
 
 from .controlModelHessian import ControlModelHessian
 
 from .controlQoI import ControlQoI, L2MisfitVarfHandler, VariationalControlQoI, L2MisfitControlQoI
-
-from .meanVarRiskMeasureStochastic import meanVarRiskMeasureStochasticSettings, MeanVarRiskMeasureStochastic
-
-from .meanVarRiskMeasureSAA import meanVarRiskMeasureSAASettings, MeanVarRiskMeasureSAA 
-
-from .penalization import Penalization, L2Penalization, WeightedL2Penalization, MultiPenalization, VariationalPenalization
-
-from .riskMeasure import RiskMeasure
-
-from .smoothPlusApproximation import SmoothPlusApproximationQuartic, SmoothPlusApproximationSoftplus
-
-from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA, superquantileRiskMeasureSAASettings, sample_superquantile, sample_superquantile_by_minimization
-
-from .transformedMeanRiskMeasureSAA import TransformedMeanRiskMeasureSAA, transformedMeanRiskMeasureSAASettings, IdentityFunction, FunctionWrapper
 
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 

@@ -28,7 +28,8 @@ class AugmentedVector:
         :param v: :code:`dolfin.Vector` to be augmented
         :param copy_vector: If :code:`True`, copy the vector, otherwise use the same memory
         """
-        assert v.mpi_comm().Get_size() == 1
+        # assert v.mpi_comm().Get_size() == 1 # Working towards removing this constraint 
+        self._mpi_comm = v.mpi_comm()
         if copy_vector:
             self.v = v.copy()
         else:
@@ -40,7 +41,9 @@ class AugmentedVector:
         x = AugmentedVector(self.v, copy_vector=True)
         x.set_scalar(self.t)
 
-
+    def mpi_comm(self):
+        return self._mpi_comm
+    
     def add_local(self, vt_array):
         self.v.add_local(vt_array[:-1])
         self.v.apply("")
@@ -50,9 +53,6 @@ class AugmentedVector:
         self.v.set_local(vt_array[:-1])
         self.v.apply("")
         self.t = vt_array[-1]
-
-    def apply(self, method):
-        self.v.apply(method)
 
     def get_local(self):
         return np.append(self.v.get_local(), self.t)
@@ -84,4 +84,14 @@ class AugmentedVector:
     
     def apply(self, method):
         self.v.apply(method)
+    
+    def gather_on_zero(self):
+        v_np = self.v.gather_on_zero()
+        if self._mpi_comm.Get_rank() == 0:
+            v_np = np.append(v_np, self.t)
+        return v_np 
+
+    
+    def size(self):
+        return self.v.size() + 1 
 

@@ -12,8 +12,7 @@
 # Software Foundation) version 3.0 dated June 2007.
 
 import dolfin as dl
-from .variables import STATE, CONTROL
-from .augmentedVector import AugmentedVector
+from ..modeling import STATE, CONTROL, AugmentedVector
 
 
 class Penalization:

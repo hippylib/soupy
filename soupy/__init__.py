@@ -13,9 +13,13 @@
 
 from .collectives import * 
 
+from .cost import * 
+
 from .modeling import *
 
 from .optimization import *
+
+from .risk import *
 
 from .solver import * 
 

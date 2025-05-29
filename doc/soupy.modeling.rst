@@ -37,47 +37,6 @@ soupy.modeling.controlModelHessian
     :show-inheritance:
 
 
-soupy.modeling.controlCostFunctional
----------------------------------------
-
-.. automodule:: soupy.modeling.controlCostFunctional
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-soupy.modeling.controlCostHessian
----------------------------------------
-
-.. automodule:: soupy.modeling.controlCostHessian
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-soupy.modeling.riskMeasure
----------------------------------------
-
-.. automodule:: soupy.modeling.riskMeasure
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-soupy.modeling.meanVarRiskMeasureStochastic
---------------------------------------------
-
-.. automodule:: soupy.modeling.meanVarRiskMeasureStochastic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-soupy.modeling.meanVarRiskMeasureSAA
----------------------------------------
-
-.. automodule:: soupy.modeling.meanVarRiskMeasureSAA
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 soupy.modeling.augmentedVector
 -------------------------------------------
@@ -86,31 +45,6 @@ soupy.modeling.augmentedVector
     :members:
     :undoc-members:
     :show-inheritance:
-
-soupy.modeling.superquantileRiskMeasureSAA
--------------------------------------------
-
-.. automodule:: soupy.modeling.superquantileRiskMeasureSAA
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-soupy.modeling.transformedMeanRiskMeasureSAA
-----------------------------------------------
-
-.. automodule:: soupy.modeling.transformedMeanRiskMeasureSAA
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-soupy.modeling.penalization
----------------------------------------
-
-.. automodule:: soupy.modeling.penalization
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 
 soupy.modeling.variables
