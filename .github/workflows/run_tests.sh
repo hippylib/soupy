@@ -20,8 +20,12 @@ conda activate $CONDA_ENV
 $PYTHON -m unittest discover -v
 $PYTHON -m unittest discover -v -p 'ptest_*'
 
+mpirun -n 2 --oversubscribe $PYTHON ptest_augmentedVector.py
+mpirun -n 2 --oversubscribe $PYTHON ptest_mpiUtils.py
 mpirun -n 2 --oversubscribe $PYTHON ptest_meanVarRiskMeasureSAA.py
 mpirun -n 2 --oversubscribe $PYTHON ptest_scipyCostWrapper.py
 mpirun -n 2 --oversubscribe $PYTHON ptest_superquantileSAA.py
 mpirun -n 2 --oversubscribe $PYTHON ptest_transformedMeanRiskMeasureSAA.py
+
+
 

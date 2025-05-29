@@ -87,9 +87,11 @@ class AugmentedVector:
     
     def gather_on_zero(self):
         v_np = self.v.gather_on_zero()
-        if self.mpi_comm.Get_rank() == 0:
+        if self._mpi_comm.Get_rank() == 0:
             v_np = np.append(v_np, self.t)
         return v_np 
 
-
+    
+    def size(self):
+        return self.v.size() + 1 
 
