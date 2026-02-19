@@ -53,7 +53,7 @@ class ControlQoI(object):
         Set the point for linearization.
         """
         raise NotImplementedError("Child class should implement method setLinearizationPoint")
-        
+
     def apply_ij(self,i,j, dir, out):
         """
         Apply the second variation :math:`\delta_{ij}` (:code:`i,j` = :code:`soupy.STATE`, \
@@ -62,6 +62,16 @@ class ControlQoI(object):
         """
 
         raise NotImplementedError("Child class should implement method apply_ij")
+
+    def form(self, u):
+        """Return the variational form of the QoI evaluated at state :code:`u`.
+
+        This is an optional method that concrete QoIs can implement to expose
+        the underlying UFL form when higher-order Taylor expansions need direct
+        access to it.
+        """
+
+        raise NotImplementedError("Child class should implement method form")
 
 
 
@@ -243,6 +253,13 @@ class VariationalControlQoI(ControlQoI):
             self.x[i].zero()
             self.x[i].axpy(1.0, x[i])
 
+    def form(self, u):
+        """Return the variational form for the QoI evaluated at state :code:`u`."""
+
+        m = hp.vector2Function(self.x[PARAMETER], self.Vh[PARAMETER])
+        z = hp.vector2Function(self.x[CONTROL], self.Vh[CONTROL])
+        return self.form_handler(u, m, z)
+
 
 class L2MisfitControlQoI(ControlQoI):
     """
@@ -269,6 +286,8 @@ class L2MisfitControlQoI(ControlQoI):
                        dl.TestFunction(Vh[ADJOINT]), dl.TestFunction(Vh[CONTROL])]
 
         self.ud = ud
+        self.ud_fun = dl.Function(Vh[STATE])
+        self.ud_fun.vector().axpy(1.0, ud)
         self.diff= dl.Function(Vh[STATE]).vector()
         self.Mdiff = dl.Function(Vh[STATE]).vector()
 
@@ -391,3 +410,7 @@ class L2MisfitControlQoI(ControlQoI):
             self.x[i].zero()
             self.x[i].axpy(1.0, x[i])
 
+    def form(self, u):
+        """Return the variational form corresponding to the L2 misfit."""
+
+        return dl.inner(u - self.ud_fun, u - self.ud_fun) * dl.dx

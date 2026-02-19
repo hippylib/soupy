@@ -19,3 +19,8 @@ from .stochasticCostFiniteDifference import stochasticCostFiniteDifference, SAAC
 
 from .scipyCostWrapper import ScipyCostWrapper
 
+from .macos_config import configure_macos_compiler, configure_dolfin_form_compiler
+
+from .dolfin_defaults import configure_dolfin_defaults
+
+configure_dolfin_defaults()

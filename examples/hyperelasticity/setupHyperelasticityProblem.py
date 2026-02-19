@@ -66,7 +66,7 @@ def hyperelasticity_problem_settings():
     settings["qoi_type"] = "stiffness"
     settings["geometry"] = {"lx" : 2.0, "ly" : 0.5, "lz" : 0.25, "dim" : 2}
     settings["mesh"] = {"nx" : 96, "ny" : 24, "nz" : 12}
-    settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0]}
+    settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0], "verbose" : False}
     settings["uncertainty"] = {"gamma" : 0.2, "delta" : 1.0, "robin_bc" : True}
     return settings
 
@@ -159,8 +159,10 @@ def setup_hyperelasticity_problem(settings, comm_mesh=MPI.COMM_WORLD):
     hyperelasticity_varf = HyperelasticityVarfHandler(Vh, geometry, T_nominal, 
             spatial_dim=settings["geometry"]["dim"])
 
-    pde = HyperelasticityControlPDE(Vh, hyperelasticity_varf, bcs, bcs, 
-        load_steps=settings["solver"]["load_steps"], backtrack=settings['solver']['backtrack'])
+    verbose = settings["solver"].get("verbose", False)
+    pde = HyperelasticityControlPDE(Vh, hyperelasticity_varf, bcs, bcs,
+        load_steps=settings["solver"]["load_steps"], backtrack=settings['solver']['backtrack'],
+        verbose=verbose)
 
     prior = setup_prior(Vh, settings)
     qoi = setup_qoi(mesh, Vh, settings)

@@ -137,12 +137,11 @@ class DeterministicControlCostFunctional(ControlCostFunctional):
         # Check if new forward solve is needed 
         if diff_norm > dl.DOLFIN_EPS or not self.has_forward_solve:
             # Update control variable (changes all samples)
-            # Ask that new forward and adjoint solves are computed 
+            # Ask that new forward and adjoint solves are computed
             self.z.zero()
             self.z.axpy(1.0, z)
             # new_forward_solve = True
-            # logging.info("Using new forward solve")
-            print("Using new forward solve")
+            logging.info("Using new forward solve")
             self.model.solveFwd(self.u, self.x) 
             
             if order >= 1: 

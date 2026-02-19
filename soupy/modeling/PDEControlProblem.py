@@ -203,10 +203,12 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         out.zero()
         dl.assemble( dl.derivative(res_form, z, dz), tensor=out)
          
+    # The following function computes the Jacobian of the PDE residual at the point x and set up the incremental forward and adjoint solvers.
     def setLinearizationPoint(self,x, gauss_newton_approx):
         """ Set the values of the state and parameter
             for the incremental forward and adjoint solvers. """
             
+        # Here x = [u, m, p, z] is the point at which we want to linearize the PDE and compute the Hessian action.
         x_fun = [hp.vector2Function(x[i], self.Vh[i]) for i in range(4)]
         
         f_form = self.varf_handler(*x_fun)
@@ -302,9 +304,12 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
 
         KKT[CONTROL, STATE] = self.Wzu
         KKT[CONTROL, CONTROL] = self.Wzz
-        KKT[CONTROL, ADJOINT] = hp.Transpose(self.Cz)
+        if self.Cz is not None:
+            KKT[CONTROL, ADJOINT] = hp.Transpose(self.Cz)
+        else:
+            KKT[CONTROL, ADJOINT] = None
 
-        if i == ADJOINT and j == CONTROL:
+        if i == ADJOINT and j == CONTROL and self.Cz is not None:
             # Check Cz first since the index ordering is different with CONTROL 
             # This avoids doing transpmult of hp.Tranpose(Cz)
             self.Cz.mult(dir, out) 
@@ -345,3 +350,341 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         else:
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method="default")
 
+    # ------------------------------------------------------------------
+    # Helpers for higher-order Taylor approximations
+
+    def forSolveAdjIncrementalAdj(self, x, mhat):
+        u_fun = hp.vector2Function(x[STATE], self.Vh[STATE])
+        m_fun = hp.vector2Function(x[PARAMETER], self.Vh[PARAMETER])
+        p_fun = hp.vector2Function(x[ADJOINT], self.Vh[ADJOINT])
+        z_fun = hp.vector2Function(x[CONTROL], self.Vh[CONTROL])
+        mhat_fun = hp.vector2Function(mhat, self.Vh[PARAMETER])
+
+        form = self.varf_handler(u_fun, m_fun, p_fun, z_fun)
+        p_test = dl.TestFunction(self.Vh[ADJOINT])
+
+        dmr = dl.derivative(form, m_fun, mhat_fun)
+        dmyr = dl.derivative(dmr, p_fun, p_test)
+        out = self.generate_state()
+        dl.assemble(dmyr, tensor=out)
+        for bc in self.bc0:
+            bc.apply(out)
+        return out
+
+    def forSolveAdjIncrementalFwd(self, x, mhat, uhatstar, qoi):
+        u_fun = hp.vector2Function(x[STATE], self.Vh[STATE])
+        m_fun = hp.vector2Function(x[PARAMETER], self.Vh[PARAMETER])
+        p_fun = hp.vector2Function(x[ADJOINT], self.Vh[ADJOINT])
+        z_fun = hp.vector2Function(x[CONTROL], self.Vh[CONTROL])
+        mhat_fun = hp.vector2Function(mhat, self.Vh[PARAMETER])
+        uhatstar_fun = hp.vector2Function(uhatstar, self.Vh[STATE])
+
+        form = self.varf_handler(u_fun, m_fun, p_fun, z_fun)
+        u_test = dl.TestFunction(self.Vh[STATE])
+
+        dmr = dl.derivative(form, m_fun, mhat_fun)
+        dmxr = dl.derivative(dmr, u_fun, u_test)
+        vec_dmxr = self.generate_state()
+        dl.assemble(dmxr, tensor=vec_dmxr)
+        for bc in self.bc0:
+            bc.apply(vec_dmxr)
+
+        dxr = dl.derivative(form, u_fun, uhatstar_fun)
+        dxxr = dl.derivative(dxr, u_fun, u_test)
+        vec_dxxr = self.generate_state()
+        dl.assemble(dxxr, tensor=vec_dxxr)
+        for bc in self.bc0:
+            bc.apply(vec_dxxr)
+
+        vec_dxxq = self.generate_state()
+        qoi.apply_ij(STATE, STATE, uhatstar, vec_dxxq)
+        for bc in self.bc0:
+            bc.apply(vec_dxxq)
+
+        return vec_dmxr, vec_dxxr, vec_dxxq
+
+    def forSolveAdjAdj(self, x, uhat, uhatstar, mhat, mhatstar, qoi):
+        u_fun = hp.vector2Function(x[STATE], self.Vh[STATE])
+        m_fun = hp.vector2Function(x[PARAMETER], self.Vh[PARAMETER])
+        p_fun = hp.vector2Function(x[ADJOINT], self.Vh[ADJOINT])
+        z_fun = hp.vector2Function(x[CONTROL], self.Vh[CONTROL])
+        mhat_fun = hp.vector2Function(mhat, self.Vh[PARAMETER])
+        mhatstar_fun = hp.vector2Function(mhatstar, self.Vh[PARAMETER])
+        uhat_fun = hp.vector2Function(uhat, self.Vh[STATE])
+        uhatstar_fun = hp.vector2Function(uhatstar, self.Vh[STATE])
+
+        form = self.varf_handler(u_fun, m_fun, p_fun, z_fun)
+        p_test = dl.TestFunction(self.Vh[ADJOINT])
+        u_test = dl.TestFunction(self.Vh[STATE])
+
+        dxr = dl.derivative(form, u_fun, uhatstar_fun)
+
+        dxxr = dl.derivative(dxr, u_fun, uhat_fun)
+        dxxyr = dl.derivative(dxxr, p_fun, p_test)
+        vec_dxxyr = self.generate_state()
+        dl.assemble(dxxyr, tensor=vec_dxxyr)
+        for bc in self.bc0:
+            bc.apply(vec_dxxyr)
+
+        dxmr = dl.derivative(dxr, m_fun, mhat_fun)
+        dxmyr = dl.derivative(dxmr, p_fun, p_test)
+        vec_dxmyr = self.generate_state()
+        dl.assemble(dxmyr, tensor=vec_dxmyr)
+        for bc in self.bc0:
+            bc.apply(vec_dxmyr)
+
+        dyxxr = self.generate_state()
+        self.apply_ij(PARAMETER, PARAMETER, mhatstar, dyxxr)
+
+        dmxr = dl.derivative(dxr, u_fun, uhat_fun)
+        dxxxr = dl.derivative(dmxr, u_fun, u_test)
+        vec_dxxxr = self.generate_state()
+        dl.assemble(dxxxr, tensor=vec_dxxxr)
+        for bc in self.bc0:
+            bc.apply(vec_dxxxr)
+
+        dxmxr = dl.derivative(dxmr, u_fun, u_test)
+        vec_dxmxr = self.generate_state()
+        dl.assemble(dxmxr, tensor=vec_dxmxr)
+        for bc in self.bc0:
+            bc.apply(vec_dxmxr)
+
+        dxxxq = self.generate_state()
+        qoi.apply_ijk(STATE, STATE, STATE, uhatstar, uhat, dxxxq)
+        for bc in self.bc0:
+            bc.apply(dxxxq)
+
+        dmr = dl.derivative(form, m_fun, mhat_fun)
+        dmxr_ass = dl.derivative(dmr, u_fun, u_test)
+        vec_dmxr_ass = self.generate_state()
+        dl.assemble(dmxr_ass, tensor=vec_dmxr_ass)
+        for bc in self.bc0:
+            bc.apply(vec_dmxr_ass)
+
+        dmr = dl.derivative(form, m_fun, mhatstar_fun)
+        dmmr = dl.derivative(dmr, m_fun, mhat_fun)
+        dmmxr = dl.derivative(dmmr, u_fun, u_test)
+        vec_dmmxr = self.generate_state()
+        dl.assemble(dmmxr, tensor=vec_dmmxr)
+        for bc in self.bc0:
+            bc.apply(vec_dmmxr)
+
+        dmyr = dl.derivative(dmr, p_fun, p_test)
+        dmyxr = dl.derivative(dmyr, u_fun, u_test)
+        vec_dmyxr = self.generate_state()
+        dl.assemble(dmyxr, tensor=vec_dmyxr)
+        for bc in self.bc0:
+            bc.apply(vec_dmyxr)
+
+        dmxr = dl.derivative(dmr, u_fun, uhat_fun)
+        dmxxr = dl.derivative(dmxr, u_fun, u_test)
+        vec_dmxxr = self.generate_state()
+        dl.assemble(dmxxr, tensor=vec_dmxxr)
+        for bc in self.bc0:
+            bc.apply(vec_dmxxr)
+
+        dxmxq = self.generate_state()
+        qoi.apply_ijk(STATE, PARAMETER, STATE, uhatstar, mhat, dxmxq)
+        for bc in self.bc0:
+            bc.apply(dxmxq)
+
+        dmmxq = self.generate_state()
+        qoi.apply_ijk(PARAMETER, PARAMETER, STATE, mhatstar, mhat, dmmxq)
+        for bc in self.bc0:
+            bc.apply(dmmxq)
+
+        dmxxq = self.generate_state()
+        qoi.apply_ijk(PARAMETER, STATE, STATE, mhatstar, uhat, dmxxq)
+        for bc in self.bc0:
+            bc.apply(dmxxq)
+
+        return (vec_dmxr_ass, vec_dxxyr, vec_dxmyr, vec_dmmxr,
+                vec_dmyxr, vec_dmxxr, dxxxq, dxmxq, dmmxq, dmxxq)
+
+    def forSolveAdjFwd(self, x, uhat, uhatstar, mhat, mhatstar, yhat, yhatstar, qoi):
+        u_fun = hp.vector2Function(x[STATE], self.Vh[STATE])
+        m_fun = hp.vector2Function(x[PARAMETER], self.Vh[PARAMETER])
+        p_fun = hp.vector2Function(x[ADJOINT], self.Vh[ADJOINT])
+        z_fun = hp.vector2Function(x[CONTROL], self.Vh[CONTROL])
+        uhat_fun = hp.vector2Function(uhat, self.Vh[STATE])
+        uhatstar_fun = hp.vector2Function(uhatstar, self.Vh[STATE])
+        mhat_fun = hp.vector2Function(mhat, self.Vh[PARAMETER])
+        mhatstar_fun = hp.vector2Function(mhatstar, self.Vh[PARAMETER])
+        yhat_fun = hp.vector2Function(yhat, self.Vh[ADJOINT])
+        yhatstar_fun = hp.vector2Function(yhatstar, self.Vh[ADJOINT])
+
+        form = self.varf_handler(u_fun, m_fun, p_fun, z_fun)
+        z_test = dl.TestFunction(self.Vh[CONTROL])
+
+        dyr = dl.derivative(form, p_fun, yhatstar_fun)
+        dyxzr = dl.derivative(dl.derivative(dyr, u_fun, uhat_fun), z_fun, z_test)
+        vec_dyxzr = self.generate_control()
+        dl.assemble(dyxzr, tensor=vec_dyxzr)
+
+        dymzr = dl.derivative(dl.derivative(dyr, m_fun, mhat_fun), z_fun, z_test)
+        vec_dymzr = self.generate_control()
+        dl.assemble(dymzr, tensor=vec_dymzr)
+
+        dxr = dl.derivative(form, u_fun, uhatstar_fun)
+        dxyzr = dl.derivative(dl.derivative(dxr, p_fun, yhat_fun), z_fun, z_test)
+        vec_dxyzr = self.generate_control()
+        dl.assemble(dxyzr, tensor=vec_dxyzr)
+
+        dxxzr = dl.derivative(dl.derivative(dxr, u_fun, uhat_fun), z_fun, z_test)
+        vec_dxxzr = self.generate_control()
+        dl.assemble(dxxzr, tensor=vec_dxxzr)
+
+        dxmzr = dl.derivative(dl.derivative(dxr, m_fun, mhat_fun), z_fun, z_test)
+        vec_dxmzr = self.generate_control()
+        dl.assemble(dxmzr, tensor=vec_dxmzr)
+
+        dmr = dl.derivative(form, m_fun, mhatstar_fun)
+        dmmzr = dl.derivative(dl.derivative(dmr, m_fun, mhat_fun), z_fun, z_test)
+        vec_dmmzr = self.generate_control()
+        dl.assemble(dmmzr, tensor=vec_dmmzr)
+
+        dmyzr = dl.derivative(dl.derivative(dmr, p_fun, yhat_fun), z_fun, z_test)
+        vec_dmyzr = self.generate_control()
+        dl.assemble(dmyzr, tensor=vec_dmyzr)
+
+        dmxzr = dl.derivative(dl.derivative(dmr, u_fun, uhat_fun), z_fun, z_test)
+        vec_dmxzr = self.generate_control()
+        dl.assemble(dmxzr, tensor=vec_dmxzr)
+
+        dmxzq = self.generate_control()
+        qoi.apply_ijk(PARAMETER, STATE, CONTROL, mhatstar, uhat, dmxzq)
+
+        dmmzq = self.generate_control()
+        qoi.apply_ijk(PARAMETER, PARAMETER, CONTROL, mhatstar, mhat, dmmzq)
+
+        dxxzq = self.generate_control()
+        qoi.apply_ijk(STATE, STATE, CONTROL, uhatstar, uhat, dxxzq)
+
+        dxmzq = self.generate_control()
+        qoi.apply_ijk(STATE, PARAMETER, CONTROL, uhatstar, mhat, dxmzq)
+
+        dyzr = dl.derivative(form, p_fun, yhatstar_fun)
+        dyzr = dl.derivative(dyzr, z_fun, z_test)
+        vec_dyzr = self.generate_control()
+        dl.assemble(dyzr, tensor=vec_dyzr)
+
+        dxzr = dl.derivative(form, u_fun, uhatstar_fun)
+        dxzr = dl.derivative(dxzr, z_fun, z_test)
+        vec_dxzr = self.generate_control()
+        dl.assemble(dxzr, tensor=vec_dxzr)
+
+        return (
+            vec_dyzr,
+            vec_dxzr,
+            vec_dyxzr,
+            vec_dymzr,
+            vec_dxyzr,
+            vec_dxxzr,
+            vec_dxmzr,
+            vec_dmmzr,
+            vec_dmyzr,
+            vec_dmxzr,
+            dmxzq,
+            dmmzq,
+            dxxzq,
+            dxmzq,
+        )
+
+    def gradientControl(self, x, ustar, pstar, uhat, uhatstar, mhat, mhatstar, phat, phatstar, qoi):
+        u_fun = hp.vector2Function(x[STATE], self.Vh[STATE])
+        m_fun = hp.vector2Function(x[PARAMETER], self.Vh[PARAMETER])
+        p_fun = hp.vector2Function(x[ADJOINT], self.Vh[ADJOINT])
+        z_fun = hp.vector2Function(x[CONTROL], self.Vh[CONTROL])
+        ustar_fun = hp.vector2Function(ustar, self.Vh[STATE])
+        pstar_fun = hp.vector2Function(pstar, self.Vh[ADJOINT])
+        uhat_fun = hp.vector2Function(uhat, self.Vh[STATE])
+        uhatstar_fun = hp.vector2Function(uhatstar, self.Vh[STATE])
+        mhat_fun = hp.vector2Function(mhat, self.Vh[PARAMETER])
+        mhatstar_fun = hp.vector2Function(mhatstar, self.Vh[PARAMETER])
+        phat_fun = hp.vector2Function(phat, self.Vh[ADJOINT])
+        phatstar_fun = hp.vector2Function(phatstar, self.Vh[ADJOINT])
+
+        form = self.varf_handler(u_fun, m_fun, p_fun, z_fun)
+        z_test = dl.TestFunction(self.Vh[CONTROL])
+
+        dyr = dl.derivative(form, p_fun, pstar_fun)
+        dyzr = dl.derivative(dyr, z_fun, z_test)
+        vec_dyzr = self.generate_control()
+        dl.assemble(dyzr, tensor=vec_dyzr)
+
+        dxr = dl.derivative(form, u_fun, ustar_fun)
+        dxzr = dl.derivative(dxr, z_fun, z_test)
+        vec_dxzr = self.generate_control()
+        dl.assemble(dxzr, tensor=vec_dxzr)
+
+        dyr = dl.derivative(form, p_fun, phatstar_fun)
+        dyxr = dl.derivative(dyr, u_fun, uhat_fun)
+        dyxzr = dl.derivative(dyxr, z_fun, z_test)
+        vec_dyxzr = self.generate_control()
+        dl.assemble(dyxzr, tensor=vec_dyxzr)
+
+        dymr = dl.derivative(dyr, m_fun, mhat_fun)
+        dymzr = dl.derivative(dymr, z_fun, z_test)
+        vec_dymzr = self.generate_control()
+        dl.assemble(dymzr, tensor=vec_dymzr)
+
+        dxr = dl.derivative(form, u_fun, uhatstar_fun)
+        dxyr = dl.derivative(dxr, p_fun, phat_fun)
+        dxyzr = dl.derivative(dxyr, z_fun, z_test)
+        vec_dxyzr = self.generate_control()
+        dl.assemble(dxyzr, tensor=vec_dxyzr)
+
+        dxxr = dl.derivative(dxr, u_fun, uhat_fun)
+        dxxzr = dl.derivative(dxxr, z_fun, z_test)
+        vec_dxxzr = self.generate_control()
+        dl.assemble(dxxzr, tensor=vec_dxxzr)
+
+        dxmr = dl.derivative(dxr, m_fun, mhat_fun)
+        dxmzr = dl.derivative(dxmr, z_fun, z_test)
+        vec_dxmzr = self.generate_control()
+        dl.assemble(dxmzr, tensor=vec_dxmzr)
+
+        dmr = dl.derivative(form, m_fun, mhatstar_fun)
+        dmmr = dl.derivative(dmr, m_fun, mhat_fun)
+        dmmzr = dl.derivative(dmmr, z_fun, z_test)
+        vec_dmmzr = self.generate_control()
+        dl.assemble(dmmzr, tensor=vec_dmmzr)
+
+        dmyr = dl.derivative(dmr, p_fun, phat_fun)
+        dmyzr = dl.derivative(dmyr, z_fun, z_test)
+        vec_dmyzr = self.generate_control()
+        dl.assemble(dmyzr, tensor=vec_dmyzr)
+
+        dmxr = dl.derivative(dmr, u_fun, uhat_fun)
+        dmxzr = dl.derivative(dmxr, z_fun, z_test)
+        vec_dmxzr = self.generate_control()
+        dl.assemble(dmxzr, tensor=vec_dmxzr)
+
+        dmxzq = self.generate_control()
+        qoi.apply_ijk(PARAMETER, STATE, CONTROL, mhatstar, uhat, dmxzq)
+
+        dmmzq = self.generate_control()
+        qoi.apply_ijk(PARAMETER, PARAMETER, CONTROL, mhatstar, mhat, dmmzq)
+
+        dxxzq = self.generate_control()
+        qoi.apply_ijk(STATE, STATE, CONTROL, uhatstar, uhat, dxxzq)
+
+        dxmzq = self.generate_control()
+        qoi.apply_ijk(STATE, PARAMETER, CONTROL, uhatstar, mhat, dxmzq)
+
+        return (
+            vec_dyzr,
+            vec_dxzr,
+            vec_dyxzr,
+            vec_dymzr,
+            vec_dxyzr,
+            vec_dxxzr,
+            vec_dxmzr,
+            vec_dmmzr,
+            vec_dmyzr,
+            vec_dmxzr,
+            dmxzq,
+            dmmzq,
+            dxxzq,
+            dxmzq,
+        )

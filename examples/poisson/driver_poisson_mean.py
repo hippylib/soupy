@@ -48,6 +48,7 @@ SAMPLE_SIZE = 4
 PENALTY_WEIGHT = 1e-3
 
 RESULTS_DIRECTORY = "results"
+os.makedirs(RESULTS_DIRECTORY, exist_ok=True)
 
 # 0. MPI Communicators
 comm_mesh = MPI.COMM_SELF
@@ -104,7 +105,11 @@ penalty = soupy.L2Penalization(Vh, PENALTY_WEIGHT)
 cost_functional = soupy.RiskMeasureControlCostFunctional(risk_measure, penalty)
 
 
-# 9. Define the optimizer 
+# 9. Define the optimizer (enable progress printing)
+# newton_params = soupy.InexactNewtonCG_ParameterList()
+# newton_params["print_level"] = 1
+# optimizer = soupy.InexactNewtonCG(cost_functional, newton_params)
+
 optimizer = soupy.InexactNewtonCG(cost_functional)
 
 # 10. Provide initial guess and solve 
@@ -143,8 +148,6 @@ prior.sample(noise, x[soupy.PARAMETER])
 # solve the forward problem 
 control_model.solveFwd(x[soupy.STATE], x)
 
-os.makedirs(RESULTS_DIRECTORY, exist_ok=True)
-
 plt.figure()
 hp.nb.plot(hp.vector2Function(x[soupy.CONTROL], Vh[soupy.CONTROL]))
 plt.title("Optimal control (rank %d)" %(comm_sampler.rank)) 
@@ -169,5 +172,4 @@ if comm_sampler.rank == 0:
     plt.title("Target state(rank %d)" %(comm_sampler.rank)) 
     plt.savefig("%s/target_state.png" %(RESULTS_DIRECTORY))
     plt.close()
-
 

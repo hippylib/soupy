@@ -59,11 +59,58 @@ from semilinearEllipticControlPDE import setup_semilinear_elliptic_pde, \
 
 from semilinearEllipticOUU import get_target, plot_sources
 
+import logging
+logging.getLogger('FFC').setLevel(logging.WARNING)
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('dijitso').setLevel(logging.WARNING)
+
 dl.set_log_active(False)
+dl.parameters["std_out_all_processes"] = False
 
 def print_on_root(print_str, mpi_comm=MPI.COMM_WORLD):
     if mpi_comm.Get_rank() == 0:
         print(print_str)
+
+
+class QuietScipyCostWrapper:
+    """Scipy cost wrapper with clean iteration output."""
+
+    def __init__(self, cost_functional, comm_rank=0, print_every=1):
+        self.cost_functional = cost_functional
+        self.comm_rank = comm_rank
+        self.print_every = print_every
+        self.iter_count = 0
+        self.n_func = 0
+        self.n_grad = 0
+        self.cost_history = []
+        self.grad_norm_history = []
+        self._z = cost_functional.generate_vector(soupy.CONTROL)
+        self._g = cost_functional.generate_vector(soupy.CONTROL)
+
+    def function(self):
+        def f(z_np):
+            self._z.set_local(z_np)
+            self._z.apply("")
+            cost = self.cost_functional.cost(self._z, order=0)
+            self.cost_history.append(cost)
+            self.n_func += 1
+            return cost
+        return f
+
+    def jac(self):
+        def g(z_np):
+            self._z.set_local(z_np)
+            self._z.apply("")
+            self.cost_functional.cost(self._z, order=1)
+            grad_norm = self.cost_functional.grad(self._g)
+            self.grad_norm_history.append(grad_norm)
+            self.n_grad += 1
+            self.iter_count += 1
+            if self.comm_rank == 0 and self.iter_count % self.print_every == 0:
+                print(f"  Iter {self.iter_count:4d}: cost = {self.cost_history[-1]:.6e}, ||grad|| = {grad_norm:.6e}")
+                sys.stdout.flush()
+            return self._g.get_local()
+        return g
 
 
 if __name__ == "__main__":
@@ -76,14 +123,14 @@ if __name__ == "__main__":
     parser.add_argument('-N', '--N_sample', type=int, default=16, help="Number of samples for SAA")
     parser.add_argument('-n', '--max_iter', type=int, default=100, help="Maximum number of optimization iterations")
 
-    parser.add_argument('--nx', type=int, default=64, help="Number of elements in x direction")
-    parser.add_argument('--ny', type=int, default=64, help="Number of elements in y direction")
+    parser.add_argument('--nx', type=int, default=16, help="Number of elements in x direction")
+    parser.add_argument('--ny', type=int, default=16, help="Number of elements in y direction")
     parser.add_argument('--N_sources', type=int, default=7, help="Number of sources per side")
     parser.add_argument('--loc_lower', type=float, default=0.1, help="Lower bound of location of sources")
     parser.add_argument('--loc_upper', type=float, default=0.9, help="Upper bound of location of sources")
     parser.add_argument('--well_width', type=float, default=0.08, help="Width of sources")
 
-    parser.add_argument('--display', default=False, action="store_true", help="Display optimization iterations")
+    parser.add_argument('--print-every', type=int, default=1, help="Print iteration info every N iterations")
     parser.add_argument('--seed', type=int, default=0, help="Random seed for sampling the random parameter")
     args = parser.parse_args()
         
@@ -147,51 +194,71 @@ if __name__ == "__main__":
     pde_rm = soupy.SuperquantileRiskMeasureSAA(control_model, prior, settings=rm_param, comm_sampler=comm_sampler)
     pde_cost = soupy.RiskMeasureControlCostFunctional(pde_rm, None)
 
-    # Scipy cost 
+    # Scipy cost wrapper with iteration output
     print_on_root("Convert to scipy cost")
-    scipy_cost = soupy.ScipyCostWrapper(pde_cost)
+    scipy_cost = QuietScipyCostWrapper(pde_cost, comm_rank=comm_rank_sampler, print_every=args.print_every)
 
-    # Box constraint with CVaR. t is unconstrained 
+    # Box constraint with CVaR. t is unconstrained
     dim = semilinear_elliptic_settings["n_wells_per_side"]**2
     lb = np.ones(dim) * semilinear_elliptic_settings["strength_lower"]
     ub = np.ones(dim) * semilinear_elliptic_settings["strength_upper"]
-    lb = np.append(lb, np.array([-np.infty]))
-    ub = np.append(ub, np.array([np.infty]))
+    lb = np.append(lb, np.array([-np.inf]))
+    ub = np.append(ub, np.array([np.inf]))
     box_bounds = scipy.optimize.Bounds(lb=lb, ub=ub)
 
-    # ----------------- Optimize ----------------- # 
-    print_on_root("Start optimization")
-    opt_options = {"maxiter" : args.max_iter, "disp" : args.display} 
+    # ----------------- Optimize ----------------- #
+    if comm_rank_sampler == 0:
+        print("=" * 70)
+        print("Semilinear Elliptic CVaR Optimization")
+        print("=" * 70)
+        print(f"  Target:          {args.target} (param={args.param})")
+        print(f"  CVaR beta:       {args.beta}")
+        print(f"  CVaR epsilon:    {args.epsilon}")
+        print(f"  N samples:       {args.N_sample}")
+        print(f"  Max iterations:  {args.max_iter}")
+        print(f"  N sources:       {args.N_sources}x{args.N_sources}")
+        print("=" * 70)
+        print("\nStarting optimization (L-BFGS-B)...")
+        print("-" * 70)
+        sys.stdout.flush()
 
-    # Generate the initial guess array as zeros. 
+    # Generate the initial guess array as zeros.
     zt = pde_cost.generate_vector(soupy.CONTROL)
     zt0_np = zt.get_local()
 
-    # Flush the out buffer before starting optimization 
-    sys.stdout.flush()
-
     tsolve_0 = time.time()
-    results = scipy.optimize.minimize(scipy_cost.function(), zt0_np, method="L-BFGS-B", jac=scipy_cost.jac(), bounds=box_bounds, options=opt_options)
+    results = scipy.optimize.minimize(scipy_cost.function(), zt0_np, method="L-BFGS-B", jac=scipy_cost.jac(), bounds=box_bounds, options={"maxiter": args.max_iter, "disp": False})
     tsolve_1 = time.time()
     tsolve = tsolve_1 - tsolve_0
 
     zt_opt_np = results["x"]
     z_opt_np = zt_opt_np[:-1]
-    print_on_root("Time to solve: %g" %tsolve)
+
+    if comm_rank_sampler == 0:
+        print("-" * 70)
+        print("Optimization Summary")
+        print("-" * 70)
+        print(f"  Converged:       {results['success']}")
+        print(f"  Iterations:      {results['nit']}")
+        print(f"  Time:            {tsolve:.2f} s")
     
     n_linear_solves_proc = np.array([pde.n_linear_solves], dtype=np.int32)
     n_linear_solves_total = np.zeros_like(n_linear_solves_proc)
     comm_sampler.Reduce(n_linear_solves_proc, n_linear_solves_total, root=0)
 
-    print_on_root("Number of function evals: %d" %(scipy_cost.n_func))
-    print_on_root("Number of gradient evals: %d" %(scipy_cost.n_grad))
-    print_on_root("Number of linear PDE solves (single proc): %d" %(pde.n_linear_solves))
-    print_on_root("Number of linear PDE solves (all procs): %d" %(n_linear_solves_total[0]))
-    
     zt.set_local(zt_opt_np)
     pde_rm.computeComponents(zt)
     risk_opt = pde_rm.cost()
     cvar_opt = pde_rm.superquantile()
+
+    if comm_rank_sampler == 0:
+        print(f"  Function evals:  {scipy_cost.n_func}")
+        print(f"  Gradient evals:  {scipy_cost.n_grad}")
+        print(f"  PDE solves:      {n_linear_solves_total[0]} (total), {pde.n_linear_solves} (this proc)")
+        print(f"  Final cost:      {results['fun']:.6e}")
+        print(f"  CVaR:            {cvar_opt:.6e}")
+        print("=" * 70)
+        sys.stdout.flush()
 
     # -----------------  Post processing ----------------- #
     inds_all = [soupy.STATE, soupy.PARAMETER, soupy.ADJOINT, soupy.CONTROL]
@@ -242,4 +309,3 @@ if __name__ == "__main__":
         plt.figure()
         hp.nb.plot(x_fun[soupy.PARAMETER], mytitle="Sample parameter")
         plt.savefig("%s/parameter.png" %(save_dir))
-

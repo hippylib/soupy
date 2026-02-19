@@ -15,10 +15,11 @@ from .collectives import *
 
 from .modeling import *
 
+from .approximations import *
+
 from .optimization import *
 
 from .solver import * 
 
 from .utils import *
-
 
