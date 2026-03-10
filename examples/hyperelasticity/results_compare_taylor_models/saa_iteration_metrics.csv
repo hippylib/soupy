@@ -1,0 +1,2 @@
+iteration,model_cost,true_cost,abs_error,rel_error,residual,iter_time_sec
+1,0.20970298596851775,0.20970298596851775,0.0,0.0,0.038033094727942605,nan

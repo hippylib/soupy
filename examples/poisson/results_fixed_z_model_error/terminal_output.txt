@@ -1,0 +1,68 @@
+==============================================================================
+Poisson Fixed-Control Approximation Error Comparison
+==============================================================================
+log_file=results_fixed_z_model_error/terminal_output.txt
+save_dir=results_fixed_z_model_error
+saa_samples=1000000, beta=10.0
+==============================================================================
+[zero        ] J_true=3.178161e-01, E[Q]=3.094364e-01, Var[Q]=8.379638e-04, P(z)=0.000000e+00, ||z||_2=0.000e+00, ||z||_inf=0.000e+00
+  - linear           J_model=3.160270e-01, rel_err=5.629e-03
+  - quadratic        J_model=3.202038e-01, rel_err=7.513e-03
+  - mixture_linear_kle J_model=3.160641e-01, rel_err=5.512e-03
+  - mixture_linear_hep J_model=3.177735e-01, rel_err=1.340e-04
+  - mixture_quadratic_kle J_model=3.198364e-01, rel_err=6.357e-03
+  - mixture_quadratic_hep J_model=3.193770e-01, rel_err=4.912e-03
+[affine_small] J_true=2.853667e-01, E[Q]=2.719035e-01, Var[Q]=1.304655e-03, P(z)=4.166667e-04, ||z||_2=4.496e+00, ||z||_inf=5.000e-01
+  - linear           J_model=2.616356e-01, rel_err=8.316e-02
+  - quadratic        J_model=2.745251e-01, rel_err=3.799e-02
+  - mixture_linear_kle J_model=2.758441e-01, rel_err=3.337e-02
+  - mixture_linear_hep J_model=2.754165e-01, rel_err=3.487e-02
+  - mixture_quadratic_kle J_model=2.814335e-01, rel_err=1.378e-02
+  - mixture_quadratic_hep J_model=2.774307e-01, rel_err=2.781e-02
+[affine_large] J_true=9.563679e+00, E[Q]=7.502508e-01, Var[Q]=8.806762e-01, P(z)=6.666667e-03, ||z||_2=1.798e+01, ||z||_inf=2.000e+00
+  - linear           J_model=1.505448e+00, rel_err=8.426e-01
+  - quadratic        J_model=2.607593e+00, rel_err=7.273e-01
+  - mixture_linear_kle J_model=7.019252e+00, rel_err=2.661e-01
+  - mixture_linear_hep J_model=7.194623e+00, rel_err=2.477e-01
+  - mixture_quadratic_kle J_model=7.790217e+00, rel_err=1.854e-01
+  - mixture_quadratic_hep J_model=7.983211e+00, rel_err=1.653e-01
+[sin_small   ] J_true=2.762844e-01, E[Q]=2.643855e-01, Var[Q]=1.129398e-03, P(z)=6.048564e-04, ||z||_2=5.000e+00, ||z||_inf=5.000e-01
+  - linear           J_model=2.778995e-01, rel_err=5.846e-03
+  - quadratic        J_model=2.824336e-01, rel_err=2.226e-02
+  - mixture_linear_kle J_model=2.745384e-01, rel_err=6.320e-03
+  - mixture_linear_hep J_model=2.803774e-01, rel_err=1.481e-02
+  - mixture_quadratic_kle J_model=2.788377e-01, rel_err=9.242e-03
+  - mixture_quadratic_hep J_model=2.815608e-01, rel_err=1.910e-02
+[sin_large   ] J_true=2.780100e-01, E[Q]=2.036017e-01, Var[Q]=6.473065e-03, P(z)=9.677703e-03, ||z||_2=2.000e+01, ||z||_inf=2.000e+00
+  - linear           J_model=2.083361e-01, rel_err=2.506e-01
+  - quadratic        J_model=2.241858e-01, rel_err=1.936e-01
+  - mixture_linear_kle J_model=2.313535e-01, rel_err=1.678e-01
+  - mixture_linear_hep J_model=2.295757e-01, rel_err=1.742e-01
+  - mixture_quadratic_kle J_model=2.457517e-01, rel_err=1.160e-01
+  - mixture_quadratic_hep J_model=2.349096e-01, rel_err=1.550e-01
+[random_small] J_true=3.484910e-01, E[Q]=3.346556e-01, Var[Q]=1.342829e-03, P(z)=4.071675e-04, ||z||_2=5.879e+00, ||z||_inf=9.754e-01
+  - linear           J_model=3.423359e-01, rel_err=1.766e-02
+  - quadratic        J_model=3.495466e-01, rel_err=3.029e-03
+  - mixture_linear_kle J_model=3.466099e-01, rel_err=5.398e-03
+  - mixture_linear_hep J_model=3.465480e-01, rel_err=5.576e-03
+  - mixture_quadratic_kle J_model=3.509233e-01, rel_err=6.980e-03
+  - mixture_quadratic_hep J_model=3.486367e-01, rel_err=4.180e-04
+[random_large] J_true=3.763321e-01, E[Q]=3.467984e-01, Var[Q]=2.486346e-03, P(z)=4.670206e-03, ||z||_2=2.031e+01, ||z||_inf=2.820e+00
+  - linear           J_model=3.637464e-01, rel_err=3.344e-02
+  - quadratic        J_model=3.755725e-01, rel_err=2.018e-03
+  - mixture_linear_kle J_model=3.752296e-01, rel_err=2.929e-03
+  - mixture_linear_hep J_model=3.780514e-01, rel_err=4.569e-03
+  - mixture_quadratic_kle J_model=3.801263e-01, rel_err=1.008e-02
+  - mixture_quadratic_hep J_model=3.805283e-01, rel_err=1.115e-02
+
+------------------------------------------------------------------------------
+Model summary over fixed controls
+------------------------------------------------------------------------------
+linear           mean rel=1.770e-01, max rel=8.426e-01
+quadratic        mean rel=1.420e-01, max rel=7.273e-01
+mixture_linear_kle mean rel=6.963e-02, max rel=2.661e-01
+mixture_linear_hep mean rel=6.884e-02, max rel=2.477e-01
+mixture_quadratic_kle mean rel=4.970e-02, max rel=1.854e-01
+mixture_quadratic_hep mean rel=5.481e-02, max rel=1.653e-01
+------------------------------------------------------------------------------
+Outputs written to: results_fixed_z_model_error

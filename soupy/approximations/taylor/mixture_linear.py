@@ -123,9 +123,9 @@ class _TaylorMixtureLinearLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            omega = MultiVector(self.pde.generate_parameter(), 15)
+            omega = MultiVector(self.pde.generate_parameter(), 64)
             rand = Random()
-            for i in range(15):
+            for i in range(64):
                 rand.normal(1.0, omega[i])
 
             d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
@@ -309,7 +309,7 @@ class _TaylorMixtureLinearLegacy:
         # Solve the incremental adjoint equation for y_star
         # The incremental adjoint equation \partial L / \partial u_i (check the note for detailed equation)
         
-        #  <\tilde{u}_i, \partial_{u} \bar{Q}_i>
+        #  <\tilde{u}_i, （1 + 2 * beta - 2 * beta * self.mixture_mean)\partial_{u} \bar{Q}_i>
         if gamma_i != 0.0:
             dxq = self.pde.generate_state()
             self.qoi.grad(STATE, [x_i, m_i, y_i, self.z], dxq)

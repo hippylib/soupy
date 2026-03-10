@@ -61,6 +61,7 @@ def hyperElasticityPDESettings():
     settings["E0"] = 20
     settings["E1"] = 200
     settings["nu"] = 0.3 
+    settings["eps"] = 1e-2
     return settings
 
 
@@ -71,6 +72,7 @@ class HyperelasticityVarfHandler:
         self.geometry = geometry
         self.E0 = dl.Constant(settings["E0"])
         self.E1 = dl.Constant(settings["E1"])
+        self.eps = dl.Constant(settings["eps"])
         self.nu = dl.Constant(settings["nu"])
         self.t_nominal = t_nominal 
         self.spatial_dim = spatial_dim
@@ -80,7 +82,7 @@ class HyperelasticityVarfHandler:
         """
         Control variable to elastic modulus form
         """
-        percentage = z**3
+        percentage = self.eps * z + z**3
         E = self.E0 + percentage * (self.E1 - self.E0)
         return E 
 
@@ -185,6 +187,5 @@ class HyperelasticityControlPDE(soupy.PDEVariationalControlProblem):
                 self.n_linear_solves += num_iters
         state.zero()
         state.axpy(1., u.vector())
-
 
 

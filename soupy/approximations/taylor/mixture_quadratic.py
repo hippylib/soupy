@@ -60,15 +60,72 @@ def quadratic_mixture_mean_variance_analytical(
 
     return float(mixture_mean), float(mixture_var)
 
+class _RankOneCovarianceSolver:
+    """Apply C_i = C + alpha * psi psi^T via solve(out, rhs)."""
 
+    def __init__(self, base_prior, psi, alpha):
+        self._base = base_prior
+        self._psi = psi
+        self._alpha = float(alpha)
+
+    def init_vector(self, x, dim):
+        if hasattr(self._base.Rsolver, "init_vector"):
+            self._base.Rsolver.init_vector(x, dim)
+        elif hasattr(self._base.R, "init_vector"):
+            self._base.R.init_vector(x, dim)
+        else:
+            raise NotImplementedError("init_vector not available on base prior operators")
+
+    # Compute out = C_i*rhs
+    def solve(self, out, rhs):
+        # Base term: C*rhs
+        self._base.Rsolver.solve(out, rhs)
+        # Rank-1 correction: alpha * <psi, rhs> * psi
+        if abs(self._alpha) > 0.0:
+            out.axpy(self._alpha * self._psi.inner(rhs), self._psi)
+
+
+class _RankOneInverseCovariance:
+    """Apply C_i^{-1} directly using the provided spectral formula.
+
+    C_i^{-1} = C^{-1} + ((1/sigma_i^2)-1) * (1/lambda_psi) * psi psi^T
+    """
+
+    def __init__(self, base_prior, psi, sigma_sq, lambda_psi):
+        self._base = base_prior
+        self._psi = psi
+        self._sigma_sq = float(sigma_sq)
+        self._lambda_psi = float(lambda_psi)
+        if self._sigma_sq <= 0.0:
+            raise RuntimeError("sigma^2 must be positive.")
+        if abs(self._lambda_psi) < 1e-14:
+            raise RuntimeError("lambda_psi is too small.")
+        self._coeff = ((1.0 / self._sigma_sq) - 1.0) / self._lambda_psi
+
+    def init_vector(self, x, dim):
+        if hasattr(self._base.R, "init_vector"):
+            self._base.R.init_vector(x, dim)
+        elif hasattr(self._base.Rsolver, "init_vector"):
+            self._base.Rsolver.init_vector(x, dim)
+        else:
+            raise NotImplementedError("init_vector not available on base prior operators")
+
+    # Compute y = C_i^{-1} x
+    def mult(self, x, y):
+        # Base term: C^{-1} x
+        self._base.R.mult(x, y)
+        # Direct spectral correction.
+        y.axpy(self._coeff * self._psi.inner(x), self._psi)
+
+# Compute the covariance for a given cluster
 class _ShiftedPrior:
-    """Prior view with shifted mean and shared covariance operators."""
+    """Compute the covariance for a cluster"""
 
-    def __init__(self, base_prior, mean_vec):
+    def __init__(self, base_prior, mean_vec, psi, alpha, sigma_sq, lambda_psi):
         self._base = base_prior
         self.mean = mean_vec
-        self.R = base_prior.R
-        self.Rsolver = base_prior.Rsolver
+        self.R = _RankOneInverseCovariance(base_prior, psi, sigma_sq, lambda_psi)
+        self.Rsolver = _RankOneCovarianceSolver(base_prior, psi, alpha)
 
     def __getattr__(self, name):
         return getattr(self._base, name)
@@ -156,6 +213,7 @@ class _TaylorMixtureQuadraticLegacy:
         if self.direction_computed:
             return
 
+        # Solve forward and adjoint PDE at the mean parameter for estimating Hessian at the mean. 
         self.x_all[CONTROL] = self.z
         self.x_all[PARAMETER] = self.prior.mean
         self.pde.solveFwd(self.x, self.x_all)
@@ -170,11 +228,12 @@ class _TaylorMixtureQuadraticLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            omega = MultiVector(self.pde.generate_parameter(), 15)
+            omega = MultiVector(self.pde.generate_parameter(), 64)
             rand = Random()
-            for i in range(15):
+            for i in range(64):
                 rand.normal(1.0, omega[i])
 
+            # Incremental state and incremental adjoint are solved whenever Hessian action is called in doulbePassG. 
             d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
 
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
@@ -188,6 +247,7 @@ class _TaylorMixtureQuadraticLegacy:
             rand = Random()
             rand.normal(1.0, v)
 
+            # Use power iteration to estimate dominant eigendirection of C (KLE mode)
             for _ in range(50):
                 w = dl.Function(self.pde.Vh[PARAMETER]).vector()
                 self.prior.Rsolver.solve(w, v)
@@ -200,7 +260,7 @@ class _TaylorMixtureQuadraticLegacy:
             self.prior.R.mult(v, R_v)
             norm_sq = v.inner(R_v)
             v_local = v.get_local()
-            v.set_local(v_local / np.sqrt(norm_sq))
+            v.set_local(v_local / np.sqrt(norm_sq)) # dominant eigendirection psi are divided by the inverse of the sqrt of eigenvalue, so that lambda_psi can be set to 1.0.
             v.apply("")
 
             self.psi = v
@@ -233,12 +293,21 @@ class _TaylorMixtureQuadraticLegacy:
         )
 
     def _evaluate_component(self, m_i):
-        """Evaluate one component via the validated quadratic legacy solver.
+        """Evaluate the contribution to z-gradient of mu_i and var_i for each cluster i using the regular Quadratic Taylor implementation. 
 
         Returns:
             dict with mu, var, dmu, dvar and diagnostic component fields.
         """
-        prior_i = _ShiftedPrior(self.prior, m_i)
+        sigma_sq = float(self.mix_1d["sigma"] ** 2)
+        alpha = (sigma_sq - 1.0) * float(self.lambda_psi)
+        prior_i = _ShiftedPrior(
+            self.prior,
+            m_i,
+            self.psi,
+            alpha,
+            sigma_sq,
+            self.lambda_psi,
+        )
 
         # beta=0 gives pure mean objective and mean gradient.
         legacy_mu = _TaylorQuadraticLegacy(
@@ -251,7 +320,8 @@ class _TaylorMixtureQuadraticLegacy:
         mu_i = legacy_mu.costValue(self.z)
         dmu_i, _ = legacy_mu.costGradient(self.z)
 
-        # beta=1 gives mu + var - mu^2 and its gradient.
+        # This beta=1 so that it gives mu + var and its gradient.
+        # Recover dvar_i by first setting beta to 1 and then removing the mean contribution. 
         legacy_beta1 = _TaylorQuadraticLegacy(
             self._component_settings(1.0),
             self.model,
@@ -259,15 +329,36 @@ class _TaylorMixtureQuadraticLegacy:
             penalization=None,
             tol=self.tol,
         )
+
+        # beta=1 objective equals: mu_i + var_i
         j_beta1 = legacy_beta1.costValue(self.z)
         g_beta1, _ = legacy_beta1.costGradient(self.z)
 
-        # Recover var and dvar from algebraic identities.
-        var_i = j_beta1 - mu_i + mu_i ** 2
+        # Recover variance and second moment explicitly:
+        # var_i = j_beta1 - mu_i
+        # second_moment_i = var_i + mu_i^2
+        var_i = j_beta1 - mu_i
+        second_moment_i = var_i + mu_i ** 2
+
+        # Differentiate the same identities:
+        # dvar_i = g_beta1 - dmu_i
+        # dsecond_moment_i = dvar_i + 2*mu_i*dmu_i
         dvar_i = self.model.generate_vector(CONTROL)
         dvar_i.zero()
         dvar_i.axpy(1.0, g_beta1)
-        dvar_i.axpy(-(1.0 - 2.0 * mu_i), dmu_i)
+        dvar_i.axpy(-1.0, dmu_i)
+        # Both dmu_i and dvar_i are full control derivatives (including implicit
+        # contributions transmitted through state/adjoint constraints), because
+        # they are recovered from full gradients of the validated quadratic solver.
+        
+        # We can split also the constraint into contribution of variance term and contribution 
+        # of mean term because the equations we need to solve when computing the z-gradient are all linearized equations, 
+        # so the principle of superposition applies (now, state and adjoint equation are already solved).
+
+        dsecond_moment_i = self.model.generate_vector(CONTROL)
+        dsecond_moment_i.zero()
+        dsecond_moment_i.axpy(1.0, dvar_i)
+        dsecond_moment_i.axpy(2.0 * mu_i, dmu_i)
 
         Q0_i = legacy_beta1.Q_0
         # Linear variance term <g, Cg> extracted from legacy linear moment part.
@@ -354,16 +445,33 @@ class _TaylorMixtureQuadraticLegacy:
 
         dz = self.model.generate_vector(CONTROL)
 
-        # dJ = sum_i w_i*(1 + 2*beta*(mu_i - mu_mix))*dmu_i + beta*sum_i w_i*dvar_i
+        # mixture_mean = sum_i w_i*mu_i
+        # mixture_second_moment = sum_i w_i*(mu_i^2 + var_i)
+        # mixture_var = mixture_second_moment - mixture_mean^2
+        # J = mixture_mean + beta * mixture_var
+        # dJ = dmu_mix + beta*(dsecond_mix - 2*mu_mix*dmu_mix)
+        dmu_mix = self.model.generate_vector(CONTROL)
+        dmu_mix.zero()
+        dsecond_mix = self.model.generate_vector(CONTROL)
+        dsecond_mix.zero()
+
         for i in range(self.N_mix):
             w_i = self.component_weights[i]
             mu_i = self.component_quad_mean[i]
+            # dmu_i and dvar_i are both full derivatives for component i.
+            dmu_mix.axpy(w_i, self.component_dmu[i])
+            dsecond_mix.axpy(2.0 * w_i * mu_i, self.component_dmu[i])
+            dsecond_mix.axpy(w_i, self.component_dvar[i])
 
-            mean_coeff = w_i * (1.0 + 2.0 * self.beta * (mu_i - self.mixture_mean))
-            var_coeff = self.beta * w_i
+        # Equivalent form:
+        # dJ = sum_i w_i*(1 + 2*beta*(mu_i - mu_mix))*dmu_i + beta*sum_i w_i*dvar_i
+        # where mu_mix = sum_i w_i*mu_i. The implementation below uses the
+        # second-moment form dJ = dmu_mix + beta*(dsecond_mix - 2*mu_mix*dmu_mix).
 
-            dz.axpy(mean_coeff, self.component_dmu[i])
-            dz.axpy(var_coeff, self.component_dvar[i])
+
+        dz.axpy(1.0, dmu_mix)
+        dz.axpy(self.beta, dsecond_mix)
+        dz.axpy(-2.0 * self.beta * self.mixture_mean, dmu_mix)
 
         if self.penalization is not None:
             pen = self.model.generate_vector(CONTROL)

@@ -29,7 +29,7 @@ from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
 from .settings import taylor_mixture_linear_cvar_settings
 from .mixture_data import get_1d_mixture
-from .linear_cvar import gaussian_cvar
+from .linear_cvar import gaussian_cvar, gaussian_cvar_grad_std
 
 
 def gaussian_mixture_cvar(means, stds, weights, beta, tol=1e-10):
@@ -114,7 +114,6 @@ def gaussian_mixture_cvar(means, stds, weights, beta, tol=1e-10):
 
     # Compute CVaR using formula for E[(X - t)^+] for Gaussian X
     # E[(X - t)^+] = sigma * phi((t-mu)/sigma) + (mu - t) * (1 - Phi((t-mu)/sigma))
-    cvar = var
     for i in range(n_components):
         mu_i, sigma_i, w_i = means[i], stds[i], weights[i]
         if sigma_i > 1e-14:
@@ -130,7 +129,7 @@ def gaussian_mixture_cvar(means, stds, weights, beta, tol=1e-10):
 
 
 class _TaylorMixtureLinearCVaRLegacy:
-    """Implementation of Gaussian mixture linear Taylor CVaR."""
+    """Implementation of Gaussian-mixture linear Taylor CVaR."""
 
     def __init__(self, settings, model, prior, penalization, tol=1e-9):
         self.settings = settings
@@ -142,6 +141,7 @@ class _TaylorMixtureLinearCVaRLegacy:
         self.tol = tol
 
         self.z = model.generate_vector(CONTROL)
+        self.z_diff = model.generate_vector(CONTROL)
         self.m = prior.mean
         self.x = model.generate_vector(STATE)
         self.y = model.generate_vector(STATE)
@@ -173,7 +173,12 @@ class _TaylorMixtureLinearCVaRLegacy:
         # Storage for mixture component quantities
         self.component_means = []  # Q(m_bar_i)
         self.component_stds = []  # sqrt(<g_i, C_i @ g_i>)
+        self.component_vars = []  # <g_i, C_i @ g_i>
         self.component_weights = self.mix_1d['weights']
+
+        self.x_components = []
+        self.y_components = []
+        self.Cdmq_components = []
 
         # Direction and components (computed on first objective call)
         self.psi = None  # Decomposition direction
@@ -187,9 +192,14 @@ class _TaylorMixtureLinearCVaRLegacy:
         # CVaR values
         self.var = 0.0
         self.cvar = 0.0
+        self.mixture_mean = 0.0
+        self.mixture_std = 0.0
 
-        # For gradient computation
-        self.dominant_component_idx = 0
+    def _std_gradient_scale(self):
+        """Return kappa / Sigma for J = M + kappa * Sigma."""
+        if self.mixture_std <= 1e-14:
+            return 0.0
+        return gaussian_cvar_grad_std(self.mixture_std, self.beta) / self.mixture_std
 
     def _compute_direction(self):
         """Compute decomposition direction (KLE or HEP)."""
@@ -212,9 +222,9 @@ class _TaylorMixtureLinearCVaRLegacy:
 
         if self.direction == "hep":
             # Compute dominant HEP eigenvector
-            omega = MultiVector(self.pde.generate_parameter(), 15)
+            omega = MultiVector(self.pde.generate_parameter(), 64)
             rand = Random()
-            for i in range(15):
+            for i in range(64):
                 rand.normal(1.0, omega[i])
 
             d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
@@ -268,7 +278,7 @@ class _TaylorMixtureLinearCVaRLegacy:
         self.direction_computed = True
 
     def objective(self):
-        """Compute CVaR objective using Gaussian mixture linear Taylor."""
+        """Compute the GMM linear CVaR surrogate J = M + k * Sigma."""
         self._compute_direction()
 
         sigma_1d = self.mix_1d['sigma']
@@ -276,6 +286,10 @@ class _TaylorMixtureLinearCVaRLegacy:
 
         self.component_means = []
         self.component_stds = []
+        self.component_vars = []
+        self.x_components = []
+        self.y_components = []
+        self.Cdmq_components = []
 
         # Pre-compute R @ psi = C^{-1} @ psi
         R_psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
@@ -324,75 +338,172 @@ class _TaylorMixtureLinearCVaRLegacy:
             self.prior.Rsolver.solve(C_g_i, g_i)
             var_C = g_i.inner(C_g_i)
 
-            # Correction term
+            # Get rank-1 correction for componentwise variance
             g_dot_psi = g_i.inner(self.psi)
             correction = (sigma_sq - 1.0) * self.lambda_psi * g_dot_psi ** 2
 
             var_i = var_C + correction
+            C_g_i.axpy((sigma_sq - 1.0) * self.lambda_psi * g_dot_psi, self.psi)
+            self.component_vars.append(var_i)
             std_i = np.sqrt(max(0.0, var_i))
             self.component_stds.append(std_i)
+            self.x_components.append(x_i)
+            self.y_components.append(y_i)
+            self.Cdmq_components.append(C_g_i)
 
-        # Compute CVaR of the Gaussian mixture
-        self.var, self.cvar = gaussian_mixture_cvar(
-            self.component_means,
-            self.component_stds,
-            self.component_weights,
-            self.beta,
-        )
+        weights = np.asarray(self.component_weights)
+        means = np.asarray(self.component_means)
+        vars_ = np.asarray(self.component_vars)
 
-        # Find dominant component for gradient
-        self.dominant_component_idx = np.argmax(self.component_weights)
+        self.mixture_mean = float(np.sum(weights * means))
+        second_moment = float(np.sum(weights * (means ** 2 + vars_)))
+        mixture_var = max(0.0, second_moment - self.mixture_mean ** 2)
+        self.mixture_std = np.sqrt(mixture_var)
+        self.var = self.mixture_mean + self.mixture_std * norm.ppf(self.beta)
+        self.cvar = gaussian_cvar(self.mixture_mean, self.mixture_std, self.beta)
 
         if self.verbose and self.mpi_rank == 0:
-            print(f"  [Mixture Linear CVaR] N_mix={self.N_mix}, VaR={self.var:.4e}, CVaR={self.cvar:.4e}")
+            print(
+                f"  [Mixture Linear CVaR] N_mix={self.N_mix}, "
+                f"mean={self.mixture_mean:.4e}, std={self.mixture_std:.4e}, "
+                f"VaR={self.var:.4e}, CVaR={self.cvar:.4e}"
+            )
             for i in range(self.N_mix):
-                print(f"    Component {i}: Q={self.component_means[i]:.4e}, std={self.component_stds[i]:.4e}, w={self.component_weights[i]:.4f}")
+                print(
+                    f"    Component {i}: Q={self.component_means[i]:.4e}, "
+                    f"std={self.component_stds[i]:.4e}, w={self.component_weights[i]:.4f}"
+                )
 
         return self.cvar
 
     def costValue(self, z):
         """Evaluate cost at control z."""
         self.func_ncalls += 1
-        self.z.zero()
-        self.z.axpy(1.0, z)
+        if isinstance(z, np.ndarray):
+            idx = self.z.local_range()
+            self.z.set_local(z[idx[0]:idx[1]])
+            self.z.apply("")
+        else:
+            self.z.zero()
+            self.z.axpy(1.0, z)
+        self.direction_computed = False
         objective = self.objective()
         penalty = 0.0 if self.penalization is None else self.penalization.cost(self.z)
+        self.grad_cache = None
         return objective + penalty
 
-    def costGradient(self, z):
-        """Compute gradient of cost at control z.
+    def _component_weighted_gradient(self, x_i, y_i, m_i, Cdmq_i, gamma_i, eta_i):
+        """Compute one component contribution to the GMM linear CVaR gradient."""
+        Vh = self.pde.Vh
 
-        Uses simplified gradient through the dominant mixture component.
-        """
+        x_fun = vector2Function(x_i, Vh[STATE])
+        y_fun = vector2Function(y_i, Vh[ADJOINT])
+        m_fun = vector2Function(m_i, Vh[PARAMETER])
+        z_fun = vector2Function(self.z, Vh[CONTROL])
+        Cdmq_fun = vector2Function(Cdmq_i, Vh[PARAMETER])
+
+        form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+
+        x_test = dl.TestFunction(Vh[STATE])
+        y_test = dl.TestFunction(Vh[ADJOINT])
+        z_test = dl.TestFunction(Vh[CONTROL])
+
+        dmrC = dl.derivative(form, m_fun, Cdmq_fun)
+
+        xstarrhs = self.pde.generate_state()
+        if eta_i != 0.0:
+            dmyrC = dl.assemble(dl.derivative(dmrC, y_fun, y_test))
+            [bc.apply(dmyrC) for bc in self.pde.bc0]
+            xstarrhs.axpy(2.0 * eta_i, dmyrC)
+        # eta_i is w_i*kappa/(2*std) here
+
+        xstar = self.pde.generate_state()
+        self.pde.solveIncremental(xstar, -xstarrhs, False)
+        # For the incremental state equation, what we solve for is indeed solve for w_i * xstar instead of xstar 
+
+        ystarrhs = self.pde.generate_state()
+
+        if gamma_i != 0.0:
+            dxq = self.pde.generate_state()
+            self.qoi.grad(STATE, [x_i, m_i, y_i, self.z], dxq)
+            [bc.apply(dxq) for bc in self.pde.bc0]
+            ystarrhs.axpy(gamma_i, dxq)
+            # gamma_i = w_i * (1.0 + (kappa/std) * (mu_i - self.mixture_mean))
+
+        if eta_i != 0.0:
+            dmxrC = dl.assemble(dl.derivative(dmrC, x_fun, x_test))
+            [bc.apply(dmxrC) for bc in self.pde.bc0]
+            ystarrhs.axpy(2.0 * eta_i, dmxrC)
+        # eta_i is w_i*kappa/(2*std) here
+
+        xstar_fun = vector2Function(xstar, Vh[STATE])
+        dxr = dl.derivative(form, x_fun, xstar_fun)
+        dxxr = dl.assemble(dl.derivative(dxr, x_fun, x_test))
+        [bc.apply(dxxr) for bc in self.pde.bc0]
+        ystarrhs.axpy(1.0, dxxr)
+
+        dxxq = self.pde.generate_state()
+        self.qoi.apply_ij(STATE, STATE, xstar, dxxq)
+        [bc.apply(dxxq) for bc in self.pde.bc0]
+        ystarrhs.axpy(1.0, dxxq)
+
+        ystar = self.pde.generate_state()
+        self.pde.solveIncremental(ystar, -ystarrhs, True)
+        # For the incremental state equation, what we solve for is indeed solve for w_i * ystar instead of ystar 
+
+        grad = self.model.generate_vector(CONTROL)
+
+        if eta_i != 0.0:
+            dmzrC = dl.assemble(dl.derivative(dmrC, z_fun, z_test))
+            grad.axpy(2.0 * eta_i, dmzrC)
+        # eta_i is w_i*kappa/(2*std) here
+
+        ystar_fun = vector2Function(ystar, Vh[ADJOINT])
+        dyr = dl.derivative(form, y_fun, ystar_fun)
+        dyzr = dl.assemble(dl.derivative(dyr, z_fun, z_test))
+        grad.axpy(1.0, dyzr)
+
+        dxzr = dl.assemble(dl.derivative(dxr, z_fun, z_test))
+        grad.axpy(1.0, dxzr) # we don't need to multiply w_i here because the ystar_fun and xstar_fun here is indeed w_i * ystar and w_i * xstar, 
+        # so the w_i is already included in the solution of the incremental state and adjoint
+
+        return grad
+
+    def costGradient(self, z):
+        """Compute gradient of cost at control z."""
         self.grad_ncalls += 1
-        self.z.zero()
-        self.z.axpy(1.0, z)
-        self.objective()  # Ensure components are computed
+        if isinstance(z, np.ndarray):
+            self.costValue(z)
+        else:
+            self.z_diff.zero()
+            self.z_diff.axpy(1.0, self.z)
+            self.z_diff.axpy(-1.0, z)
+            if (not self.direction_computed) or self.z_diff.inner(self.z_diff) > 1e-20:
+                self.costValue(z)
 
         dz = self.model.generate_vector(CONTROL)
+        scale = self._std_gradient_scale() # This is kappa / std
 
-        # Simplified gradient: use the dominant component's gradient
-        # More sophisticated: weight by component contributions to CVaR
-        i = self.dominant_component_idx
-        m_i = self.m_bar_i[i]
+        for i in range(self.N_mix):
+            m_i = self.m_bar_i[i]
+            x_i = self.x_components[i]
+            y_i = self.y_components[i]
+            Cdmq_i = self.Cdmq_components[i]
 
-        # Solve forward and adjoint at dominant component
-        x_i = self.model.generate_vector(STATE)
-        y_i = self.model.generate_vector(STATE)
-        x_all_i = [x_i, m_i, y_i, self.z]
+            x_all_i = [x_i, m_i, y_i, self.z]
+            self.pde.setLinearizationPoint(x_all_i, False)
+            self.qoi.setLinearizationPoint(x_all_i)
 
-        self.pde.solveFwd(x_i, x_all_i)
-        x_all_i[STATE] = x_i
+            w_i = self.component_weights[i]
+            mu_i = self.component_means[i]
 
-        rhs_i = self.model.generate_vector(STATE)
-        self.qoi.adj_rhs(x_all_i, rhs_i)
-        self.pde.solveAdj(y_i, x_all_i, rhs_i)
-        x_all_i[ADJOINT] = y_i
+            gamma_i = w_i * (1.0 + scale * (mu_i - self.mixture_mean))
+            eta_i = 0.5 * scale * w_i
 
-        self.pde.setLinearizationPoint(x_all_i, False)
-
-        # Gradient w.r.t. control
-        self.pde.evalGradientControl(x_all_i, dz)
+            dcomp_i = self._component_weighted_gradient(
+                x_i, y_i, m_i, Cdmq_i, gamma_i, eta_i
+            )
+            dz.axpy(1.0, dcomp_i)
 
         # Add penalization gradient
         if self.penalization is not None:
@@ -408,8 +519,10 @@ class _TaylorMixtureLinearCVaRLegacy:
 class TaylorMixtureLinearCVaRControlCostFunctional(ControlCostFunctional):
     """Gaussian mixture with linear Taylor CVaR approximation.
 
-    Uses analytical Gaussian CVaR formula for each mixture component.
-    The mixture decomposes the prior along a dominant direction (KLE or HEP).
+    The objective follows the GMM linear surrogate
+        J = M + k * Sigma + P(z),
+    where M and Sigma are assembled from the mixture component means and
+    linearized component variances.
     """
 
     def __init__(

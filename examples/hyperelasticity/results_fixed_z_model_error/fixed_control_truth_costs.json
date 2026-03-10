@@ -1,0 +1,98 @@
+{
+  "config": {
+    "beta": 1.0,
+    "n_tr": 50,
+    "n_mix": 11,
+    "saa_samples": 1000,
+    "saa_seed": 1,
+    "qoi_type": "stiffness",
+    "penalty": 0.01,
+    "z_seed": 7,
+    "save_dir": "results_fixed_z_model_error",
+    "log_file": "terminal_output.txt",
+    "verbose": false
+  },
+  "true_cost_by_control": {
+    "const_0": 0.2095402168734128,
+    "const_05": 0.055288686506349737,
+    "const_1": 0.012416331985520607,
+    "affine_small": 0.05498066418628216,
+    "affine_large": 0.05254010075995193,
+    "random_small": 0.055850418405039536,
+    "random_large": 0.047948364181446095
+  },
+  "control_norms": {
+    "const_0": {
+      "z_l2_norm": 0.0,
+      "z_linf_norm": 0.0
+    },
+    "const_05": {
+      "z_l2_norm": 24.62214450449026,
+      "z_linf_norm": 0.5
+    },
+    "const_1": {
+      "z_l2_norm": 49.24428900898052,
+      "z_linf_norm": 1.0
+    },
+    "affine_small": {
+      "z_l2_norm": 24.882591056270872,
+      "z_linf_norm": 0.625
+    },
+    "affine_large": {
+      "z_l2_norm": 26.086694405386055,
+      "z_linf_norm": 0.8
+    },
+    "random_small": {
+      "z_l2_norm": 24.927360520634203,
+      "z_linf_norm": 0.7988247588403308
+    },
+    "random_large": {
+      "z_l2_norm": 28.67577844306904,
+      "z_linf_norm": 1.0
+    }
+  },
+  "model_summary": [
+    {
+      "model": "linear",
+      "mean_abs_error": 0.025263988809365374,
+      "max_abs_error": 0.07029799305637069,
+      "mean_rel_error": 0.3428792001509691,
+      "max_rel_error": 0.40106871668836275
+    },
+    {
+      "model": "quadratic",
+      "mean_abs_error": 0.00360358246672599,
+      "max_abs_error": 0.008521353039333074,
+      "mean_rel_error": 0.05252405944447631,
+      "max_rel_error": 0.06691641272087404
+    },
+    {
+      "model": "mixture_linear_kle",
+      "mean_abs_error": 0.012681238702174422,
+      "max_abs_error": 0.03541386554928372,
+      "mean_rel_error": 0.17210931423506998,
+      "max_rel_error": 0.20146272650725733
+    },
+    {
+      "model": "mixture_linear_hep",
+      "mean_abs_error": 0.006746583158931937,
+      "max_abs_error": 0.01953124233372114,
+      "mean_rel_error": 0.09006464615708709,
+      "max_rel_error": 0.1039991041475048
+    },
+    {
+      "model": "mixture_quadratic_kle",
+      "mean_abs_error": 0.003911687516231215,
+      "max_abs_error": 0.010891681783048585,
+      "mean_rel_error": 0.053302417745027746,
+      "max_rel_error": 0.06311749614728691
+    },
+    {
+      "model": "mixture_quadratic_hep",
+      "mean_abs_error": 0.000972758724010542,
+      "max_abs_error": 0.0019346700989139598,
+      "mean_rel_error": 0.014832367328212748,
+      "max_rel_error": 0.01868461806311868
+    }
+  ]
+}

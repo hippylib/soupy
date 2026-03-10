@@ -1,0 +1,191 @@
+==============================================================================
+Poisson Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep
+  mixture_quadratic_kle / mixture_quadratic_hep
+==============================================================================
+SAA truth samples: 1000
+beta=10.0, n_tr=10, n_mix=39
+terminal log file: results_compare_taylor_models/terminal_output.txt
+==============================================================================
+
+Computing SAA reference optimum with L-BFGS-B ...
+
+Optimizing saa with L-BFGS-B ...
+/work2/wenbo/soupy/examples/poisson/driver_poisson_compare_taylor_models.py:327: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
+  result = scipy.optimize.minimize(
+  [saa                 ] iter    1: J_model=2.816716e-01, J_true=2.816716e-01, rel_err=0.000e+00, ||g||=2.765e-02
+  [saa                 ] iter    2: J_model=2.682149e-01, J_true=2.682149e-01, rel_err=0.000e+00, ||g||=2.581e-02
+  [saa                 ] iter    3: J_model=2.635914e-01, J_true=2.635914e-01, rel_err=0.000e+00, ||g||=9.784e-03
+  [saa                 ] iter    4: J_model=2.512744e-01, J_true=2.512744e-01, rel_err=0.000e+00, ||g||=1.038e-02
+  [saa                 ] iter    5: J_model=2.138148e-01, J_true=2.138148e-01, rel_err=0.000e+00, ||g||=4.669e-02
+  [saa                 ] iter    6: J_model=1.927953e-01, J_true=1.927953e-01, rel_err=0.000e+00, ||g||=2.520e-02
+  [saa                 ] iter    7: J_model=1.815306e-01, J_true=1.815306e-01, rel_err=0.000e+00, ||g||=1.269e-02
+  [saa                 ] iter    8: J_model=1.774618e-01, J_true=1.774618e-01, rel_err=0.000e+00, ||g||=3.522e-03
+  [saa                 ] iter    9: J_model=1.763263e-01, J_true=1.763263e-01, rel_err=0.000e+00, ||g||=3.080e-03
+  [saa                 ] iter   10: J_model=1.739865e-01, J_true=1.739865e-01, rel_err=0.000e+00, ||g||=1.757e-03
+  [saa                 ] iter   11: J_model=1.736367e-01, J_true=1.736367e-01, rel_err=0.000e+00, ||g||=8.278e-04
+  [saa                 ] iter   12: J_model=1.730355e-01, J_true=1.730355e-01, rel_err=0.000e+00, ||g||=2.300e-03
+  [saa                 ] iter   13: J_model=1.725689e-01, J_true=1.725689e-01, rel_err=0.000e+00, ||g||=2.601e-03
+  [saa                 ] iter   14: J_model=1.718629e-01, J_true=1.718629e-01, rel_err=0.000e+00, ||g||=1.598e-03
+  [saa                 ] iter   15: J_model=1.716957e-01, J_true=1.716957e-01, rel_err=0.000e+00, ||g||=2.936e-04
+  [saa                 ] iter   16: J_model=1.716489e-01, J_true=1.716489e-01, rel_err=0.000e+00, ||g||=4.263e-04
+  [saa                 ] iter   17: J_model=1.716278e-01, J_true=1.716278e-01, rel_err=0.000e+00, ||g||=1.466e-03
+  [saa                 ] iter   18: J_model=1.715916e-01, J_true=1.715916e-01, rel_err=0.000e+00, ||g||=1.365e-03
+  [saa                 ] iter   19: J_model=1.714313e-01, J_true=1.714313e-01, rel_err=0.000e+00, ||g||=5.605e-04
+  [saa                 ] iter   20: J_model=1.713865e-01, J_true=1.713865e-01, rel_err=0.000e+00, ||g||=2.175e-04
+  [saa                 ] iter   21: J_model=1.713716e-01, J_true=1.713716e-01, rel_err=0.000e+00, ||g||=1.357e-04
+  [saa                 ] iter   22: J_model=1.713641e-01, J_true=1.713641e-01, rel_err=0.000e+00, ||g||=1.345e-04
+  [saa                 ] iter   23: J_model=1.713409e-01, J_true=1.713409e-01, rel_err=0.000e+00, ||g||=1.661e-04
+  [saa                 ] iter   24: J_model=1.713346e-01, J_true=1.713346e-01, rel_err=0.000e+00, ||g||=1.592e-04
+  [saa                 ] iter   25: J_model=1.713127e-01, J_true=1.713127e-01, rel_err=0.000e+00, ||g||=1.118e-04
+  [saa                 ] iter   26: J_model=1.712987e-01, J_true=1.712987e-01, rel_err=0.000e+00, ||g||=8.287e-05
+  [saa                 ] iter   27: J_model=1.712857e-01, J_true=1.712857e-01, rel_err=0.000e+00, ||g||=1.318e-04
+  [saa                 ] iter   28: J_model=1.712850e-01, J_true=1.712850e-01, rel_err=0.000e+00, ||g||=3.032e-04
+  [saa                 ] iter   29: J_model=1.712776e-01, J_true=1.712776e-01, rel_err=0.000e+00, ||g||=2.099e-04
+  [saa                 ] iter   30: J_model=1.712716e-01, J_true=1.712716e-01, rel_err=0.000e+00, ||g||=8.632e-05
+  [saa                 ] done: success=True, nit=30, avg_iter_time=0.29s, opt rel_err=0.000e+00
+
+Optimizing linear with L-BFGS-B ...
+  [linear              ] iter    1: J_model=2.805869e-01, J_true=2.816985e-01, rel_err=3.946e-03, ||g||=2.923e-02
+  [linear              ] iter    2: J_model=2.368979e-01, J_true=3.200866e-01, rel_err=2.599e-01, ||g||=1.130e-02
+  [linear              ] iter    3: J_model=2.290119e-01, J_true=5.790884e-01, rel_err=6.045e-01, ||g||=1.560e-02
+  [linear              ] iter    4: J_model=2.224871e-01, J_true=4.781454e-01, rel_err=5.347e-01, ||g||=9.517e-03
+  [linear              ] iter    5: J_model=1.931188e-01, J_true=3.212721e-01, rel_err=3.989e-01, ||g||=8.809e-03
+  [linear              ] iter    6: J_model=1.406386e-01, J_true=2.967833e-01, rel_err=5.261e-01, ||g||=1.573e-02
+  [linear              ] iter    7: J_model=9.287466e-02, J_true=2.239192e+00, rel_err=9.585e-01, ||g||=3.122e-02
+  [linear              ] iter    8: J_model=8.811217e-02, J_true=8.968737e-01, rel_err=9.018e-01, ||g||=5.594e-03
+  [linear              ] iter    9: J_model=8.162501e-02, J_true=1.305737e+00, rel_err=9.375e-01, ||g||=2.719e-03
+  [linear              ] iter   10: J_model=7.969496e-02, J_true=1.694016e+00, rel_err=9.530e-01, ||g||=6.552e-03
+  [linear              ] iter   11: J_model=7.849769e-02, J_true=1.690800e+00, rel_err=9.536e-01, ||g||=3.918e-03
+  [linear              ] iter   12: J_model=7.684194e-02, J_true=1.723346e+00, rel_err=9.554e-01, ||g||=2.155e-03
+  [linear              ] iter   13: J_model=7.650240e-02, J_true=1.744772e+00, rel_err=9.562e-01, ||g||=3.166e-03
+  [linear              ] iter   14: J_model=7.594722e-02, J_true=1.789252e+00, rel_err=9.576e-01, ||g||=3.824e-03
+  [linear              ] iter   15: J_model=7.517572e-02, J_true=1.856135e+00, rel_err=9.595e-01, ||g||=1.756e-03
+  [linear              ] iter   16: J_model=7.502317e-02, J_true=1.845775e+00, rel_err=9.594e-01, ||g||=3.049e-04
+  [linear              ] iter   17: J_model=7.501047e-02, J_true=1.841679e+00, rel_err=9.593e-01, ||g||=3.168e-04
+  [linear              ] iter   18: J_model=7.498254e-02, J_true=1.841032e+00, rel_err=9.593e-01, ||g||=5.548e-04
+  [linear              ] iter   19: J_model=7.494196e-02, J_true=1.844066e+00, rel_err=9.594e-01, ||g||=7.323e-04
+  [linear              ] iter   20: J_model=7.486796e-02, J_true=1.856378e+00, rel_err=9.597e-01, ||g||=6.753e-04
+  [linear              ] iter   21: J_model=7.474992e-02, J_true=1.864742e+00, rel_err=9.599e-01, ||g||=4.777e-04
+  [linear              ] iter   22: J_model=7.451374e-02, J_true=1.907512e+00, rel_err=9.609e-01, ||g||=2.909e-04
+  [linear              ] iter   23: J_model=7.448616e-02, J_true=1.854296e+00, rel_err=9.598e-01, ||g||=6.436e-04
+  [linear              ] iter   24: J_model=7.440306e-02, J_true=1.873109e+00, rel_err=9.603e-01, ||g||=5.991e-04
+  [linear              ] iter   25: J_model=7.431120e-02, J_true=1.858614e+00, rel_err=9.600e-01, ||g||=1.441e-04
+  [linear              ] iter   26: J_model=7.428020e-02, J_true=1.854502e+00, rel_err=9.599e-01, ||g||=2.632e-04
+  [linear              ] iter   27: J_model=7.424577e-02, J_true=1.850822e+00, rel_err=9.599e-01, ||g||=3.285e-04
+  [linear              ] iter   28: J_model=7.423820e-02, J_true=1.859733e+00, rel_err=9.601e-01, ||g||=6.792e-04
+  [linear              ] iter   29: J_model=7.420598e-02, J_true=1.862937e+00, rel_err=9.602e-01, ||g||=4.013e-04
+  [linear              ] iter   30: J_model=7.418424e-02, J_true=1.868977e+00, rel_err=9.603e-01, ||g||=1.071e-04
+  [linear              ] iter   31: J_model=7.417935e-02, J_true=1.872436e+00, rel_err=9.604e-01, ||g||=6.570e-05
+  [linear              ] iter   32: J_model=7.417679e-02, J_true=1.873475e+00, rel_err=9.604e-01, ||g||=6.740e-05
+  [linear              ] iter   33: J_model=7.416390e-02, J_true=1.872937e+00, rel_err=9.604e-01, ||g||=7.233e-05
+  [linear              ] iter   34: J_model=7.416067e-02, J_true=1.859649e+00, rel_err=9.601e-01, ||g||=2.409e-04
+  [linear              ] iter   35: J_model=7.414487e-02, J_true=1.860925e+00, rel_err=9.602e-01, ||g||=1.084e-04
+  [linear              ] iter   36: J_model=7.413746e-02, J_true=1.859726e+00, rel_err=9.601e-01, ||g||=5.913e-05
+  [linear              ] iter   37: J_model=7.413423e-02, J_true=1.859494e+00, rel_err=9.601e-01, ||g||=4.831e-05
+  [linear              ] done: success=True, nit=37, avg_iter_time=0.33s, opt rel_err=9.601e-01
+
+Optimizing quadratic with L-BFGS-B ...
+  [quadratic           ] iter    1: J_model=2.858809e-01, J_true=2.816716e-01, rel_err=1.494e-02, ||g||=2.755e-02
+  [quadratic           ] iter    2: J_model=2.546495e-01, J_true=2.869760e-01, rel_err=1.126e-01, ||g||=8.085e-03
+  [quadratic           ] iter    3: J_model=2.495498e-01, J_true=3.092790e-01, rel_err=1.931e-01, ||g||=1.021e-02
+  [quadratic           ] iter    4: J_model=2.340407e-01, J_true=3.336001e-01, rel_err=2.984e-01, ||g||=1.805e-02
+  [quadratic           ] iter    5: J_model=1.972225e-01, J_true=3.613929e-01, rel_err=4.543e-01, ||g||=2.788e-02
+  [quadratic           ] iter    6: J_model=1.687527e-01, J_true=3.197525e-01, rel_err=4.722e-01, ||g||=1.667e-02
+  [quadratic           ] iter    7: J_model=1.573251e-01, J_true=3.046499e-01, rel_err=4.836e-01, ||g||=5.854e-03
+  [quadratic           ] iter    8: J_model=1.547331e-01, J_true=3.253582e-01, rel_err=5.244e-01, ||g||=2.317e-03
+  [quadratic           ] iter    9: J_model=1.539604e-01, J_true=3.229086e-01, rel_err=5.232e-01, ||g||=1.665e-03
+  [quadratic           ] iter   10: J_model=1.532597e-01, J_true=3.305068e-01, rel_err=5.363e-01, ||g||=2.731e-03
+  [quadratic           ] iter   11: J_model=1.525063e-01, J_true=3.388996e-01, rel_err=5.500e-01, ||g||=2.989e-03
+  [quadratic           ] iter   12: J_model=1.515497e-01, J_true=3.545526e-01, rel_err=5.726e-01, ||g||=6.654e-04
+  [quadratic           ] iter   13: J_model=1.514393e-01, J_true=3.522640e-01, rel_err=5.701e-01, ||g||=3.189e-04
+  [quadratic           ] iter   14: J_model=1.514060e-01, J_true=3.519005e-01, rel_err=5.697e-01, ||g||=4.231e-04
+  [quadratic           ] iter   15: J_model=1.513019e-01, J_true=3.457990e-01, rel_err=5.625e-01, ||g||=3.310e-04
+  [quadratic           ] iter   16: J_model=1.512824e-01, J_true=3.526885e-01, rel_err=5.711e-01, ||g||=8.691e-04
+  [quadratic           ] iter   17: J_model=1.512408e-01, J_true=3.523312e-01, rel_err=5.707e-01, ||g||=5.953e-04
+  [quadratic           ] iter   18: J_model=1.511891e-01, J_true=3.539048e-01, rel_err=5.728e-01, ||g||=3.573e-04
+  [quadratic           ] iter   19: J_model=1.511541e-01, J_true=3.552310e-01, rel_err=5.745e-01, ||g||=5.433e-04
+  [quadratic           ] iter   20: J_model=1.510817e-01, J_true=3.553945e-01, rel_err=5.749e-01, ||g||=8.155e-04
+  [quadratic           ] iter   21: J_model=1.509730e-01, J_true=3.515744e-01, rel_err=5.706e-01, ||g||=8.022e-04
+  [quadratic           ] iter   22: J_model=1.509588e-01, J_true=3.539599e-01, rel_err=5.735e-01, ||g||=6.148e-04
+  [quadratic           ] iter   23: J_model=1.508989e-01, J_true=3.493827e-01, rel_err=5.681e-01, ||g||=2.235e-04
+  [quadratic           ] iter   24: J_model=1.508813e-01, J_true=3.480785e-01, rel_err=5.665e-01, ||g||=1.473e-04
+  [quadratic           ] iter   25: J_model=1.508734e-01, J_true=3.475515e-01, rel_err=5.659e-01, ||g||=2.652e-04
+  [quadratic           ] iter   26: J_model=1.508606e-01, J_true=3.471958e-01, rel_err=5.655e-01, ||g||=4.112e-04
+  [quadratic           ] iter   27: J_model=1.508363e-01, J_true=3.464282e-01, rel_err=5.646e-01, ||g||=5.000e-04
+  [quadratic           ] iter   28: J_model=1.508258e-01, J_true=3.515469e-01, rel_err=5.710e-01, ||g||=9.809e-04
+  [quadratic           ] iter   29: J_model=1.507959e-01, J_true=3.494274e-01, rel_err=5.684e-01, ||g||=6.587e-04
+  [quadratic           ] iter   30: J_model=1.507765e-01, J_true=3.493471e-01, rel_err=5.684e-01, ||g||=2.129e-04
+  [quadratic           ] iter   31: J_model=1.507736e-01, J_true=3.505415e-01, rel_err=5.699e-01, ||g||=7.104e-05
+  [quadratic           ] iter   32: J_model=1.507729e-01, J_true=3.511280e-01, rel_err=5.706e-01, ||g||=7.904e-05
+  [quadratic           ] iter   33: J_model=1.507694e-01, J_true=3.519228e-01, rel_err=5.716e-01, ||g||=9.268e-05
+  [quadratic           ] iter   34: J_model=1.507529e-01, J_true=3.535850e-01, rel_err=5.736e-01, ||g||=1.337e-04
+  [quadratic           ] iter   35: J_model=1.507327e-01, J_true=3.540606e-01, rel_err=5.743e-01, ||g||=1.203e-04
+  [quadratic           ] iter   36: J_model=1.507261e-01, J_true=3.531034e-01, rel_err=5.731e-01, ||g||=1.276e-04
+  [quadratic           ] iter   37: J_model=1.507145e-01, J_true=3.510145e-01, rel_err=5.706e-01, ||g||=1.416e-04
+  [quadratic           ] iter   38: J_model=1.507060e-01, J_true=3.504286e-01, rel_err=5.699e-01, ||g||=1.084e-04
+  [quadratic           ] iter   39: J_model=1.507036e-01, J_true=3.505870e-01, rel_err=5.701e-01, ||g||=1.441e-04
+  [quadratic           ] iter   40: J_model=1.507036e-01, J_true=3.495774e-01, rel_err=5.689e-01, ||g||=6.137e-05
+  [quadratic           ] done: success=True, nit=40, avg_iter_time=0.35s, opt rel_err=5.689e-01
+
+Optimizing mixture_linear_kle with L-BFGS-B ...
+  [mixture_linear_kle  ] iter    1: J_model=2.787972e-01, J_true=2.816943e-01, rel_err=1.028e-02, ||g||=2.856e-02
+  [mixture_linear_kle  ] iter    2: J_model=2.547908e-01, J_true=2.737806e-01, rel_err=6.936e-02, ||g||=9.972e-03
+  [mixture_linear_kle  ] iter    3: J_model=2.393075e-01, J_true=2.485741e-01, rel_err=3.728e-02, ||g||=9.458e-03
+  [mixture_linear_kle  ] iter    4: J_model=1.792301e-01, J_true=1.906642e-01, rel_err=5.997e-02, ||g||=5.258e-03
+  [mixture_linear_kle  ] iter    5: J_model=1.594578e-01, J_true=2.429181e-01, rel_err=3.436e-01, ||g||=3.416e-02
+  [mixture_linear_kle  ] iter    6: J_model=1.501639e-01, J_true=1.945560e-01, rel_err=2.282e-01, ||g||=3.187e-03
+  [mixture_linear_kle  ] iter    7: J_model=1.475082e-01, J_true=2.107202e-01, rel_err=3.000e-01, ||g||=2.580e-03
+  [mixture_linear_kle  ] iter    8: J_model=1.469158e-01, J_true=2.372527e-01, rel_err=3.808e-01, ||g||=2.660e-03
+  [mixture_linear_kle  ] iter    9: J_model=1.462719e-01, J_true=2.354968e-01, rel_err=3.789e-01, ||g||=5.861e-04
+  [mixture_linear_kle  ] iter   10: J_model=1.461616e-01, J_true=2.303256e-01, rel_err=3.654e-01, ||g||=4.892e-04
+  [mixture_linear_kle  ] iter   11: J_model=1.460168e-01, J_true=2.260348e-01, rel_err=3.540e-01, ||g||=1.430e-03
+  [mixture_linear_kle  ] iter   12: J_model=1.458757e-01, J_true=2.244322e-01, rel_err=3.500e-01, ||g||=1.728e-03
+  [mixture_linear_kle  ] iter   13: J_model=1.457597e-01, J_true=2.258963e-01, rel_err=3.547e-01, ||g||=1.084e-03
+  [mixture_linear_kle  ] iter   14: J_model=1.457184e-01, J_true=2.281151e-01, rel_err=3.612e-01, ||g||=2.095e-04
+  [mixture_linear_kle  ] iter   15: J_model=1.457092e-01, J_true=2.290901e-01, rel_err=3.640e-01, ||g||=3.458e-04
+  [mixture_linear_kle  ] iter   16: J_model=1.457026e-01, J_true=2.295267e-01, rel_err=3.652e-01, ||g||=5.652e-04
+  [mixture_linear_kle  ] iter   17: J_model=1.456869e-01, J_true=2.304611e-01, rel_err=3.678e-01, ||g||=7.761e-04
+  [mixture_linear_kle  ] iter   18: J_model=1.456589e-01, J_true=2.302213e-01, rel_err=3.673e-01, ||g||=8.951e-04
+  [mixture_linear_kle  ] iter   19: J_model=1.456466e-01, J_true=2.322965e-01, rel_err=3.730e-01, ||g||=5.975e-04
+  [mixture_linear_kle  ] iter   20: J_model=1.456106e-01, J_true=2.296885e-01, rel_err=3.661e-01, ||g||=4.620e-04
+  [mixture_linear_kle  ] iter   21: J_model=1.455738e-01, J_true=2.276445e-01, rel_err=3.605e-01, ||g||=2.034e-04
+  [mixture_linear_kle  ] iter   22: J_model=1.455466e-01, J_true=2.283765e-01, rel_err=3.627e-01, ||g||=3.674e-04
+  [mixture_linear_kle  ] iter   23: J_model=1.455365e-01, J_true=2.288851e-01, rel_err=3.642e-01, ||g||=2.647e-04
+  [mixture_linear_kle  ] iter   24: J_model=1.455293e-01, J_true=2.294248e-01, rel_err=3.657e-01, ||g||=8.247e-05
+  [mixture_linear_kle  ] iter   25: J_model=1.455254e-01, J_true=2.297679e-01, rel_err=3.666e-01, ||g||=1.665e-04
+  [mixture_linear_kle  ] iter   26: J_model=1.455189e-01, J_true=2.301417e-01, rel_err=3.677e-01, ||g||=3.354e-04
+  [mixture_linear_kle  ] iter   27: J_model=1.455027e-01, J_true=2.305454e-01, rel_err=3.689e-01, ||g||=5.253e-04
+  [mixture_linear_kle  ] iter   28: J_model=1.454779e-01, J_true=2.306795e-01, rel_err=3.694e-01, ||g||=7.154e-04
+  [mixture_linear_kle  ] iter   29: J_model=1.454704e-01, J_true=2.299155e-01, rel_err=3.673e-01, ||g||=3.317e-04
+  [mixture_linear_kle  ] iter   30: J_model=1.454520e-01, J_true=2.288020e-01, rel_err=3.643e-01, ||g||=3.649e-04
+  [mixture_linear_kle  ] iter   31: J_model=1.454496e-01, J_true=2.290840e-01, rel_err=3.651e-01, ||g||=1.892e-04
+  [mixture_linear_kle  ] iter   32: J_model=1.454458e-01, J_true=2.284290e-01, rel_err=3.633e-01, ||g||=8.205e-05
+  [mixture_linear_kle  ] iter   33: J_model=1.454444e-01, J_true=2.283091e-01, rel_err=3.629e-01, ||g||=4.967e-05
+  [mixture_linear_kle  ] iter   34: J_model=1.454430e-01, J_true=2.283727e-01, rel_err=3.631e-01, ||g||=8.074e-05
+  [mixture_linear_kle  ] iter   35: J_model=1.454410e-01, J_true=2.286951e-01, rel_err=3.640e-01, ||g||=1.157e-04
+  [mixture_linear_kle  ] iter   36: J_model=1.454378e-01, J_true=2.293083e-01, rel_err=3.658e-01, ||g||=1.120e-04
+  [mixture_linear_kle  ] iter   37: J_model=1.454328e-01, J_true=2.301132e-01, rel_err=3.680e-01, ||g||=2.990e-04
+  [mixture_linear_kle  ] iter   38: J_model=1.454282e-01, J_true=2.306074e-01, rel_err=3.694e-01, ||g||=6.405e-05
+  [mixture_linear_kle  ] iter   39: J_model=1.454263e-01, J_true=2.305228e-01, rel_err=3.691e-01, ||g||=3.270e-05
+  [mixture_linear_kle  ] done: success=True, nit=39, avg_iter_time=2.50s, opt rel_err=3.691e-01
+
+Optimizing mixture_linear_hep with L-BFGS-B ...
+  [mixture_linear_hep  ] iter    1: J_model=2.837076e-01, J_true=2.816742e-01, rel_err=7.219e-03, ||g||=2.747e-02
+  [mixture_linear_hep  ] iter    2: J_model=2.581815e-01, J_true=2.990915e-01, rel_err=1.368e-01, ||g||=1.821e-02
+  [mixture_linear_hep  ] iter    3: J_model=2.524976e-01, J_true=2.674415e-01, rel_err=5.588e-02, ||g||=1.020e-02
+  [mixture_linear_hep  ] iter    4: J_model=2.359095e-01, J_true=2.682526e-01, rel_err=1.206e-01, ||g||=1.156e-02
+  [mixture_linear_hep  ] iter    5: J_model=2.197204e-01, J_true=2.951379e-01, rel_err=2.555e-01, ||g||=6.511e-02
+  [mixture_linear_hep  ] iter    6: J_model=1.852624e-01, J_true=2.217242e-01, rel_err=1.644e-01, ||g||=2.053e-02
+  [mixture_linear_hep  ] iter    7: J_model=1.683518e-01, J_true=2.129373e-01, rel_err=2.094e-01, ||g||=1.735e-02
+  [mixture_linear_hep  ] iter    8: J_model=1.540136e-01, J_true=2.182824e-01, rel_err=2.944e-01, ||g||=8.243e-03
+  [mixture_linear_hep  ] iter    9: J_model=1.512501e-01, J_true=2.238570e-01, rel_err=3.243e-01, ||g||=4.782e-03
+  [mixture_linear_hep  ] iter   10: J_model=1.484568e-01, J_true=2.376681e-01, rel_err=3.754e-01, ||g||=1.259e-03
+  [mixture_linear_hep  ] iter   11: J_model=1.475750e-01, J_true=2.472225e-01, rel_err=4.031e-01, ||g||=2.070e-03
+  [mixture_linear_hep  ] iter   12: J_model=1.468832e-01, J_true=2.551551e-01, rel_err=4.243e-01, ||g||=2.804e-03
+  [mixture_linear_hep  ] iter   13: J_model=1.464044e-01, J_true=2.650172e-01, rel_err=4.476e-01, ||g||=2.110e-03
+  [mixture_linear_hep  ] iter   14: J_model=1.462043e-01, J_true=2.602538e-01, rel_err=4.382e-01, ||g||=1.337e-03
+  [mixture_linear_hep  ] iter   15: J_model=1.462043e-01, J_true=2.602538e-01, rel_err=4.382e-01, ||g||=1.337e-03
+  [mixture_linear_hep  ] done: success=True, nit=15, avg_iter_time=6.42s, opt rel_err=4.382e-01
+
+Optimizing mixture_quadratic_kle with L-BFGS-B ...

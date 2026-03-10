@@ -1,6 +1,7 @@
 """Directional finite-difference check for z-gradient of Taylor approximations.
 
-For each approximation (linear, quadratic, and mixture-linear), this script computes
+For each approximation (linear, quadratic, mixture-linear, and mixture-quadratic),
+this script computes
 
     FD(eps) = [Q(z + eps * dz) - Q(z)] / eps
 
@@ -49,6 +50,7 @@ from soupy.modeling.controlQoI import L2MisfitControlQoI
 from soupy.approximations.taylor import (
     TaylorLinearControlCostFunctional,
     TaylorMixtureLinearControlCostFunctional,
+    TaylorMixtureQuadraticControlCostFunctional,
     TaylorQuadraticControlCostFunctional,
 )
 
@@ -96,7 +98,8 @@ def sweep_fd_error(cost, z, dz, epsilons):
     """
     Args:
         Cost: TaylorLinearControlCostFunctional, TaylorMixtureLinearControlCostFunctional,
-            or TaylorQuadraticControlCostFunctional object.
+            TaylorQuadraticControlCostFunctional, or
+            TaylorMixtureQuadraticControlCostFunctional object.
         z: Control vector at which to evaluate the cost and gradient.
         dz: Direction vector for finite difference perturbation (random and normalized).
     Returns:
@@ -144,7 +147,7 @@ def fit_loglog_slope(epsilons, errors, start_idx, end_idx):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Check z-gradient accuracy for linear/quadratic/mixture-linear Taylor approximations"
+        description="Check z-gradient accuracy for linear/quadratic/mixture-linear/mixture-quadratic Taylor approximations"
     )
     parser.add_argument("--beta", type=float, default=1.0, help="Variance weight beta")
     parser.add_argument("--n-tr", type=int, default=50, help="N_tr for quadratic Taylor")
@@ -152,7 +155,7 @@ def main():
     parser.add_argument(
         "--mix-direction",
         type=str,
-        default="hep",
+        default="kle",
         choices=["hep", "kle"],
         help="Direction for mixture-linear Taylor",
     )
@@ -206,10 +209,21 @@ def main():
         None,
         {"beta": args.beta, "N_tr": args.n_tr},
     )
+    mix_quad = TaylorMixtureQuadraticControlCostFunctional(
+        model,
+        prior,
+        None,
+        {
+            "beta": args.beta,
+            "N_mix": args.n_mix,
+            "direction": args.mix_direction,
+            "N_tr": args.n_tr,
+        },
+    )
 
     z = lin.generate_vector(CONTROL)
     #z.zero()
-    z.set_local(np.full(z.local_size(), 10))
+    z.set_local(np.full(z.local_size(), 10.0))
 
     dz = lin.generate_vector(CONTROL)
     np.random.seed(args.seed)
@@ -226,19 +240,30 @@ def main():
     lin_true, lin_fd, lin_err, lin_rel_err = sweep_fd_error(lin, z, dz, epsilons)
     mix_true, mix_fd, mix_err, mix_rel_err = sweep_fd_error(mix_lin, z, dz, epsilons)
     quad_true, quad_fd, quad_err, quad_rel_err = sweep_fd_error(quad, z, dz, epsilons)
+    mix_quad_true, mix_quad_fd, mix_quad_err, mix_quad_rel_err = sweep_fd_error(
+        mix_quad, z, dz, epsilons
+    )
 
     lin_slope, _ = fit_loglog_slope(epsilons, lin_err, args.fit_start, args.fit_end)
     mix_slope, _ = fit_loglog_slope(epsilons, mix_err, args.fit_start, args.fit_end)
     quad_slope, _ = fit_loglog_slope(epsilons, quad_err, args.fit_start, args.fit_end)
+    mix_quad_slope, _ = fit_loglog_slope(
+        epsilons, mix_quad_err, args.fit_start, args.fit_end
+    )
 
     print("Directional derivative check:")
     print(f"  linear:    g.dz = {lin_true:.12e}")
     print(f"  mix-linear (N_mix={args.n_mix}, dir={args.mix_direction}): g.dz = {mix_true:.12e}")
     print(f"  quadratic: g.dz = {quad_true:.12e}")
+    print(
+        f"  mix-quad   (N_mix={args.n_mix}, dir={args.mix_direction}, N_tr={args.n_tr}): "
+        f"g.dz = {mix_quad_true:.12e}"
+    )
     print("Estimated convergence slope (log-log error vs epsilon):")
     print(f"  linear:    slope ~ {lin_slope:.3f}")
     print(f"  mix-linear slope ~ {mix_slope:.3f}")
     print(f"  quadratic: slope ~ {quad_slope:.3f}")
+    print(f"  mix-quad:  slope ~ {mix_quad_slope:.3f}")
 
     plt.figure(figsize=(7.0, 5.0))
     plt.loglog(epsilons, lin_err, "o-", label=f"Linear Taylor (slope~{lin_slope:.2f})")
@@ -249,6 +274,15 @@ def main():
         label=f"Mixture Linear (slope~{mix_slope:.2f}, N_mix={args.n_mix}, {args.mix_direction})",
     )
     plt.loglog(epsilons, quad_err, "s-", label=f"Quadratic Taylor (slope~{quad_slope:.2f})")
+    plt.loglog(
+        epsilons,
+        mix_quad_err,
+        "d-",
+        label=(
+            f"Mixture Quadratic (slope~{mix_quad_slope:.2f}, "
+            f"N_mix={args.n_mix}, {args.mix_direction}, N_tr={args.n_tr})"
+        ),
+    )
 
     ref = lin_err[max(1, min(len(lin_err) - 1, args.fit_start))]
     eps_ref = epsilons[max(1, min(len(epsilons) - 1, args.fit_start))]
@@ -256,7 +290,7 @@ def main():
 
     plt.xlabel("epsilon")
     plt.ylabel("|FD - g·dz|")
-    plt.title("z-gradient FD error for Taylor linear/mixture-linear/quadratic")
+    plt.title("z-gradient FD error for Taylor linear/mixture-linear/quadratic/mixture-quadratic")
     plt.grid(True, which="both", alpha=0.25)
     plt.legend()
     plt.tight_layout()
@@ -273,9 +307,15 @@ def main():
     plt.loglog(epsilons, lin_rel_err, "o-", label="Linear Taylor")
     plt.loglog(epsilons, mix_rel_err, "^-", label=f"Mixture Linear (N_mix={args.n_mix}, {args.mix_direction})")
     plt.loglog(epsilons, quad_rel_err, "s-", label="Quadratic Taylor")
+    plt.loglog(
+        epsilons,
+        mix_quad_rel_err,
+        "d-",
+        label=f"Mixture Quadratic (N_mix={args.n_mix}, {args.mix_direction}, N_tr={args.n_tr})",
+    )
     plt.xlabel("epsilon")
     plt.ylabel("|FD - g·dz| / max(|g·dz|, 1e-14)")
-    plt.title("z-gradient relative FD error for Taylor linear/mixture-linear/quadratic")
+    plt.title("z-gradient relative FD error for Taylor linear/mixture-linear/quadratic/mixture-quadratic")
     plt.grid(True, which="both", alpha=0.25)
     plt.legend()
     plt.tight_layout()

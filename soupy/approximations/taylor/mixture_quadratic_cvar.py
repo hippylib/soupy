@@ -122,9 +122,9 @@ class _TaylorMixtureQuadraticCVaRLegacy:
 
         if self.direction == "hep":
             # Compute dominant HEP eigenvector
-            omega = MultiVector(self.pde.generate_parameter(), 15)
+            omega = MultiVector(self.pde.generate_parameter(), 64)
             rand = Random()
-            for i in range(15):
+            for i in range(64):
                 rand.normal(1.0, omega[i])
 
             d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)

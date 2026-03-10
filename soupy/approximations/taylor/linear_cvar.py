@@ -156,6 +156,78 @@ class _TaylorLinearCVaRLegacy:
         self.tobj = 0.0
         self.tgrad = 0.0
 
+    def _std_gradient_scale(self):
+        """Return k/sigma.
+
+        For J_lin = mu + k * sigma, sigma = <C dmq, dmq>^(1/2), the chain rule gives
+        dJ/dz = dmu/dz + (k / sigma) * <d(dmq)/dz, C dmq>.
+        """
+        if self.lin_std <= 1e-14:
+            return 0.0
+        return gaussian_cvar_grad_std(self.lin_std, self.beta) / self.lin_std
+
+    def solve_xstar(self):
+        """Solve the incremental forward problem from the CVaR variance term."""
+        z_fun = vector2Function(self.z, self.Vh[OPTIMIZATION])
+        x_fun = vector2Function(self.x, self.Vh[STATE])
+        y_fun = vector2Function(self.y, self.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.Vh[PARAMETER])
+        f_form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        y_test = dl.TestFunction(self.Vh[ADJOINT])
+        Cdmq_fun = vector2Function(self.Cdmq, self.Vh[PARAMETER])
+
+        xstarrhs = self.pde.generate_state()
+        scale = self._std_gradient_scale()
+
+        if abs(scale) > 0.0:
+            dmrCdmq = dl.derivative(f_form, m_fun, Cdmq_fun)
+            dmyrCdmq = dl.assemble(dl.derivative(dmrCdmq, y_fun, y_test))
+            [bc.apply(dmyrCdmq) for bc in self.pde.bc0]
+            xstarrhs.axpy(scale, dmyrCdmq)
+
+        xstar = self.pde.generate_state()
+        self.pde.solveIncremental(xstar, -xstarrhs, False)
+        self.xstar = xstar
+
+    def solve_ystar(self):
+        """Solve the incremental adjoint problem for the linear CVaR gradient."""
+        z_fun = vector2Function(self.z, self.Vh[OPTIMIZATION])
+        x_fun = vector2Function(self.x, self.Vh[STATE])
+        y_fun = vector2Function(self.y, self.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.Vh[PARAMETER])
+        f_form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        x_test = dl.TestFunction(self.Vh[STATE])
+        Cdmq_fun = vector2Function(self.Cdmq, self.Vh[PARAMETER])
+
+        ystarrhs = self.pde.generate_state()
+        scale = self._std_gradient_scale()
+
+        dxq = self.pde.generate_state()
+        self.qoi.grad(STATE, self.x_all, dxq)
+        [bc.apply(dxq) for bc in self.pde.bc0]
+        ystarrhs.axpy(1.0, dxq)
+
+        if abs(scale) > 0.0:
+            dmrCdmq = dl.derivative(f_form, m_fun, Cdmq_fun)
+            dmxrCdmq = dl.assemble(dl.derivative(dmrCdmq, x_fun, x_test))
+            [bc.apply(dmxrCdmq) for bc in self.pde.bc0]
+            ystarrhs.axpy(scale, dmxrCdmq)
+
+        xstar_fun = vector2Function(self.xstar, self.Vh[STATE])
+        dxr = dl.derivative(f_form, x_fun, xstar_fun)
+        dxxr = dl.assemble(dl.derivative(dxr, x_fun, x_test))
+        [bc.apply(dxxr) for bc in self.pde.bc0]
+        ystarrhs.axpy(1.0, dxxr)
+
+        dxxq = self.pde.generate_state()
+        self.qoi.apply_ij(STATE, STATE, self.xstar, dxxq)
+        [bc.apply(dxxq) for bc in self.pde.bc0]
+        ystarrhs.axpy(1.0, dxxq)
+
+        ystar = self.pde.generate_state()
+        self.pde.solveIncremental(ystar, -ystarrhs, True)
+        self.ystar = ystar
+
     def objective(self):
         """Compute the CVaR objective using linear Taylor approximation."""
         self.x_all[OPTIMIZATION] = self.z
@@ -271,37 +343,37 @@ class _TaylorLinearCVaRLegacy:
 
         tgrad = time.time()
 
-        self.x_all[OPTIMIZATION] = self.z
-        self.x_all[STATE] = self.x
+        dzq = self.pde.generate_control()
+        z_test = dl.TestFunction(self.Vh[OPTIMIZATION])
+        z_fun = vector2Function(self.z, self.Vh[OPTIMIZATION])
 
-        rhs = self.pde.generate_state()
-        self.x_all[ADJOINT] = self.y
-        self.qoi.adj_rhs(self.x_all, rhs)
-        self.pde.solveAdj(self.y, self.x_all, rhs)
-        self.x_all[ADJOINT] = self.y
+        x_fun = vector2Function(self.x, self.Vh[STATE])
+        y_fun = vector2Function(self.y, self.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.Vh[PARAMETER])
+        f_form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        Cdmq_fun = vector2Function(self.Cdmq, self.Vh[PARAMETER])
+        scale = self._std_gradient_scale()
+
+        self.solve_xstar()
+        self.solve_ystar()
+
+        if abs(scale) > 0.0:
+            dmrCdmq = dl.derivative(f_form, m_fun, Cdmq_fun)
+            dmzrCdmq = dl.assemble(dl.derivative(dmrCdmq, z_fun, z_test))
+            dzq.axpy(scale, dmzrCdmq)
+
+        ystar_fun = vector2Function(self.ystar, self.Vh[ADJOINT])
+        dyr = dl.derivative(f_form, y_fun, ystar_fun)
+        dyzr = dl.assemble(dl.derivative(dyr, z_fun, z_test))
+        dzq.axpy(1.0, dyzr)
+
+        xstar_fun = vector2Function(self.xstar, self.Vh[STATE])
+        dxr = dl.derivative(f_form, x_fun, xstar_fun)
+        dxzr = dl.assemble(dl.derivative(dxr, z_fun, z_test))
+        dzq.axpy(1.0, dxzr)
 
         dz = self.pde.generate_control()
-
-        # Gradient of CVaR w.r.t. control
-        # CVaR = μ + σ * c  where c = φ(Φ⁻¹(β)) / (1-β)
-        # d(CVaR)/dz = d(μ)/dz + c * d(σ)/dz
-        #            = d(Q₀)/dz + c * (1/(2σ)) * d(σ²)/dz
-
-        # d(Q₀)/dz: gradient through adjoint
-        dzq = self.pde.generate_control()
-        self.pde.evalGradientControl(self.x_all, dzq)
         dz.axpy(1.0, dzq)
-
-        # d(σ²)/dz contribution (through variance gradient)
-        # σ² = dmq · Cdmq, and dmq depends on z through the adjoint y
-        # For simplified gradient, we use frozen σ (as discussed in plan)
-        # This is the "simplified version" - full version would include variance gradient
-
-        # For correction term: add MC correction gradient
-        if self.correction and self.N_mc > 0:
-            # Simplified: just use mean gradient correction
-            # This is E[dQ/dz - dQ_taylor/dz] which should be small
-            pass
 
         if self.penalization is not None:
             dzp = self.pde.generate_control()
