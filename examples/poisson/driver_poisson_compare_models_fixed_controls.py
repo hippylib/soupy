@@ -11,7 +11,6 @@ import argparse
 import atexit
 import csv
 import json
-import math
 import os
 import sys
 from datetime import datetime
@@ -37,7 +36,7 @@ import numpy as np
 from mpi4py import MPI
 
 import soupy
-from driver_poisson_compare_taylor_models import MODEL_ORDER, make_saa_cost, make_taylor_cost, setup_problem
+from driver_poisson_compare_taylor_models import make_saa_cost, make_taylor_cost, setup_problem
 
 
 dl.set_log_active(False)
@@ -54,7 +53,17 @@ MODEL_COLORS = {
     "mixture_linear_hep": "tab:olive",
     "mixture_quadratic_kle": "tab:red",
     "mixture_quadratic_hep": "tab:brown",
+    "saa_dynamic": "tab:cyan",
 }
+
+BASE_MODEL_ORDER = [
+    "linear",
+    "quadratic",
+    "mixture_linear_kle",
+    "mixture_linear_hep",
+    "mixture_quadratic_kle",
+    "mixture_quadratic_hep",
+]
 
 
 class TeeStream:
@@ -161,19 +170,47 @@ def save_model_summary_csv(path: str, summary_rows: List[Dict]):
         writer.writerows(summary_rows)
 
 
-def plot_rel_error(rows: List[Dict], save_dir: str):
+def build_model_order(args) -> List[str]:
+    return [*BASE_MODEL_ORDER, f"saa_{args.n_mix}"]
+
+
+def build_approx_costs(args, control_model, prior, penalty):
+    approx_costs = {
+        model_name: make_taylor_cost(model_name, control_model, prior, penalty, args)
+        for model_name in BASE_MODEL_ORDER
+    }
+    approx_costs[f"saa_{args.n_mix}"] = make_saa_cost(
+        control_model,
+        prior,
+        penalty,
+        beta=args.beta,
+        sample_size=args.n_mix,
+        seed=args.saa_seed,
+        comm_sampler=MPI.COMM_SELF,
+    )
+    return approx_costs
+
+
+def plot_rel_error(rows: List[Dict], model_order: List[str], save_dir: str):
     controls = sorted({r["control_name"] for r in rows})
     x = np.arange(len(controls))
     # Keep grouped bars within ~80% of unit spacing so bars do not crowd together.
-    width = min(0.12, 0.8 / max(len(MODEL_ORDER), 1))
+    width = min(0.12, 0.8 / max(len(model_order), 1))
+    center_offset = 0.5 * (len(model_order) - 1)
 
     plt.figure(figsize=(10, 5))
-    for i, model in enumerate(MODEL_ORDER):
+    for i, model in enumerate(model_order):
         vals = []
         for cname in controls:
             matched = [r for r in rows if r["control_name"] == cname and r["model"] == model]
             vals.append(matched[0]["rel_error"] if matched else np.nan)
-        plt.bar(x + (i - 1.5) * width, vals, width=width, color=MODEL_COLORS[model], label=model)
+        plt.bar(
+            x + (i - center_offset) * width,
+            vals,
+            width=width,
+            color=MODEL_COLORS.get(model, MODEL_COLORS.get("saa_dynamic", f"C{i}")) if model.startswith("saa_") else MODEL_COLORS.get(model, f"C{i}"),
+            label=model,
+        )
 
     plt.yscale("log")
     plt.xticks(x, controls, rotation=20, ha="right")
@@ -193,7 +230,7 @@ def main():
     parser.add_argument("--n-mix", type=int, default=39)
     parser.add_argument("--mix-linear-direction", type=str, default="kle", choices=["hep", "kle"])
     parser.add_argument("--mix-quadratic-direction", type=str, default="kle", choices=["hep", "kle"])
-    parser.add_argument("--saa-samples", type=int, default=1000000)
+    parser.add_argument("--saa-samples", type=int, default=100000)
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--prior-gamma", type=float, default=0.2)
     parser.add_argument("--prior-delta", type=float, default=1.0)
@@ -242,11 +279,10 @@ def main():
         beta=args.beta,
         sample_size=args.saa_samples,
         seed=args.saa_seed,
+        comm_sampler=MPI.COMM_SELF,
     )
-    approx_costs = {
-        model_name: make_taylor_cost(model_name, control_model, prior, penalty, args)
-        for model_name in MODEL_ORDER
-    }
+    model_order = build_model_order(args)
+    approx_costs = build_approx_costs(args, control_model, prior, penalty)
 
     controls = build_test_controls(Vh[soupy.CONTROL], args.z_seed)
     rows: List[Dict] = []
@@ -270,7 +306,7 @@ def main():
                 f"||z||_inf={control_norms[cname]['z_linf_norm']:.3e}"
             )
 
-        for model_name in MODEL_ORDER:
+        for model_name in model_order:
             j_model = evaluate_cost(approx_costs[model_name], z_vec)
             rel_err = abs(j_model - j_true) / max(abs(j_true), 1e-14)
             row = {
@@ -284,13 +320,10 @@ def main():
             }
             rows.append(row)
             if rank == 0:
-                print(
-                    f"  - {model_name:16s} J_model={j_model:.6e}, "
-                    f"rel_err={rel_err:.3e}"
-                )
+                print(f"  - {model_name:16s} J_model={j_model:.6e}, rel_err={rel_err:.3e}")
 
     model_summary_rows = []
-    for model_name in MODEL_ORDER:
+    for model_name in model_order:
         rr = [r for r in rows if r["model"] == model_name]
         model_summary_rows.append(
             {
@@ -307,6 +340,7 @@ def main():
             json.dump(
                 {
                     "config": vars(args),
+                    "model_order": model_order,
                     "true_cost_by_control": control_truth,
                     "control_norms": control_norms,
                     "model_summary": model_summary_rows,
@@ -314,7 +348,7 @@ def main():
                 f,
                 indent=2,
             )
-        plot_rel_error(rows, args.save_dir)
+        plot_rel_error(rows, model_order, args.save_dir)
 
         print("\n" + "-" * 78)
         print("Model summary over fixed controls")

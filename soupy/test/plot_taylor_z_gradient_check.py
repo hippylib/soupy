@@ -55,7 +55,7 @@ from soupy.approximations.taylor import (
 )
 
 
-def setup_poisson_problem(nx=16, ny=16, gamma=1, delta=5):
+def setup_poisson_problem(nx=16, ny=16, gamma=0.2, delta=1.0):
     """Set up a compact Poisson control problem used in Taylor tests."""
     mesh = dl.UnitSquareMesh(nx, ny)
     Vh_state = dl.FunctionSpace(mesh, "CG", 1)
@@ -151,16 +151,16 @@ def main():
     )
     parser.add_argument("--beta", type=float, default=1.0, help="Variance weight beta")
     parser.add_argument("--n-tr", type=int, default=50, help="N_tr for quadratic Taylor")
-    parser.add_argument("--n-mix", type=int, default=5, help="N_mix for mixture-linear Taylor")
-    parser.add_argument(
-        "--mix-direction",
-        type=str,
-        default="kle",
-        choices=["hep", "kle"],
-        help="Direction for mixture-linear Taylor",
-    )
-    parser.add_argument("--nx", type=int, default=16, help="Mesh cells in x")
-    parser.add_argument("--ny", type=int, default=16, help="Mesh cells in y")
+    parser.add_argument("--n-mix", type=int, default=39, help="N_mix for mixture-linear Taylor")
+    # parser.add_argument(
+    #     "--mix-direction",
+    #     type=str,
+    #     default="kle",
+    #     choices=["hep", "kle"],
+    #     help="Direction for mixture-linear Taylor",
+    # )
+    parser.add_argument("--nx", type=int, default=20, help="Mesh cells in x")
+    parser.add_argument("--ny", type=int, default=20, help="Mesh cells in y")
     parser.add_argument("--eps-min", type=float, default=1e-4, help="Minimum epsilon")
     parser.add_argument("--eps-max", type=float, default=1e02, help="Maximum epsilon")
     parser.add_argument("--n-eps", type=int, default=16, help="Number of epsilon values")
@@ -197,11 +197,13 @@ def main():
     model, prior = setup_poisson_problem(nx=args.nx, ny=args.ny)
 
     lin = TaylorLinearControlCostFunctional(model, prior, None, {"beta": args.beta})
+    mix_direction = "hep"
+
     mix_lin = TaylorMixtureLinearControlCostFunctional(
         model,
         prior,
         None,
-        {"beta": args.beta, "N_mix": args.n_mix, "direction": args.mix_direction},
+        {"beta": args.beta, "N_mix": args.n_mix, "direction": mix_direction},
     )
     quad = TaylorQuadraticControlCostFunctional(
         model,
@@ -216,14 +218,14 @@ def main():
         {
             "beta": args.beta,
             "N_mix": args.n_mix,
-            "direction": args.mix_direction,
+            "direction": mix_direction,
             "N_tr": args.n_tr,
         },
     )
 
     z = lin.generate_vector(CONTROL)
     #z.zero()
-    z.set_local(np.full(z.local_size(), 10.0))
+    z.set_local(np.full(z.local_size(), 0.0))
 
     dz = lin.generate_vector(CONTROL)
     np.random.seed(args.seed)
@@ -253,10 +255,10 @@ def main():
 
     print("Directional derivative check:")
     print(f"  linear:    g.dz = {lin_true:.12e}")
-    print(f"  mix-linear (N_mix={args.n_mix}, dir={args.mix_direction}): g.dz = {mix_true:.12e}")
+    print(f"  mix-linear (N_mix={args.n_mix}, dir={mix_direction}): g.dz = {mix_true:.12e}")
     print(f"  quadratic: g.dz = {quad_true:.12e}")
     print(
-        f"  mix-quad   (N_mix={args.n_mix}, dir={args.mix_direction}, N_tr={args.n_tr}): "
+        f"  mix-quad   (N_mix={args.n_mix}, dir={mix_direction}, N_tr={args.n_tr}): "
         f"g.dz = {mix_quad_true:.12e}"
     )
     print("Estimated convergence slope (log-log error vs epsilon):")
@@ -271,7 +273,7 @@ def main():
         epsilons,
         mix_err,
         "^-",
-        label=f"Mixture Linear (slope~{mix_slope:.2f}, N_mix={args.n_mix}, {args.mix_direction})",
+        label=f"Mixture Linear (slope~{mix_slope:.2f}, N_mix={args.n_mix}, {mix_direction})",
     )
     plt.loglog(epsilons, quad_err, "s-", label=f"Quadratic Taylor (slope~{quad_slope:.2f})")
     plt.loglog(
@@ -280,7 +282,7 @@ def main():
         "d-",
         label=(
             f"Mixture Quadratic (slope~{mix_quad_slope:.2f}, "
-            f"N_mix={args.n_mix}, {args.mix_direction}, N_tr={args.n_tr})"
+            f"N_mix={args.n_mix}, {mix_direction}, N_tr={args.n_tr})"
         ),
     )
 
@@ -305,13 +307,13 @@ def main():
 
     plt.figure(figsize=(7.0, 5.0))
     plt.loglog(epsilons, lin_rel_err, "o-", label="Linear Taylor")
-    plt.loglog(epsilons, mix_rel_err, "^-", label=f"Mixture Linear (N_mix={args.n_mix}, {args.mix_direction})")
+    plt.loglog(epsilons, mix_rel_err, "^-", label=f"Mixture Linear (N_mix={args.n_mix}, {mix_direction})")
     plt.loglog(epsilons, quad_rel_err, "s-", label="Quadratic Taylor")
     plt.loglog(
         epsilons,
         mix_quad_rel_err,
         "d-",
-        label=f"Mixture Quadratic (N_mix={args.n_mix}, {args.mix_direction}, N_tr={args.n_tr})",
+        label=f"Mixture Quadratic (N_mix={args.n_mix}, {mix_direction}, N_tr={args.n_tr})",
     )
     plt.xlabel("epsilon")
     plt.ylabel("|FD - g·dz| / max(|g·dz|, 1e-14)")

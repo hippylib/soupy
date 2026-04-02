@@ -11,7 +11,7 @@
 # terms of the GNU General Public License (as published by the Free
 # Software Foundation) version 3.0 dated June 2007.
 
-"""Compare Taylor and mixture-Taylor models on Poisson control.
+"""Compare Taylor and SAA models on Poisson control.
 
 Models compared:
 - linear
@@ -20,19 +20,23 @@ Models compared:
 - mixture_linear_hep
 - mixture_quadratic_kle
 - mixture_quadratic_hep
+- saa_10
+- saa_100
+- saa_1000
+- saa_10000
 
 Reference truth:
-- Mean-variance SAA objective with 10000 samples (configurable)
-- SAA-L-BFGS-B optimal control as baseline for control error
+- Mean-variance SAA objective with a large fixed sample size
+- Evaluated only at the initial control and each model optimum
 
 Metrics:
-1) Objective approximation relative error curve per optimization iteration:
-      |J_model(z_k) - J_SAA(z_k)| / |J_SAA(z_k)|
-2) Objective approximation relative error at each model optimum
-3) Time comparison (pure optimization only):
+1) Optimization time comparison:
       - average time per iteration
       - total iteration count
-4) Relative RMSE of model optimal control vs SAA optimal control
+2) Initial/final objective approximation relative error:
+      |J_model(z) - J_truth(z)| / |J_truth(z)|
+3) Initial/final true objective values
+4) Final optimal control and corresponding state plots
 
 No MC correction is used in Taylor-based models.
 """
@@ -43,6 +47,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -102,6 +107,10 @@ MODEL_ORDER = [
     "mixture_linear_hep",
     "mixture_quadratic_kle",
     "mixture_quadratic_hep",
+    "saa_10",
+    "saa_100",
+    "saa_1000",
+    "saa_10000",
 ]
 MODEL_COLORS = {
     "linear": "tab:blue",
@@ -110,7 +119,10 @@ MODEL_COLORS = {
     "mixture_linear_hep": "tab:olive",
     "mixture_quadratic_kle": "tab:red",
     "mixture_quadratic_hep": "tab:brown",
-    "saa": "tab:purple",
+    "saa_10": "tab:cyan",
+    "saa_100": "tab:gray",
+    "saa_1000": "tab:purple",
+    "saa_10000": "tab:pink",
 }
 
 
@@ -134,11 +146,52 @@ class TeeStream:
 class IterRecord:
     iteration: int
     model_cost: float
-    true_cost: float
-    abs_error: float
-    rel_error: float
     residual: float
     iter_time_sec: float
+    rss_mb: float
+    peak_rss_mb: float
+    cost_rss_before_mb: float
+    cost_rss_after_mb: float
+    grad_rss_before_mb: float
+    grad_rss_after_mb: float
+
+
+def _rss_from_proc_status_mb() -> float:
+    """Read current RSS from /proc/self/status when available."""
+    try:
+        with open("/proc/self/status", "r") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    match = re.search(r"(\d+)", line)
+                    if match:
+                        return float(match.group(1)) / 1024.0
+    except OSError:
+        pass
+    return float("nan")
+
+
+def get_current_rss_mb() -> float:
+    """Best-effort current resident set size in MB."""
+    try:
+        import psutil
+
+        return float(psutil.Process(os.getpid()).memory_info().rss) / (1024.0 ** 2)
+    except Exception:
+        return _rss_from_proc_status_mb()
+
+
+def get_peak_rss_mb() -> float:
+    """Best-effort peak resident set size in MB."""
+    try:
+        import resource
+
+        peak_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        # Linux reports KB, macOS reports bytes.
+        if sys.platform == "darwin":
+            return float(peak_kb) / (1024.0 ** 2)
+        return float(peak_kb) / 1024.0
+    except Exception:
+        return float("nan")
 
 
 class ScipyObjectiveWithHistory:
@@ -150,6 +203,10 @@ class ScipyObjectiveWithHistory:
         self._g = cost_functional.generate_vector(soupy.CONTROL)
         self.latest_cost = np.nan
         self.latest_grad_norm = np.nan
+        self.latest_cost_rss_before_mb = np.nan
+        self.latest_cost_rss_after_mb = np.nan
+        self.latest_grad_rss_before_mb = np.nan
+        self.latest_grad_rss_after_mb = np.nan
         self.n_func = 0
         self.n_grad = 0
 
@@ -157,7 +214,9 @@ class ScipyObjectiveWithHistory:
         def f(z_np):
             self._z.set_local(z_np)
             self._z.apply("")
+            self.latest_cost_rss_before_mb = get_current_rss_mb()
             self.latest_cost = float(self.cost_functional.cost(self._z, order=0))
+            self.latest_cost_rss_after_mb = get_current_rss_mb()
             self.n_func += 1
             return self.latest_cost
 
@@ -167,8 +226,10 @@ class ScipyObjectiveWithHistory:
         def g(z_np):
             self._z.set_local(z_np)
             self._z.apply("")
+            self.latest_grad_rss_before_mb = get_current_rss_mb()
             self.cost_functional.cost(self._z, order=1)
             self.latest_grad_norm = float(self.cost_functional.grad(self._g))
+            self.latest_grad_rss_after_mb = get_current_rss_mb()
             self.n_grad += 1
             return self._g.get_local()
 
@@ -207,7 +268,7 @@ def setup_problem(args, comm_mesh):
     )
 
     u_target = dl.Expression(
-        "x[1] + sin(k*x[0]) * sin(k*x[1])",
+        "(x[1] + sin(k*x[0]) * sin(k*x[1]))",
         k=1.5 * np.pi,
         degree=2,
         mpi_comm=comm_mesh,
@@ -220,7 +281,7 @@ def setup_problem(args, comm_mesh):
     return mesh, Vh, control_model, prior, penalty
 
 
-def make_saa_cost(control_model, prior, penalty, beta, sample_size, seed):
+def make_saa_cost(control_model, prior, penalty, beta, sample_size, seed, comm_sampler):
     risk_settings = meanVarRiskMeasureSAASettings()
     risk_settings["beta"] = beta
     risk_settings["sample_size"] = sample_size
@@ -229,13 +290,56 @@ def make_saa_cost(control_model, prior, penalty, beta, sample_size, seed):
         control_model,
         prior,
         settings=risk_settings,
-        #comm_sampler=MPI.COMM_SELF,
-        comm_sampler=MPI.COMM_WORLD,
+        comm_sampler=comm_sampler,
     )
     return RiskMeasureControlCostFunctional(risk_measure, penalty)
 
 
 def make_taylor_cost(model_name, control_model, prior, penalty, args):
+    if model_name == "saa_10":
+        return make_saa_cost(
+            control_model,
+            prior,
+            penalty,
+            beta=args.beta,
+            sample_size=10,
+            seed=args.saa_seed,
+            comm_sampler=MPI.COMM_SELF,
+        )
+
+    if model_name == "saa_100":
+        return make_saa_cost(
+            control_model,
+            prior,
+            penalty,
+            beta=args.beta,
+            sample_size=100,
+            seed=args.saa_seed,
+            comm_sampler=MPI.COMM_SELF,
+        )
+
+    if model_name == "saa_1000":
+        return make_saa_cost(
+            control_model,
+            prior,
+            penalty,
+            beta=args.beta,
+            sample_size=1000,
+            seed=args.saa_seed,
+            comm_sampler=MPI.COMM_SELF,
+        )
+
+    if model_name == "saa_10000":
+        return make_saa_cost(
+            control_model,
+            prior,
+            penalty,
+            beta=args.beta,
+            sample_size=10000,
+            seed=args.saa_seed,
+            comm_sampler=MPI.COMM_SELF,
+        )
+
     if model_name == "linear":
         settings = {
             "beta": args.beta,
@@ -310,95 +414,101 @@ def evaluate_cost(cost_functional, z_np):
     return float(cost_functional.cost(z, order=0))
 
 
-def optimize_with_tracking(model_name, approx_cost, true_cost, args, rank, maxiter):
-    wrapper = ScipyObjectiveWithHistory(approx_cost)
-    z0 = approx_cost.generate_vector(soupy.CONTROL)
-    x0 = z0.get_local()
-    iterate_history: List[np.ndarray] = []
+def evaluate_true_cost_stats(cost_functional, z_np):
+    z = np_to_control(cost_functional, z_np)
+    total_cost = float(cost_functional.cost(z, order=0))
+    risk = cost_functional.risk_measure
+    mean = float(risk.q_bar)
+    variance = float(risk.q2_bar - risk.q_bar ** 2)
+    return total_cost, mean, variance
 
-    def callback(xk):
-        iterate_history.append(np.array(xk, copy=True))
 
-    if rank == 0:
-        print(f"\nOptimizing {model_name} with L-BFGS-B ...")
-        sys.stdout.flush()
+def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, root_only=False):
+    payload = None
 
-    t0 = time.perf_counter()
-    result = scipy.optimize.minimize(
-        wrapper.function(),
-        x0,
-        method="L-BFGS-B",
-        jac=wrapper.jac(),
-        callback=callback,
-        options={"maxiter": maxiter, "disp": False},
-    )
-    total_time = time.perf_counter() - t0
-    iter_count = len(iterate_history) if iterate_history else int(result.nit)
-    avg_iter_time_sec = total_time / max(iter_count, 1)
+    if (not root_only) or rank == 0:
+        z0 = approx_cost.generate_vector(soupy.CONTROL)
+        x0 = z0.get_local()
+        wrapper = ScipyObjectiveWithHistory(approx_cost)
+        iter_records: List[IterRecord] = []
+        callback_last_time = None
 
-    # Build full per-iteration metrics outside pure optimization timing.
-    iter_records: List[IterRecord] = []
-    for k, xk in enumerate(iterate_history, start=1):
-        z_vec = np_to_control(approx_cost, xk)
-        model_cost = float(approx_cost.cost(z_vec, order=1))
-        g_vec = approx_cost.generate_vector(soupy.CONTROL)
-        residual = float(approx_cost.grad(g_vec))
-        true_cost_val = float(true_cost.cost(z_vec, order=0))
-        abs_err = abs(model_cost - true_cost_val)
-        rel_err = abs_err / max(abs(true_cost_val), 1e-14)
-        iter_records.append(
-            IterRecord(
-                iteration=k,
-                model_cost=model_cost,
-                true_cost=true_cost_val,
-                abs_error=abs_err,
-                rel_error=rel_err,
-                residual=residual,
-                iter_time_sec=np.nan,
+        def callback(xk):
+            nonlocal callback_last_time
+            now = time.perf_counter()
+            iter_time = np.nan if callback_last_time is None else now - callback_last_time
+            callback_last_time = now
+            iter_records.append(
+                IterRecord(
+                    iteration=len(iter_records) + 1,
+                    model_cost=float(wrapper.latest_cost),
+                    residual=float(wrapper.latest_grad_norm),
+                    iter_time_sec=iter_time,
+                    rss_mb=get_current_rss_mb(),
+                    peak_rss_mb=get_peak_rss_mb(),
+                    cost_rss_before_mb=float(wrapper.latest_cost_rss_before_mb),
+                    cost_rss_after_mb=float(wrapper.latest_cost_rss_after_mb),
+                    grad_rss_before_mb=float(wrapper.latest_grad_rss_before_mb),
+                    grad_rss_after_mb=float(wrapper.latest_grad_rss_after_mb),
+                )
             )
+
+
+        t0 = time.perf_counter()
+        result = scipy.optimize.minimize(
+            wrapper.function(),
+            x0,
+            method="L-BFGS-B",
+            jac=wrapper.jac(),
+            callback=callback,
+            options={"maxiter": maxiter, "disp": False},
         )
-        if rank == 0 and k % args.print_every == 0:
+        total_time = time.perf_counter() - t0
+        iter_count = len(iter_records) if iter_records else int(result.nit)
+        avg_iter_time_sec = total_time / max(iter_count, 1)
+
+        for r in iter_records:
+            if rank == 0 and r.iteration % args.print_every == 0:
+                print(
+                    f"  [{model_name:20s}] iter {r.iteration:4d}: "
+                    f"J_model={r.model_cost:.6e}, ||g||={r.residual:.3e}, "
+                    f"RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB, "
+                    f"cost_mem={r.cost_rss_before_mb:.1f}->{r.cost_rss_after_mb:.1f} MB, "
+                    f"grad_mem={r.grad_rss_before_mb:.1f}->{r.grad_rss_after_mb:.1f} MB"
+                )
+                sys.stdout.flush()
+
+        z_opt_np = np.array(result.x, copy=True)
+        z_opt_vec = np_to_control(approx_cost, z_opt_np)
+        approx_opt = float(approx_cost.cost(z_opt_vec, order=0))
+
+        if rank == 0:
+            serial_note = " [root-only serial]" if root_only else ""
             print(
-                f"  [{model_name:20s}] iter {k:4d}: "
-                f"J_model={model_cost:.6e}, J_true={true_cost_val:.6e}, "
-                f"rel_err={rel_err:.3e}, ||g||={residual:.3e}"
+                f"  [{model_name:20s}] done{serial_note}: success={result.success}, nit={iter_count}, "
+                f"avg_iter_time={avg_iter_time_sec:.2f}s"
             )
             sys.stdout.flush()
 
-    z_opt_np = np.array(result.x, copy=True)
-    z_opt_vec = np_to_control(approx_cost, z_opt_np)
-    approx_opt = float(approx_cost.cost(z_opt_vec, order=0))
-    true_opt = float(true_cost.cost(z_opt_vec, order=0))
-    opt_abs_err = abs(approx_opt - true_opt)
-    opt_rel_err = opt_abs_err / max(abs(true_opt), 1e-14)
+        payload = {
+            "success": bool(result.success),
+            "nfev": int(result.nfev),
+            "njev": int(result.njev),
+            "iter_records": iter_records,
+            "iter_count": iter_count,
+            "avg_iter_time_sec": avg_iter_time_sec,
+            "total_time_sec": total_time,
+            "z0_np": np.array(x0, copy=True),
+            "z_opt_np": z_opt_np,
+            "approx_opt": approx_opt,
+            "n_func": wrapper.n_func,
+            "n_grad": wrapper.n_grad,
+        }
 
-    if rank == 0:
-        print(
-            f"  [{model_name:20s}] done: success={result.success}, nit={iter_count}, "
-            f"avg_iter_time={avg_iter_time_sec:.2f}s, opt rel_err={opt_rel_err:.3e}"
-        )
-        sys.stdout.flush()
+    if root_only:
+        payload = MPI.COMM_WORLD.bcast(payload if rank == 0 else None, root=0)
 
-    return {
-        "result": result,
-        "iter_records": iter_records,
-        "iter_count": iter_count,
-        "avg_iter_time_sec": avg_iter_time_sec,
-        "total_time_sec": total_time,
-        "z_opt_np": z_opt_np,
-        "approx_opt": approx_opt,
-        "true_opt": true_opt,
-        "opt_abs_err": opt_abs_err,
-        "opt_rel_err": opt_rel_err,
-        "n_func": wrapper.n_func,
-        "n_grad": wrapper.n_grad,
-    }
-
-
-def rrmse(z, z_ref):
-    num = np.sqrt(np.mean((z - z_ref) ** 2))
-    den = np.sqrt(np.mean(z_ref ** 2))
-    return float(num / max(den, 1e-14))
+    return payload
 
 
 def save_iteration_csv(path, records: List[IterRecord]):
@@ -408,11 +518,14 @@ def save_iteration_csv(path, records: List[IterRecord]):
             [
                 "iteration",
                 "model_cost",
-                "true_cost",
-                "abs_error",
-                "rel_error",
                 "residual",
                 "iter_time_sec",
+                "rss_mb",
+                "peak_rss_mb",
+                "cost_rss_before_mb",
+                "cost_rss_after_mb",
+                "grad_rss_before_mb",
+                "grad_rss_after_mb",
             ]
         )
         for r in records:
@@ -420,11 +533,14 @@ def save_iteration_csv(path, records: List[IterRecord]):
                 [
                     r.iteration,
                     r.model_cost,
-                    r.true_cost,
-                    r.abs_error,
-                    r.rel_error,
                     r.residual,
                     r.iter_time_sec,
+                    r.rss_mb,
+                    r.peak_rss_mb,
+                    r.cost_rss_before_mb,
+                    r.cost_rss_after_mb,
+                    r.grad_rss_before_mb,
+                    r.grad_rss_after_mb,
                 ]
             )
 
@@ -440,32 +556,45 @@ def save_summary_csv(path, rows):
                 "nfev",
                 "njev",
                 "avg_iter_time_sec",
+                "initial_model_objective",
+                "initial_true_objective",
+                "initial_rel_error",
                 "opt_model_objective",
                 "opt_true_objective",
                 "opt_rel_error",
-                "rrmse_vs_saa_opt",
             ]
         )
         for row in rows:
             writer.writerow(row)
 
 
-def plot_curves(results, saa_ref, save_dir):
+def relative_error(model_value, true_value):
+    return float(abs(model_value - true_value) / max(abs(true_value), 1e-14))
+
+
+def evaluate_truth_for_result(result, truth_cost):
+    result["true_init"], result["true_init_mean"], result["true_init_var"] = evaluate_true_cost_stats(truth_cost, result["z0_np"])
+    result["init_rel_err"] = relative_error(result["approx_init"], result["true_init"])
+    result["true_opt"], result["true_opt_mean"], result["true_opt_var"] = evaluate_true_cost_stats(truth_cost, result["z_opt_np"])
+    result["opt_rel_err"] = relative_error(result["approx_opt"], result["true_opt"])
+
+
+def plot_curves(results, save_dir):
     plt.figure(figsize=(8, 5))
     for model in MODEL_ORDER:
         rec = results[model]["iter_records"]
         if not rec:
             continue
         x = [r.iteration for r in rec]
-        y = [max(r.rel_error, 1e-16) for r in rec]
+        y = [max(abs(r.model_cost), 1e-16) for r in rec]
         plt.semilogy(x, y, marker="o", linewidth=1.5, markersize=3, color=MODEL_COLORS[model], label=model)
     plt.xlabel("Iteration")
-    plt.ylabel("Relative Approximation Error")
-    plt.title("Objective Relative Approximation Error per Iteration")
+    plt.ylabel("Model Objective")
+    plt.title("Objective Value per Iteration")
     plt.grid(True, which="both", alpha=0.3)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "approx_error_per_iteration.png"), dpi=180)
+    plt.savefig(os.path.join(save_dir, "objective_per_iteration.png"), dpi=180)
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -485,23 +614,22 @@ def plot_curves(results, saa_ref, save_dir):
     plt.savefig(os.path.join(save_dir, "residual_per_iteration.png"), dpi=180)
     plt.close()
 
-    time_models = ["saa"] + MODEL_ORDER
-    time_values = [saa_ref["avg_iter_time_sec"]] + [results[m]["avg_iter_time_sec"] for m in MODEL_ORDER]
     plt.figure(figsize=(10, 5))
-    x = np.arange(len(time_models))
-    plt.bar(x, time_values, color=[MODEL_COLORS[m] for m in time_models])
-    plt.xticks(x, time_models, rotation=20, ha="right")
+    x = np.arange(len(MODEL_ORDER))
+    time_values = [results[m]["avg_iter_time_sec"] for m in MODEL_ORDER]
+    plt.bar(x, time_values, color=[MODEL_COLORS[m] for m in MODEL_ORDER])
+    plt.xticks(x, MODEL_ORDER, rotation=20, ha="right")
     plt.ylabel("Average Time per Iteration (s)")
-    plt.title("Average Iteration Time Comparison (Pure Optimization)")
+    plt.title("Average Iteration Time Comparison")
     plt.tight_layout()
     plt.savefig(os.path.join(save_dir, "avg_iteration_time_comparison.png"), dpi=180)
     plt.close()
 
-    iter_values = [saa_ref["iter_count"]] + [results[m]["iter_count"] for m in MODEL_ORDER]
     plt.figure(figsize=(10, 5))
-    x = np.arange(len(time_models))
-    plt.bar(x, iter_values, color=[MODEL_COLORS[m] for m in time_models])
-    plt.xticks(x, time_models, rotation=20, ha="right")
+    x = np.arange(len(MODEL_ORDER))
+    iter_values = [results[m]["iter_count"] for m in MODEL_ORDER]
+    plt.bar(x, iter_values, color=[MODEL_COLORS[m] for m in MODEL_ORDER])
+    plt.xticks(x, MODEL_ORDER, rotation=20, ha="right")
     plt.ylabel("Total Iteration Count")
     plt.title("Iteration Count Comparison")
     plt.tight_layout()
@@ -515,21 +643,32 @@ def plot_curves(results, saa_ref, save_dir):
     plt.yscale("log")
     plt.xticks(x, MODEL_ORDER, rotation=15)
     plt.ylabel("|J_model(z*) - J_true(z*)| / |J_true(z*)|")
-    plt.title("Optimal-Control Objective Relative Error")
+    plt.title("Final Objective Relative Error")
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "optimal_objective_rel_error.png"), dpi=180)
+    plt.savefig(os.path.join(save_dir, "final_objective_rel_error.png"), dpi=180)
     plt.close()
 
     plt.figure(figsize=(8, 5))
     x = np.arange(len(MODEL_ORDER))
-    y = [results[m]["rrmse_vs_saa_opt"] for m in MODEL_ORDER]
+    y = [results[m]["init_rel_err"] for m in MODEL_ORDER]
     plt.bar(x, y, color=[MODEL_COLORS[m] for m in MODEL_ORDER])
     plt.yscale("log")
     plt.xticks(x, MODEL_ORDER, rotation=15)
-    plt.ylabel("RRMSE vs SAA z*")
-    plt.title("Optimal Control Relative RMSE")
+    plt.ylabel("|J_model(z0) - J_true(z0)| / |J_true(z0)|")
+    plt.title("Initial Objective Relative Error")
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "optimal_control_rrmse.png"), dpi=180)
+    plt.savefig(os.path.join(save_dir, "initial_objective_rel_error.png"), dpi=180)
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+    x = np.arange(len(MODEL_ORDER))
+    y = [results[m]["true_opt"] for m in MODEL_ORDER]
+    plt.bar(x, y, color=[MODEL_COLORS[m] for m in MODEL_ORDER])
+    plt.xticks(x, MODEL_ORDER, rotation=15)
+    plt.ylabel("J_true(z*)")
+    plt.title("Final True Objective Value")
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, "final_true_objective_value.png"), dpi=180)
     plt.close()
 
 
@@ -556,15 +695,11 @@ def solve_state_at_control(control_model, prior, z_np):
     return x[soupy.CONTROL].copy(), x[soupy.STATE].copy()
 
 
-def save_optimal_field_plots(results, z_saa_opt, control_model, prior, Vh, save_dir):
-    control_saa_vec, state_saa_vec = solve_state_at_control(control_model, prior, z_saa_opt)
-
+def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
     V_control = Vh[soupy.CONTROL]
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
 
-    control_saa_fun = vector_to_function(V_control, control_saa_vec)
-    state_saa_fun = scalarize_for_plot(vector_to_function(V_state, state_saa_vec), V_state_scalar)
     overview_payload = []
 
     for model_name in MODEL_ORDER:
@@ -572,62 +707,34 @@ def save_optimal_field_plots(results, z_saa_opt, control_model, prior, Vh, save_
         control_model_vec, state_model_vec = solve_state_at_control(control_model, prior, z_model_opt)
 
         control_model_fun = vector_to_function(V_control, control_model_vec)
-        control_abs_err_fun = vector_to_function(V_control, control_model_vec.copy())
-        control_abs_err_fun.vector().axpy(-1.0, control_saa_vec)
-        control_abs_err_fun.vector().set_local(np.abs(control_abs_err_fun.vector().get_local()))
-        control_abs_err_fun.vector().apply("")
-
         state_model_fun = scalarize_for_plot(vector_to_function(V_state, state_model_vec), V_state_scalar)
-        state_abs_err_fun = dl.Function(V_state_scalar)
-        state_abs_err_fun.vector().zero()
-        state_abs_err_fun.vector().axpy(1.0, state_model_fun.vector())
-        state_abs_err_fun.vector().axpy(-1.0, state_saa_fun.vector())
-        state_abs_err_fun.vector().set_local(np.abs(state_abs_err_fun.vector().get_local()))
-        state_abs_err_fun.vector().apply("")
 
-        fig, axes = plt.subplots(1, 3, figsize=(14, 4))
-        for ax, fun, title in zip(
-            axes,
-            [control_model_fun, control_saa_fun, control_abs_err_fun],
-            [f"{model_name} z*", "SAA z*", "|z* - z*_SAA|"],
-        ):
-            artist = dl.plot(fun, ax=ax)
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        for ax, fun, title in zip(axes, [control_model_fun, state_model_fun], [f"{model_name} z*", f"{model_name} u(z*)"]):
+            plt.sca(ax)
+            artist = dl.plot(fun)
             ax.set_title(title)
             ax.set_xlabel("x")
             ax.set_ylabel("y")
             plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
         fig.tight_layout()
-        fig.savefig(os.path.join(save_dir, f"{model_name}_optimal_control_vs_saa.png"), dpi=180)
+        fig.savefig(os.path.join(save_dir, f"{model_name}_optimal_fields.png"), dpi=180)
         plt.close(fig)
-
-        fig, axes = plt.subplots(1, 3, figsize=(14, 4))
-        for ax, fun, title in zip(
-            axes,
-            [state_model_fun, state_saa_fun, state_abs_err_fun],
-            [f"{model_name} u(z*)", "SAA u(z*_SAA)", "|u(z*) - u(z*_SAA)|"],
-        ):
-            artist = dl.plot(fun, ax=ax)
-            ax.set_title(title)
-            ax.set_xlabel("x")
-            ax.set_ylabel("y")
-            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
-        fig.tight_layout()
-        fig.savefig(os.path.join(save_dir, f"{model_name}_optimal_solution_vs_saa.png"), dpi=180)
-        plt.close(fig)
-        overview_payload.append((model_name, control_model_fun, control_abs_err_fun, state_model_fun, state_abs_err_fun))
+        overview_payload.append((model_name, control_model_fun, state_model_fun))
 
     n_models = len(overview_payload)
-    fig, axes = plt.subplots(n_models, 6, figsize=(24, 3.6 * n_models))
+    fig, axes = plt.subplots(n_models, 2, figsize=(10, 3.6 * n_models))
     if n_models == 1:
         axes = np.array([axes])
-    col_titles = ["model z*", "SAA z*", "|z* - z*_SAA|", "model u(z*)", "SAA u(z*_SAA)", "|u(z*) - u(z*_SAA)|"]
+    col_titles = ["optimal control z*", "state u(z*)"]
     for j, title in enumerate(col_titles):
         axes[0, j].set_title(title)
-    for i, (model_name, control_model_fun, control_abs_err_fun, state_model_fun, state_abs_err_fun) in enumerate(overview_payload):
-        fields = [control_model_fun, control_saa_fun, control_abs_err_fun, state_model_fun, state_saa_fun, state_abs_err_fun]
+    for i, (model_name, control_model_fun, state_model_fun) in enumerate(overview_payload):
+        fields = [control_model_fun, state_model_fun]
         for j, fun in enumerate(fields):
             ax = axes[i, j]
-            dl.plot(fun, ax=ax)
+            plt.sca(ax)
+            dl.plot(fun)
             ax.set_xticks([])
             ax.set_yticks([])
         axes[i, 0].set_ylabel(model_name, rotation=90, fontsize=10)
@@ -655,13 +762,13 @@ def main():
         choices=["hep", "kle"],
         help="Deprecated: ignored. Script compares both mixture_quadratic_kle and mixture_quadratic_hep.",
     )
-    parser.add_argument("--saa-samples", type=int, default=1000, help="Sample size for SAA truth")
+    parser.add_argument("--truth-saa-samples", type=int, default=100000, help="Sample size for ground-truth SAA evaluation")
     parser.add_argument("--saa-seed", type=int, default=1, help="Seed for SAA sampling")
     parser.add_argument("--prior-gamma", type=float, default=0.2, help="Prior gamma")
     parser.add_argument("--prior-delta", type=float, default=1.0, help="Prior delta")
     parser.add_argument("--penalty", type=float, default=1e-2, help="Control penalty")
     parser.add_argument("--maxiter", type=int, default=60, help="Max iterations for each model")
-    parser.add_argument("--maxiter-saa", type=int, default=60, help="Max iterations for SAA reference solve")
+    parser.add_argument("--maxiter-saa", type=int, default=60, help="Max iterations for optimized SAA models")
     parser.add_argument("--nx", type=int, default=20, help="Mesh cells in x")
     parser.add_argument("--ny", type=int, default=20, help="Mesh cells in y")
     parser.add_argument("--print-every", type=int, default=1, help="Print every N iterations")
@@ -698,9 +805,9 @@ def main():
             print("=" * 78)
             print("Poisson Model Comparison:")
             print("  linear / quadratic / mixture_linear_kle / mixture_linear_hep")
-            print("  mixture_quadratic_kle / mixture_quadratic_hep")
+            print("  mixture_quadratic_kle / mixture_quadratic_hep / saa_10 / saa_100 / saa_1000 / saa_10000")
             print("=" * 78)
-            print(f"SAA truth samples: {args.saa_samples}")
+            print(f"Ground-truth SAA samples: {args.truth_saa_samples}")
             print(f"beta={args.beta}, n_tr={args.n_tr}, n_mix={args.n_mix}")
             print(f"terminal log file: {log_path}")
             print("=" * 78)
@@ -708,44 +815,78 @@ def main():
 
         mesh, Vh, control_model, prior, penalty = setup_problem(args, comm_mesh)
 
-        # Reference truth cost for evaluations (fixed samples)
-        true_cost = make_saa_cost(
-            control_model,
-            prior,
-            penalty,
-            beta=args.beta,
-            sample_size=args.saa_samples,
-            seed=args.saa_seed,
-        )
-
-        # Reference SAA optimum for control error metric
-        if rank == 0:
-            print("\nComputing SAA reference optimum with L-BFGS-B ...")
-            sys.stdout.flush()
-        saa_ref = optimize_with_tracking(
-            "saa",
-            true_cost,
-            true_cost,
-            args,
-            rank,
-            maxiter=args.maxiter_saa,
-        )
-        z_saa_opt = saa_ref["z_opt_np"]
-
-        # Compare all approximation models
+        # Compare all optimization models. Ground truth is built and released model-by-model
+        # to avoid retaining the full SAA sample cache across the entire run.
         results: Dict[str, Dict] = {}
         for model_name in MODEL_ORDER:
-            approx_cost = make_taylor_cost(model_name, control_model, prior, penalty, args)
+            approx_cost = None
+            z0_np = None
+
+            if rank == 0:
+                approx_cost = make_taylor_cost(model_name, control_model, prior, penalty, args)
+                z0_np = approx_cost.generate_vector(soupy.CONTROL).get_local()
+
+            if rank == 0:
+                approx_init = evaluate_cost(approx_cost, z0_np)
+                truth_cost = make_saa_cost(
+                    control_model,
+                    prior,
+                    penalty,
+                    beta=args.beta,
+                    sample_size=args.truth_saa_samples,
+                    seed=args.saa_seed,
+                    comm_sampler=MPI.COMM_WORLD,
+                )
+                true_init, true_init_mean, true_init_var = evaluate_true_cost_stats(truth_cost, z0_np)
+                del truth_cost
+                init_rel_err = relative_error(approx_init, true_init)
+                print(f"\nOptimizing {model_name} with L-BFGS-B ...")
+                print(
+                    f"  [{model_name:20s}] initial: "
+                    f"J_model(z0)={approx_init:.6e}, "
+                    f"J_true(z0)={true_init:.6e}, "
+                    f"mean_true(z0)={true_init_mean:.6e}, "
+                    f"var_true(z0)={true_init_var:.6e}, "
+                    f"rel_err(z0)={init_rel_err:.3e}"
+                )
+                sys.stdout.flush()
+
             res = optimize_with_tracking(
                 model_name,
                 approx_cost,
-                true_cost,
                 args,
                 rank,
-                maxiter=args.maxiter,
+                maxiter=args.maxiter_saa if model_name.startswith("saa_") else args.maxiter,
+                root_only=True,
             )
-            res["rrmse_vs_saa_opt"] = rrmse(res["z_opt_np"], z_saa_opt)
+            if rank == 0:
+                res["approx_init"] = approx_init
+            res = MPI.COMM_WORLD.bcast(res if rank == 0 else None, root=0)
+            truth_cost = make_saa_cost(
+                control_model,
+                prior,
+                penalty,
+                beta=args.beta,
+                sample_size=args.truth_saa_samples,
+                seed=args.saa_seed,
+                comm_sampler=MPI.COMM_WORLD,
+            )
+            evaluate_truth_for_result(res, truth_cost)
+            del truth_cost
             results[model_name] = res
+            if rank == 0:
+                del approx_cost
+
+            if rank == 0:
+                print(
+                    f"  [{model_name:20s}] optimal: "
+                    f"J_model(z*)={res['approx_opt']:.6e}, "
+                    f"J_true(z*)={res['true_opt']:.6e}, "
+                    f"mean_true(z*)={res['true_opt_mean']:.6e}, "
+                    f"var_true(z*)={res['true_opt_var']:.6e}, "
+                    f"rel_err(z*)={res['opt_rel_err']:.3e}"
+                )
+                sys.stdout.flush()
 
         if rank == 0:
             # Save detailed iteration CSV files
@@ -755,11 +896,6 @@ def main():
                     results[model_name]["iter_records"],
                 )
 
-            save_iteration_csv(
-                os.path.join(args.save_dir, "saa_iteration_metrics.csv"),
-                saa_ref["iter_records"],
-            )
-
             # Save summary CSV
             summary_rows = []
             for model_name in MODEL_ORDER:
@@ -767,15 +903,17 @@ def main():
                 summary_rows.append(
                     [
                         model_name,
-                        rr["result"].success,
+                        rr["success"],
                         rr["iter_count"],
-                        rr["result"].nfev,
-                        rr["result"].njev,
+                        rr["nfev"],
+                        rr["njev"],
                         rr["avg_iter_time_sec"],
+                        rr["approx_init"],
+                        rr["true_init"],
+                        rr["init_rel_err"],
                         rr["approx_opt"],
                         rr["true_opt"],
                         rr["opt_rel_err"],
-                        rr["rrmse_vs_saa_opt"],
                     ]
                 )
 
@@ -784,27 +922,24 @@ def main():
             # JSON dump with configuration + scalar summary
             json_payload = {
                 "config": vars(args),
-                "saa_reference": {
-                    "success": bool(saa_ref["result"].success),
-                    "nit": int(saa_ref["iter_count"]),
-                    "nfev": int(saa_ref["result"].nfev),
-                    "njev": int(saa_ref["result"].njev),
-                    "iter_count": int(saa_ref["iter_count"]),
-                    "avg_iter_time_sec": float(saa_ref["avg_iter_time_sec"]),
-                    "objective_at_opt": float(saa_ref["true_opt"]),
+                "truth_evaluation": {
+                    "sample_size": int(args.truth_saa_samples),
+                    "seed": int(args.saa_seed),
                 },
                 "models": {
                     name: {
-                        "success": bool(results[name]["result"].success),
+                        "success": bool(results[name]["success"]),
                         "nit": int(results[name]["iter_count"]),
-                        "nfev": int(results[name]["result"].nfev),
-                        "njev": int(results[name]["result"].njev),
+                        "nfev": int(results[name]["nfev"]),
+                        "njev": int(results[name]["njev"]),
                         "iter_count": int(results[name]["iter_count"]),
                         "avg_iter_time_sec": float(results[name]["avg_iter_time_sec"]),
+                        "initial_model_objective": float(results[name]["approx_init"]),
+                        "initial_true_objective": float(results[name]["true_init"]),
+                        "initial_rel_error": float(results[name]["init_rel_err"]),
                         "opt_model_objective": float(results[name]["approx_opt"]),
                         "opt_true_objective": float(results[name]["true_opt"]),
                         "opt_rel_error": float(results[name]["opt_rel_err"]),
-                        "rrmse_vs_saa_opt": float(results[name]["rrmse_vs_saa_opt"]),
                     }
                     for name in MODEL_ORDER
                 },
@@ -812,13 +947,10 @@ def main():
             with open(os.path.join(args.save_dir, "summary.json"), "w") as f:
                 json.dump(json_payload, f, indent=2)
 
-            plot_curves(results, saa_ref, args.save_dir)
-            save_optimal_field_plots(results, z_saa_opt, control_model, prior, Vh, args.save_dir)
+            plot_curves(results, args.save_dir)
+            save_optimal_field_plots(results, control_model, prior, Vh, args.save_dir)
 
-            # Save dedicated timing comparison table (includes SAA).
-            timing_rows = [
-                ["saa", saa_ref["iter_count"], saa_ref["avg_iter_time_sec"]],
-            ]
+            timing_rows = []
             for model_name in MODEL_ORDER:
                 rr = results[model_name]
                 timing_rows.append([model_name, rr["iter_count"], rr["avg_iter_time_sec"]])
@@ -828,19 +960,17 @@ def main():
                 writer.writerows(timing_rows)
 
             print("\n" + "-" * 78)
-            print("Summary (vs SAA reference optimum)")
+            print("Summary (ground-truth SAA evaluated at z0 and z*)")
             print("-" * 78)
-            print(
-                f"{'saa':20s} | nit={saa_ref['iter_count']:3d} | "
-                f"avg_iter_time={saa_ref['avg_iter_time_sec']:8.2f}s"
-            )
             for model_name in MODEL_ORDER:
                 rr = results[model_name]
                 print(
                     f"{model_name:20s} | nit={rr['iter_count']:3d} | "
                     f"avg_iter_time={rr['avg_iter_time_sec']:8.2f}s | "
+                    f"J_model(z*)={rr['approx_opt']:.6e} | "
+                    f"init rel_err={rr['init_rel_err']:.3e} | "
                     f"opt rel_err={rr['opt_rel_err']:.3e} | "
-                    f"RRMSE(z*)={rr['rrmse_vs_saa_opt']:.3e}"
+                    f"J_true(z*)={rr['true_opt']:.6e}"
                 )
             print("-" * 78)
             print(f"All outputs written to: {args.save_dir}")

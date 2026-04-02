@@ -19,6 +19,7 @@ from typing import Optional, Union
 
 import dolfin as dl
 import numpy as np
+from mpi4py import MPI
 from hippylib import MultiVector, Random, vector2Function
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
@@ -102,6 +103,19 @@ class _TaylorMixtureLinearLegacy:
 
         self.grad_cache = None
 
+    def _z_has_changed(self, z):
+        """Return True when the incoming control differs from the cached one."""
+        if isinstance(z, np.ndarray):
+            idx = self.z.local_range()
+            z_local = z[idx[0] : idx[1]]
+            delta = self.z.get_local() - z_local
+            return np.dot(delta, delta) > 1e-20
+
+        self.z_diff.zero()
+        self.z_diff.axpy(1.0, self.z)
+        self.z_diff.axpy(-1.0, z)
+        return self.z_diff.inner(self.z_diff) > 1e-20
+
     def _compute_direction(self):
         """Compute decomposition direction (KLE or HEP)."""
         if self.direction_computed:
@@ -123,19 +137,33 @@ class _TaylorMixtureLinearLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            omega = MultiVector(self.pde.generate_parameter(), 64)
-            rand = Random()
-            for i in range(64):
-                rand.normal(1.0, omega[i])
+            world_comm = MPI.COMM_WORLD
+            if world_comm.rank == 0:
+                omega = MultiVector(self.pde.generate_parameter(), 15)
+                rand = Random()
+                for i in range(15):
+                    rand.normal(1.0, omega[i])
 
-            d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
+                d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
+                psi_local = U[0].get_local()
+                lambda_psi = 1.0
+                dominant_eigenvalue = float(d[0])
+            else:
+                psi_local = None
+                lambda_psi = None
+                dominant_eigenvalue = None
+
+            psi_local = world_comm.bcast(psi_local, root=0)
+            lambda_psi = world_comm.bcast(lambda_psi, root=0)
+            dominant_eigenvalue = world_comm.bcast(dominant_eigenvalue, root=0)
 
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            self.psi.axpy(1.0, U[0])
-            self.lambda_psi = 1.0
+            self.psi.set_local(psi_local)
+            self.psi.apply("")
+            self.lambda_psi = lambda_psi
 
-            if self.verbose and self.mpi_rank == 0:
-                print(f"  [Mixture] Using HEP direction, dominant eigenvalue = {d[0]:.4e}")
+            if self.verbose and world_comm.rank == 0:
+                print(f"  [Mixture] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}")
         else:
             v = dl.Function(self.pde.Vh[PARAMETER]).vector()
             rand = Random()
@@ -361,6 +389,7 @@ class _TaylorMixtureLinearLegacy:
     def costValue(self, z):
         """Evaluate cost at control z."""
         self.func_ncalls += 1
+        z_changed = self._z_has_changed(z)
 
         if isinstance(z, np.ndarray):
             idx = self.z.local_range()
@@ -370,7 +399,8 @@ class _TaylorMixtureLinearLegacy:
             self.z.zero()
             self.z.axpy(1.0, z)
 
-        self.direction_computed = False
+        if z_changed:
+            self.direction_computed = False
         objective = self.objective()
 
         penalty = 0.0

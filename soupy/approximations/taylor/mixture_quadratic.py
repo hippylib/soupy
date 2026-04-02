@@ -12,10 +12,12 @@ introducing a separate derivative pipeline.
 
 from __future__ import annotations
 
+import gc
 from typing import Optional, Union
 
 import dolfin as dl
 import numpy as np
+from mpi4py import MPI
 from hippylib import MultiVector, Random
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
@@ -88,19 +90,29 @@ class _RankOneCovarianceSolver:
 class _RankOneInverseCovariance:
     """Apply C_i^{-1} directly using the provided spectral formula.
 
-    C_i^{-1} = C^{-1} + ((1/sigma_i^2)-1) * (1/lambda_psi) * psi psi^T
+    If
+
+        C_i = C + (sigma_i^2 - 1) * lambda_psi * psi psi^T,
+
+    then the consistent inverse rank-1 update acts along the dual direction
+    R psi, where R = C^{-1}:
+
+        C_i^{-1}
+          = C^{-1}
+          + ((1/sigma_i^2)-1) * lambda_psi * (R psi) (R psi)^T
     """
 
-    def __init__(self, base_prior, psi, sigma_sq, lambda_psi):
+    def __init__(self, base_prior, psi, r_psi, sigma_sq, lambda_psi):
         self._base = base_prior
         self._psi = psi
+        self._r_psi = r_psi
         self._sigma_sq = float(sigma_sq)
         self._lambda_psi = float(lambda_psi)
         if self._sigma_sq <= 0.0:
             raise RuntimeError("sigma^2 must be positive.")
         if abs(self._lambda_psi) < 1e-14:
             raise RuntimeError("lambda_psi is too small.")
-        self._coeff = ((1.0 / self._sigma_sq) - 1.0) / self._lambda_psi
+        self._coeff = ((1.0 / self._sigma_sq) - 1.0) * self._lambda_psi
 
     def init_vector(self, x, dim):
         if hasattr(self._base.R, "init_vector"):
@@ -114,8 +126,8 @@ class _RankOneInverseCovariance:
     def mult(self, x, y):
         # Base term: C^{-1} x
         self._base.R.mult(x, y)
-        # Direct spectral correction.
-        y.axpy(self._coeff * self._psi.inner(x), self._psi)
+        # Direct spectral correction along the dual direction R psi.
+        y.axpy(self._coeff * self._r_psi.inner(x), self._r_psi)
 
 # Compute the covariance for a given cluster
 class _ShiftedPrior:
@@ -124,7 +136,9 @@ class _ShiftedPrior:
     def __init__(self, base_prior, mean_vec, psi, alpha, sigma_sq, lambda_psi):
         self._base = base_prior
         self.mean = mean_vec
-        self.R = _RankOneInverseCovariance(base_prior, psi, sigma_sq, lambda_psi)
+        r_psi = dl.Function(base_prior.Vh).vector()
+        base_prior.R.mult(psi, r_psi)
+        self.R = _RankOneInverseCovariance(base_prior, psi, r_psi, sigma_sq, lambda_psi)
         self.Rsolver = _RankOneCovarianceSolver(base_prior, psi, alpha)
 
     def __getattr__(self, name):
@@ -228,20 +242,34 @@ class _TaylorMixtureQuadraticLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            omega = MultiVector(self.pde.generate_parameter(), 64)
-            rand = Random()
-            for i in range(64):
-                rand.normal(1.0, omega[i])
+            world_comm = MPI.COMM_WORLD
+            if world_comm.rank == 0:
+                omega = MultiVector(self.pde.generate_parameter(), 15)
+                rand = Random()
+                for i in range(15):
+                    rand.normal(1.0, omega[i])
 
-            # Incremental state and incremental adjoint are solved whenever Hessian action is called in doulbePassG. 
-            d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
+                # Incremental state and incremental adjoint are solved whenever Hessian action is called in doulbePassG.
+                d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
+                psi_local = U[0].get_local()
+                lambda_psi = 1.0
+                dominant_eigenvalue = float(d[0])
+            else:
+                psi_local = None
+                lambda_psi = None
+                dominant_eigenvalue = None
+
+            psi_local = world_comm.bcast(psi_local, root=0)
+            lambda_psi = world_comm.bcast(lambda_psi, root=0)
+            dominant_eigenvalue = world_comm.bcast(dominant_eigenvalue, root=0)
 
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            self.psi.axpy(1.0, U[0])
-            self.lambda_psi = 1.0
+            self.psi.set_local(psi_local)
+            self.psi.apply("")
+            self.lambda_psi = lambda_psi
 
-            if self.verbose and self.mpi_rank == 0:
-                print(f"  [Mixture Quad] Using HEP direction, dominant eigenvalue = {d[0]:.4e}")
+            if self.verbose and world_comm.rank == 0:
+                print(f"  [Mixture Quad] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}")
         else:
             v = dl.Function(self.pde.Vh[PARAMETER]).vector()
             rand = Random()
@@ -365,6 +393,13 @@ class _TaylorMixtureQuadraticLegacy:
         lin_var_i = legacy_beta1.lin_var - Q0_i ** 2
         d_i = np.array(legacy_beta1.d, copy=True)
 
+        # The heavy legacy solvers above are only needed to extract these
+        # per-component summaries. Drop references eagerly before returning
+        # so Python can reclaim them as soon as possible.
+        del legacy_mu
+        del legacy_beta1
+        gc.collect()
+
         return {
             "mu": float(mu_i),
             "var": float(var_i),
@@ -423,7 +458,8 @@ class _TaylorMixtureQuadraticLegacy:
         else:
             self._copy_z(z)
 
-        self.direction_computed = False
+        if not self._objective_matches_current_z():
+            self.direction_computed = False
         objective = self.objective()
         self._cache_objective_z()
 

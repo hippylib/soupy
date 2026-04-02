@@ -1,38 +1,72 @@
-"""Gaussian mixture with quadratic Taylor approximation for CVaR.
+"""Gaussian-mixture quadratic Taylor approximation for CVaR.
 
-This implements the Gaussian mixture Taylor approximation for CVaR from:
-    Chen, Villa, Ghattas (2024)
-    "Gaussian mixture Taylor approximations for risk measures of PDEs"
+Implementation strategy:
+- Build Gaussian-mixture component means in parameter space exactly as in
+  ``mixture_quadratic.py``.
+- For each component mean, run the validated single-Gaussian quadratic CVaR
+  pipeline from ``quadratic_cvar.py`` up to the surrogate-sample stage.
+- Solve one global scalar minimization in ``t`` for the weighted mixture CVaR
+  objective.
+- Reuse the full adjoint-based z-gradient machinery from
+  ``quadratic_cvar.py`` component-by-component, with the only change being that
+  each component uses the global optimal ``t`` and the same unweighted
+  single-component sample factors as ``quadratic_cvar.py``
 
-The key idea is to approximate the prior N(m_bar, C) by a Gaussian mixture
-with reduced variance along a dominant direction, then use quadratic Taylor
-approximations at each mixture component mean.
+      1 / ((1 - beta) K_i) * E_ik(t_opt),
 
-For the quadratic case, each component Q_qua,i follows a generalized
-chi-squared distribution. CVaR is computed by surrogate MC sampling.
+  while the final mixture z-gradient is assembled as the weighted combination
+  ``sum_i w_i * grad_i``.
+
+This follows the user-provided theory closely while avoiding a separate
+optimization variable in the control gradient.
 """
 
 from __future__ import annotations
 
-import time
 from typing import Optional, Union
 
-import numpy as np
 import dolfin as dl
-from hippylib import Random, vector2Function, MultiVector
+import numpy as np
+import scipy.optimize
+from hippylib import MultiVector, Random, vector2Function
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.smoothPlusApproximation import SmoothPlusApproximationQuartic
-from ...modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
-from .settings import taylor_mixture_quadratic_cvar_settings
+from ...modeling.variables import ADJOINT, CONTROL, PARAMETER, STATE
 from .mixture_data import get_1d_mixture
-from .quadratic_cvar import surrogate_cvar_from_samples
+from .mixture_quadratic import _ShiftedPrior
+from .quadratic_cvar import _TaylorQuadraticCVaRLegacy
+from .settings import taylor_mixture_quadratic_cvar_settings, taylor_quadratic_cvar_settings
+
+# Provides an initial guess for the value at risk t^*
+def _weighted_quantile(values, weights, q):
+    """Return the weighted q-quantile for 1D samples."""
+    values = np.asarray(values, dtype=float)
+    weights = np.asarray(weights, dtype=float)
+
+    if values.size == 0:
+        raise RuntimeError("Cannot compute a weighted quantile from empty samples.")
+    if values.shape != weights.shape:
+        raise RuntimeError("values and weights must have the same shape.")
+
+    order = np.argsort(values)
+    values_sorted = values[order]
+    weights_sorted = weights[order]
+    cumulative = np.cumsum(weights_sorted)
+    total = cumulative[-1]
+    if total <= 0.0:
+        raise RuntimeError("Sample weights must sum to a positive value.")
+
+    threshold = float(np.clip(q, 0.0, 1.0)) * total
+    idx = int(np.searchsorted(cumulative, threshold, side="left"))
+    idx = min(idx, values_sorted.size - 1)
+    return float(values_sorted[idx])
 
 
 class _TaylorMixtureQuadraticCVaRLegacy:
-    """Implementation of Gaussian mixture quadratic Taylor CVaR."""
+    """Gaussian-mixture quadratic Taylor CVaR with adjoint-based z-gradient."""
 
     def __init__(self, settings, model, prior, penalization, tol=1e-9):
         self.settings = settings
@@ -44,12 +78,17 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         self.tol = tol
 
         self.z = model.generate_vector(CONTROL)
-        self.m = prior.mean
+        self.z_at_objective = model.generate_vector(CONTROL)
+        self.z_diff = model.generate_vector(CONTROL)
+        self.objective_is_current = False
+        self.z_at_direction = model.generate_vector(CONTROL)
+        self.direction_diff = model.generate_vector(CONTROL)
+        self.direction_is_current = False
+
         self.x = model.generate_vector(STATE)
         self.y = model.generate_vector(STATE)
-        self.x_all = [self.x, self.m, self.y, self.z]
+        self.x_all = [self.x, prior.mean, self.y, self.z]
 
-        self.z_dir = model.generate_vector(CONTROL)
         self.grad_cache = None
 
         self.func_ncalls = 0
@@ -67,46 +106,80 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         except (KeyError, ValueError):
             self.verbose = False
 
-        # MPI setup
+        if self.N_mc <= 0:
+            raise RuntimeError("mixture quadratic CVaR requires N_mc > 0.")
+
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
         self.mpi_size = dl.MPI.size(self.pde.Vh[STATE].mesh().mpi_comm())
 
-        # Get 1D mixture parameters
         self.mix_1d = get_1d_mixture(self.N_mix)
-        self.component_weights = self.mix_1d['weights']
+        self.component_weights = np.asarray(self.mix_1d["weights"], dtype=float)
 
-        # Direction and components (computed on first objective call)
-        self.psi = None  # Decomposition direction
-        self.lambda_psi = None  # Pseudo-eigenvalue
-        self.m_bar_i = []  # Component means in parameter space
+        self.psi = None
+        self.lambda_psi = None
+        self.m_bar_i = []
         self.direction_computed = False
 
-        # Hessian for HEP direction and eigendecomposition
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
+        self.smoothplus = SmoothPlusApproximationQuartic(epsilon=self.epsilon)
 
-        # Storage for component quantities
-        self.component_Q0 = []  # Q(m_bar_i) for each component
-        self.component_samples = []  # Surrogate samples for each component
+        self.component_solvers = []
+        self.component_Q0 = []
+        self.component_d = []
+        self.component_samples = []
+        self.shared_m_mc = []
+        self.shared_Rm_mc = []
 
-        # Combined surrogate samples (weighted)
-        self.Q_surrogate = None
-
-        # CVaR values
+        self.Q_surrogate = np.zeros(0)
         self.t_opt = 0.0
         self.cvar = 0.0
 
-        # Smooth plus for CVaR
-        self.smoothplus = SmoothPlusApproximationQuartic(epsilon=self.epsilon)
+    def _copy_z(self, z):
+        self.z.zero()
+        if isinstance(z, np.ndarray):
+            idx = self.z.local_range()
+            self.z.set_local(z[idx[0] : idx[1]])
+            self.z.apply("")
+        else:
+            self.z.axpy(1.0, z)
+        self.objective_is_current = False
 
-        # For gradient computation
-        self.dominant_component_idx = 0
+    def _cache_objective_z(self):
+        self.z_at_objective.zero()
+        self.z_at_objective.axpy(1.0, self.z)
+        self.objective_is_current = True
+
+    def _objective_matches_current_z(self):
+        if not self.objective_is_current:
+            return False
+        self.z_diff.zero()
+        self.z_diff.axpy(1.0, self.z_at_objective)
+        self.z_diff.axpy(-1.0, self.z)
+        return self.z_diff.inner(self.z_diff) <= 1e-20
+
+    def _cache_direction_z(self):
+        self.z_at_direction.zero()
+        self.z_at_direction.axpy(1.0, self.z)
+        self.direction_is_current = True
+
+    def _direction_matches_current_z(self):
+        if not self.direction_is_current:
+            return False
+        self.direction_diff.zero()
+        self.direction_diff.axpy(1.0, self.z_at_direction)
+        self.direction_diff.axpy(-1.0, self.z)
+        return self.direction_diff.inner(self.direction_diff) <= 1e-20
 
     def _compute_direction(self):
-        """Compute decomposition direction (KLE or HEP)."""
+        """Compute the dominant mixture-splitting direction (KLE or HEP)."""
+        if self.direction == "hep" and self.direction_computed:
+            if not self._direction_matches_current_z():
+                self.direction_computed = False
+                self.direction_is_current = False
+
         if self.direction_computed:
             return
 
-        # Solve forward and adjoint at prior mean first
         self.x_all[CONTROL] = self.z
         self.x_all[PARAMETER] = self.prior.mean
         self.pde.solveFwd(self.x, self.x_all)
@@ -121,36 +194,38 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            # Compute dominant HEP eigenvector
-            omega = MultiVector(self.pde.generate_parameter(), 64)
+            omega = MultiVector(self.pde.generate_parameter(), 15)
             rand = Random()
-            for i in range(64):
+            for i in range(15):
                 rand.normal(1.0, omega[i])
 
+            # doublePassG returns eigenvectors U satisfying U^T R U = I, so
+            # lambda_psi = <psi, R psi>^{-1} = 1 for the returned direction.
             d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
-
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
+            self.psi.zero()
             self.psi.axpy(1.0, U[0])
-            self.lambda_psi = 1.0  # U is already C^{-1}-orthonormal
+            self.lambda_psi = 1.0
+            dominant_eigenvalue = float(d[0])
 
             if self.verbose and self.mpi_rank == 0:
-                print(f"  [Mixture Quad] Using HEP direction, dominant eigenvalue = {d[0]:.4e}")
-
-        else:  # KLE direction
-            # Use power iteration to get dominant KLE eigenvector
+                print(
+                    f"  [Mixture Quad CVaR] Using HEP direction, "
+                    f"dominant eigenvalue = {dominant_eigenvalue:.4e}"
+                )
+        else:
             v = dl.Function(self.pde.Vh[PARAMETER]).vector()
             rand = Random()
             rand.normal(1.0, v)
 
             for _ in range(50):
                 w = dl.Function(self.pde.Vh[PARAMETER]).vector()
-                self.prior.Rsolver.solve(w, v)  # w = C @ v
+                self.prior.Rsolver.solve(w, v)
                 norm_w = np.sqrt(w.inner(w))
                 if norm_w > 1e-14:
                     v.zero()
                     v.axpy(1.0 / norm_w, w)
 
-            # Normalize to have unit C^{-1}-norm
             R_v = dl.Function(self.pde.Vh[PARAMETER]).vector()
             self.prior.R.mult(v, R_v)
             norm_sq = v.inner(R_v)
@@ -162,10 +237,9 @@ class _TaylorMixtureQuadraticCVaRLegacy:
             self.lambda_psi = 1.0
 
             if self.verbose and self.mpi_rank == 0:
-                print(f"  [Mixture Quad] Using KLE direction")
+                print("  [Mixture Quad CVaR] Using KLE direction")
 
-        # Construct mixture component means in parameter space
-        mix_means_1d = self.mix_1d['means']
+        mix_means_1d = self.mix_1d["means"]
         sqrt_lambda = np.sqrt(self.lambda_psi)
 
         self.m_bar_i = []
@@ -176,248 +250,314 @@ class _TaylorMixtureQuadraticCVaRLegacy:
             self.m_bar_i.append(m_i)
 
         self.direction_computed = True
+        self._cache_direction_z()
 
-    def _compute_mixture_cvar(self):
-        """Compute CVaR from weighted mixture of component samples.
+    def _component_settings(self):
+        return taylor_quadratic_cvar_settings(
+            {
+                "beta": self.beta,
+                "N_tr": self.N_tr,
+                "N_mc": self.N_mc,
+                "epsilon": self.epsilon,
+                "correction": False,
+                "N_mc_correction": 0,
+                "verbose": False,
+            }
+        )
 
-        CVaR = min_t { t + (1-α)⁻¹ Σ_i w_i E_νi[(Q_i - t)^+] }
+    # Get mc samples for estimating cvar. The samples are from N(0, C_i) where C_i is C + (sigma^2-1)*lambda_psi*psi*psi^T, which is
+    # shared by all clusters from generating clusterwise MC samples. 
+    def _build_shared_component_samples(self, shifted_prior):
+        """Sample perturbations with covariance C_i shared by all mixture components."""
+        sigma = float(self.mix_1d["sigma"])
+        random_gen = Random(myid=0, nproc=self.mpi_size)
 
-        where E_νi[(Q_i - t)^+] ≈ (1/M) Σ_k (Q_i^(k) - t)^+
-        """
-        # Initial guess from weighted percentile
-        all_samples = np.concatenate(self.component_samples)
-        t_init = np.percentile(all_samples, self.beta * 100)
+        self.shared_m_mc = []
+        self.shared_Rm_mc = []
 
-        def cvar_obj(t):
-            """CVaR objective as function of t."""
-            val = t
-            for i in range(self.N_mix):
-                w_i = self.component_weights[i]
-                samples_i = self.component_samples[i]
-                # Use smooth plus approximation
-                excess = self.smoothplus(samples_i - t)
-                val += w_i * np.mean(excess) / (1.0 - self.beta)
-            return val
+        for _ in range(self.N_mc):
+            # Generate the noise vector for sampling from the shifted prior
+            noise = dl.Vector()
+            self.prior.init_vector(noise, "noise")
+            random_gen.normal(1.0, noise)
 
-        def cvar_grad(t):
-            """Gradient of CVaR objective w.r.t. t."""
-            grad = 1.0
-            for i in range(self.N_mix):
-                w_i = self.component_weights[i]
-                samples_i = self.component_samples[i]
-                grad -= w_i * np.mean(self.smoothplus.grad(samples_i - t)) / (1.0 - self.beta)
-            return grad
+            # Sampling from the base prior
+            base_sample = dl.Vector()
+            self.prior.init_vector(base_sample, 1)
+            self.prior.sample(noise, base_sample, add_mean=False)
 
-        # Gradient descent to find optimal t
-        t = t_init
-        lr = 0.1
-        for _ in range(100):
-            g = cvar_grad(t)
-            if abs(g) < 1e-8:
-                break
-            t = t - lr * g
+            # To generate samples from N(0, C_i), we apply change of variables below: 
+            # m_shift = m_base + (sigma - 1) * lambda_psi <psi, C^{-1} m_base> psi, 
+            # which should have covariance C_i = C + (sigma^2 - 1) * lambda_psi * psi * psi^T. 
+            
+            # Computes <psi, C^{-1} m_base> for the covariance shift
+            base_precision = dl.Vector()
+            self.prior.init_vector(base_precision, 1)
+            self.prior.R.mult(base_sample, base_precision) # base_precision = C^{-1} m_base
 
-        return t, cvar_obj(t)
+            coeff = self.psi.inner(base_precision)
 
-    def _sample_quadratic_component(self, Q0, g_tilde, d, n_samples, sigma_sq):
-        """Generate surrogate samples from quadratic Taylor at a component.
+            # Compute m_shift = m_base + (sigma - 1) * lambda_psi * coef * psi
+            #  Here lambda_psi = <psi, C^{-1} psi>^{-1} = 1 since psi is normalized in the prior covariance norm. 
+            shifted_sample = dl.Vector()
+            self.prior.init_vector(shifted_sample, 1)
+            shifted_sample.axpy(1.0, base_sample)
+            shifted_sample.axpy((sigma - 1.0) * coeff, self.psi)
 
-        Uses efficient sampling formula:
-            Q_qua = Q0 + sigma' * y0 + sum_j (g_tilde_j * yj + 0.5 * |dj| * yj^2)
+            # Compute C_i^{-1} m_shift
+            shifted_precision = dl.Vector()
+            self.prior.init_vector(shifted_precision, 1)
+            shifted_prior.R.mult(shifted_sample, shifted_precision)
 
-        where the covariance is modified by the mixture: C_i = C + (sigma^2-1)*lambda*psi@psi^T
+            self.shared_m_mc.append(shifted_sample)
+            self.shared_Rm_mc.append(shifted_precision)
 
-        Args:
-            Q0: QoI value at component mean
-            g_tilde: Projected gradient (g_tilde_j = <phi_j, g>)
-            d: Hessian eigenvalues
-            n_samples: Number of samples to generate
-            sigma_sq: Mixture variance scaling (sigma_i^2)
+    def _prepare_component_solver(self, m_i):
+        sigma_sq = float(self.mix_1d["sigma"] ** 2) # sigma for 1D GMM component, squared
+        alpha = (sigma_sq - 1.0) * float(self.lambda_psi) # Coefficient for shifting
+        prior_i = _ShiftedPrior(
+            self.prior,
+            m_i,
+            self.psi,
+            alpha,
+            sigma_sq,
+            self.lambda_psi,
+        )
 
-        Returns:
-            Array of surrogate samples
-        """
-        np.random.seed(42 + int(Q0 * 1000) % 1000)  # Deterministic but different per component
+        # Use cost functional objective for a single Gaussian component
+        solver = _TaylorQuadraticCVaRLegacy(
+            self._component_settings(),
+            self.model,
+            prior_i,
+            penalization=None,
+            tol=self.tol,
+        )
 
-        r = len(d)
-        samples = np.zeros(n_samples)
+        # Replace the constructor-generated samples with covariance-consistent
+        # mixture samples shared across components.
+        solver.m_mc = self.shared_m_mc
+        solver.Rm_mc = self.shared_Rm_mc
 
-        # Use absolute eigenvalues for CVaR (to capture full spread)
-        d_abs = np.abs(d)
+        solver._copy_z(self.z)
+        solver._linearize_at_mean()
+        solver._compute_eigendecomposition()
+        solver._compute_mode_increments()
+        solver._compute_surrogate_samples()
+        return solver
 
-        # Generate samples
-        for k in range(n_samples):
-            y = np.random.randn(r)
+    # Compute the cvar objective for the mixture
+    def _mixture_cvar_objective(self, t):
+        value = float(t)
+        scale = 1.0 / (1.0 - self.beta)
+        # Each component's contribution to cvar is 1/(1-beta) * w_i * np.mean(smoothplus(Q_surrogate - t)), w_i the component weight
+        for i, solver in enumerate(self.component_solvers):
+            value += self.component_weights[i] * np.mean(
+                self.smoothplus(solver.Q_surrogate - t)
+            ) * scale
+        return float(value)
 
-            # Linear term: sum_j g_tilde_j * yj
-            linear_term = np.dot(g_tilde, y)
+    # Compute the optimal t, which is the Value at Risk.
+    def _compute_global_t(self):
+        all_samples = np.concatenate([solver.Q_surrogate for solver in self.component_solvers])
+        all_weights = np.concatenate(
+            [
+                np.full(solver.N_mc, self.component_weights[i] / solver.N_mc)
+                for i, solver in enumerate(self.component_solvers)
+            ]
+        )
+        t_init = _weighted_quantile(all_samples, all_weights, self.beta)
 
-            # Quadratic term: 0.5 * sum_j |dj| * yj^2
-            # Note: The mixture scaling affects variance through the prior modification
-            # For simplicity, we use the original eigenvalues but scale by sigma_sq
-            quad_term = 0.5 * np.sum(d_abs * y ** 2)
+        def objective_for_fmin(t_arr):
+            return self._mixture_cvar_objective(float(np.atleast_1d(t_arr)[0]))
 
-            samples[k] = Q0 + linear_term + quad_term
+        minimum = scipy.optimize.fmin(
+            objective_for_fmin,
+            t_init,
+            disp=False,
+            xtol=1e-10,
+            ftol=1e-10,
+        )
+        t_opt = float(minimum[0])
+        return t_opt, self._mixture_cvar_objective(t_opt)
 
-        return samples
+    def _refresh_component_weights_and_adjoint_data(self):
+        for i, solver in enumerate(self.component_solvers):
+            solver.t_opt = self.t_opt
+            solver.plus_grad = solver.smoothplus.grad(solver.Q_surrogate - self.t_opt) # The smoothplus derivative at sample k, E_k(t)
+            # Keep the inner component adjoint solves identical to the
+            # single-Gaussian quadratic CVaR normalization. The cluster weight
+            # w_i is applied only when combining the final component gradients.
+            scale = 1.0 / ((1.0 - self.beta) * solver.N_mc)
+            solver.sample_weights = scale * solver.plus_grad
+            solver.sample_weight_sum = float(np.sum(solver.sample_weights))
+            solver._build_eigen_adjoint_vectors()
+            solver._cache_objective_z()
 
     def objective(self):
-        """Compute CVaR objective using Gaussian mixture quadratic Taylor."""
         self._compute_direction()
 
-        sigma_1d = self.mix_1d['sigma']
-        sigma_sq = sigma_1d ** 2
+        # Samples (m_i^{k} - \bar{m}_i)s for each cluster i, the samples are from N(0, C_i)
+        sigma_sq = float(self.mix_1d["sigma"] ** 2)
+        alpha = (sigma_sq - 1.0) * float(self.lambda_psi)
+        shared_prior = _ShiftedPrior(
+            self.prior,
+            self.prior.mean,
+            self.psi,
+            alpha,
+            sigma_sq,
+            self.lambda_psi,
+        )
+        self._build_shared_component_samples(shared_prior)
 
+        self.component_solvers = []
         self.component_Q0 = []
+        self.component_d = []
         self.component_samples = []
 
-        # Pre-compute R @ psi = C^{-1} @ psi
-        R_psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
-        self.prior.R.mult(self.psi, R_psi)
-
-        all_weighted_samples = []
-
         for i in range(self.N_mix):
-            m_i = self.m_bar_i[i]
-            w_i = self.component_weights[i]
+            solver = self._prepare_component_solver(self.m_bar_i[i])
+            self.component_solvers.append(solver)
+            self.component_Q0.append(float(solver.Q_0))
+            self.component_d.append(np.array(solver.d, copy=True))
+            self.component_samples.append(np.array(solver.Q_surrogate, copy=True))
 
-            # Solve forward at component mean m_i
-            x_i = self.model.generate_vector(STATE)
-            y_i = self.model.generate_vector(STATE)
-            x_all_i = [x_i, m_i, y_i, self.z]
-
-            self.pde.solveFwd(x_i, x_all_i)
-            x_all_i[STATE] = x_i
-
-            # Compute QoI at component mean
-            Q0_i = self.qoi.cost(x_all_i)
-            self.component_Q0.append(Q0_i)
-
-            # Solve adjoint at component mean
-            rhs_i = self.model.generate_vector(STATE)
-            self.qoi.adj_rhs(x_all_i, rhs_i)
-            self.pde.solveAdj(y_i, x_all_i, rhs_i)
-            x_all_i[ADJOINT] = y_i
-
-            # Set linearization point for Hessian
-            self.pde.setLinearizationPoint(x_all_i, False)
-            self.qoi.setLinearizationPoint(x_all_i)
-
-            # Compute gradient g_i = DQ(m_i) w.r.t. parameter
-            x_fun = vector2Function(x_i, self.pde.Vh[STATE])
-            y_fun = vector2Function(y_i, self.pde.Vh[ADJOINT])
-            m_fun = vector2Function(m_i, self.pde.Vh[PARAMETER])
-            z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
-
-            form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
-            m_test = dl.TestFunction(self.pde.Vh[PARAMETER])
-            g_i = dl.assemble(dl.derivative(form, m_fun, m_test))
-
-            # Compute Hessian eigendecomposition at component mean
-            # Note: This uses C_i as preconditioner, but for simplicity we use C
-            # (the paper notes this approximation is often sufficient)
-            omega = MultiVector(self.pde.generate_parameter(), self.N_tr + 10)
-            rand = Random()
-            for j in range(self.N_tr + 10):
-                rand.normal(1.0, omega[j])
-
-            d_i, U_i = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=1)
-
-            # Compute projected gradient g_tilde_j = <phi_j, g_i>
-            g_tilde = np.zeros(self.N_tr)
-            for j in range(self.N_tr):
-                g_tilde[j] = U_i[j].inner(g_i)
-
-            # Generate surrogate samples for this component
-            samples_i = self._sample_quadratic_component(Q0_i, g_tilde, d_i, self.N_mc, sigma_sq)
-            self.component_samples.append(samples_i)
-
-            # Add weighted samples to combined pool
-            # For CVaR, we need to sample from the mixture
-            n_weighted = int(w_i * self.N_mc * self.N_mix)
-            if n_weighted > 0:
-                indices = np.random.choice(self.N_mc, size=min(n_weighted, self.N_mc), replace=True)
-                all_weighted_samples.extend(samples_i[indices])
-
-        # Compute CVaR using weighted expectation over mixture components
-        # CVaR = min_t { t + (1-α)⁻¹ Σ_i w_i (1/M) Σ_k (Q_i^(k) - t)^+ }
-        self.t_opt, self.cvar = self._compute_mixture_cvar()
-
-        # Store combined samples for analysis (not used for CVaR computation)
+        # Compute the cvar objective
+        self.t_opt, self.cvar = self._compute_global_t()
+        self._refresh_component_weights_and_adjoint_data()
         self.Q_surrogate = np.concatenate(self.component_samples)
 
-        # Find dominant component for gradient
-        self.dominant_component_idx = np.argmax(self.component_weights)
-
         if self.verbose and self.mpi_rank == 0:
-            print(f"  [Mixture Quad CVaR] N_mix={self.N_mix}, t_opt={self.t_opt:.4e}, CVaR={self.cvar:.4e}")
-            for i in range(self.N_mix):
-                print(f"    Component {i}: Q0={self.component_Q0[i]:.4e}, "
-                      f"samples mean={np.mean(self.component_samples[i]):.4e}, "
-                      f"w={self.component_weights[i]:.4f}")
+            print(
+                f"  [Mixture Quad CVaR] N_mix={self.N_mix}, "
+                f"t_opt={self.t_opt:.4e}, CVaR={self.cvar:.4e}"
+            )
+            print(
+                "                        component Q0[:min(5,N_mix)]={}".format(
+                    self.component_Q0[: min(5, len(self.component_Q0))]
+                )
+            )
 
         return self.cvar
 
+    # Compute the z-gradient contribution from eah component
+    def _component_z_gradient(self, solver):
+        """Evaluate one component's z-gradient with the already-fixed global t_opt."""
+        solver.solveAdjIncrementalAdj()
+        solver.solveAdjIncrementalFwd()
+        solver.solveAdjAdj()
+        solver.solveAdjFwd()
+
+        dzq = solver.model.generate_vector(CONTROL)
+
+        x_fun = vector2Function(solver.x, solver.pde.Vh[STATE])
+        y_fun = vector2Function(solver.y, solver.pde.Vh[ADJOINT])
+        m_fun = vector2Function(solver.m, solver.pde.Vh[PARAMETER])
+        z_fun = vector2Function(solver.z, solver.pde.Vh[CONTROL])
+        form = solver.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        z_test = dl.TestFunction(solver.pde.Vh[CONTROL])
+
+        # Compute 1/(1-beta)K_i E_ik(t_opt) * <\tilde z, r_mz (m_i^k - \bar m_i)>
+        for k in range(solver.N_mc):
+            mhat_fun = vector2Function(solver.m_mc[k], solver.pde.Vh[PARAMETER])
+            dmr = dl.derivative(form, m_fun, mhat_fun)
+            dmzr = solver.model.generate_vector(CONTROL)
+            dl.assemble(dl.derivative(dmr, z_fun, z_test), tensor=dmzr)
+            dzq.axpy(solver.sample_weights[k], dmzr) # Sample weight here contains w_i
+
+        ystar_fun = vector2Function(solver.ystar, solver.pde.Vh[ADJOINT])
+        dyr = dl.derivative(form, y_fun, ystar_fun)
+        dyzr = solver.model.generate_vector(CONTROL)
+        dl.assemble(dl.derivative(dyr, z_fun, z_test), tensor=dyzr)
+        dzq.axpy(1.0, dyzr)
+
+        xstar_fun = vector2Function(solver.xstar, solver.pde.Vh[STATE])
+        dxr = dl.derivative(form, x_fun, xstar_fun)
+        dxzr = solver.model.generate_vector(CONTROL)
+        dl.assemble(dl.derivative(dxr, z_fun, z_test), tensor=dxzr)
+        dzq.axpy(1.0, dxzr)
+
+        for i in range(solver.N_tr):
+            (
+                _dyzr,
+                _dxzr,
+                dyxzr,
+                dymzr,
+                dxyzr,
+                dxxzr,
+                dxmzr,
+                dmmzr,
+                dmyzr,
+                dmxzr,
+                dmxzq,
+                dmmzq,
+                dxxzq,
+                dxmzq,
+            ) = solver.pde.gradientControl(
+                solver.x_all,
+                solver.xstar,
+                solver.ystar,
+                solver.xhat[i],
+                solver.xhatstar[i],
+                solver.mhat[i],
+                solver.mhatstar[i],
+                solver.yhat[i],
+                solver.yhatstar[i],
+                solver.qoi,
+            )
+
+            dzq.axpy(1.0, dyxzr)
+            dzq.axpy(1.0, dymzr)
+            dzq.axpy(1.0, dxyzr)
+            dzq.axpy(1.0, dxxzr)
+            dzq.axpy(1.0, dxmzr)
+            dzq.axpy(1.0, dmmzr)
+            dzq.axpy(1.0, dmyzr)
+            dzq.axpy(1.0, dmxzr)
+
+            # The following four terms are zero if Q only explicitly depends on state x
+            dzq.axpy(1.0, dmxzq)
+            dzq.axpy(1.0, dmmzq)
+            dzq.axpy(1.0, dxxzq)
+            dzq.axpy(1.0, dxmzq)
+
+        return dzq
+
     def costValue(self, z):
-        """Evaluate cost at control z."""
         self.func_ncalls += 1
-        self.z.zero()
-        self.z.axpy(1.0, z)
+        self._copy_z(z)
+
         objective = self.objective()
+        self._cache_objective_z()
+        self.grad_cache = None
+
         penalty = 0.0 if self.penalization is None else self.penalization.cost(self.z)
         return objective + penalty
 
     def costGradient(self, z):
-        """Compute gradient of cost at control z.
-
-        Uses simplified gradient through the dominant mixture component.
-        """
         self.grad_ncalls += 1
-        self.z.zero()
-        self.z.axpy(1.0, z)
-        self.objective()  # Ensure components are computed
+        self._copy_z(z)
+
+        if not self._objective_matches_current_z():
+            self.objective()
+            self._cache_objective_z()
 
         dz = self.model.generate_vector(CONTROL)
 
-        # Simplified gradient: use the dominant component's gradient
-        i = self.dominant_component_idx
-        m_i = self.m_bar_i[i]
+        # Final mixture gradient is the weighted combination sum_i w_i * grad_i.
+        for i, solver in enumerate(self.component_solvers):
+            dz.axpy(self.component_weights[i], self._component_z_gradient(solver))
 
-        # Solve forward and adjoint at dominant component
-        x_i = self.model.generate_vector(STATE)
-        y_i = self.model.generate_vector(STATE)
-        x_all_i = [x_i, m_i, y_i, self.z]
-
-        self.pde.solveFwd(x_i, x_all_i)
-        x_all_i[STATE] = x_i
-
-        rhs_i = self.model.generate_vector(STATE)
-        self.qoi.adj_rhs(x_all_i, rhs_i)
-        self.pde.solveAdj(y_i, x_all_i, rhs_i)
-        x_all_i[ADJOINT] = y_i
-
-        self.pde.setLinearizationPoint(x_all_i, False)
-
-        # Gradient w.r.t. control
-        self.pde.evalGradientControl(x_all_i, dz)
-
-        # Add penalization gradient
         if self.penalization is not None:
             pen = self.model.generate_vector(CONTROL)
             self.penalization.grad(self.z, pen)
             dz.axpy(1.0, pen)
 
-        norm = np.sqrt(dz.inner(dz))
         self.grad_cache = dz.copy()
-        return dz, norm
+        return dz, np.sqrt(dz.inner(dz))
 
 
 class TaylorMixtureQuadraticCVaRControlCostFunctional(ControlCostFunctional):
-    """Gaussian mixture with quadratic Taylor CVaR approximation.
-
-    Uses surrogate MC sampling from generalized chi-squared for each component.
-    The mixture decomposes the prior along a dominant direction (KLE or HEP).
-    """
+    """Gaussian mixture with quadratic Taylor CVaR approximation."""
 
     def __init__(
         self,
@@ -429,37 +569,39 @@ class TaylorMixtureQuadraticCVaRControlCostFunctional(ControlCostFunctional):
     ):
         self.settings = taylor_mixture_quadratic_cvar_settings(settings)
         self._legacy = _TaylorMixtureQuadraticCVaRLegacy(
-            self.settings, control_model, prior, penalization, tol
+            self.settings,
+            control_model,
+            prior,
+            penalization,
+            tol,
         )
 
     @property
     def cvar(self):
-        """Return the CVaR value."""
         return self._legacy.cvar
 
     @property
     def t_opt(self):
-        """Return the optimal CVaR threshold."""
         return self._legacy.t_opt
 
     @property
     def component_Q0(self):
-        """Return QoI values at component means."""
         return self._legacy.component_Q0
 
     @property
+    def component_d(self):
+        return self._legacy.component_d
+
+    @property
     def component_samples(self):
-        """Return surrogate samples for each component."""
         return self._legacy.component_samples
 
     @property
     def component_weights(self):
-        """Return mixture weights."""
         return self._legacy.component_weights
 
     @property
     def Q_surrogate(self):
-        """Return combined surrogate samples."""
         return self._legacy.Q_surrogate
 
     def generate_vector(self, component="ALL"):
@@ -482,6 +624,4 @@ class TaylorMixtureQuadraticCVaRControlCostFunctional(ControlCostFunctional):
         return np.sqrt(g.inner(g))
 
 
-__all__ = [
-    "TaylorMixtureQuadraticCVaRControlCostFunctional",
-]
+__all__ = ["TaylorMixtureQuadraticCVaRControlCostFunctional"]

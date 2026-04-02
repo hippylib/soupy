@@ -1,14 +1,22 @@
-"""Second-order (quadratic) Taylor approximation with CVaR risk measure.
+"""Second-order Taylor CVaR approximation based on a truncated Hessian spectrum.
 
-For quadratic Taylor approximation:
-    Q(m) ≈ Q₀ + g^T(m - m̄) + ½(m - m̄)^T H (m - m̄)
+The implementation follows the smooth CVaR surrogate
 
-Using the truncated eigendecomposition H ≈ U D U^T, and with ξ = U^T R (m - m̄) ~ N(0, I):
-    Q(ξ) ≈ Q₀ + g̃^T ξ + ½ Σᵢ dᵢ ξᵢ²
+    J_quad(z, t)
+      = t + 1 / ((1 - beta) K) sum_k [Q_quad^(k) - t]^+_eps + P(z),
 
-where g̃ = U^T g_param. This is a generalized chi-squared distribution.
+where
 
-CVaR is computed by Monte Carlo sampling from the Taylor surrogate (cheap - no PDE solves).
+    Q_quad^(k)
+      = Q(bar m)
+        + <Q_m(bar m), m^(k) - bar m>_M
+        + 0.5 sum_j lambda_j
+            <C^{-1} psi_j, m^(k) - bar m>_M^2.
+
+The dominant eigenpairs (lambda_j, psi_j) are computed with the randomized
+double-pass eigensolver applied to the reduced Hessian. The CVaR scalar
+minimization over ``t`` uses the quartic smooth-plus approximation already
+available in SOUPy.
 """
 
 from __future__ import annotations
@@ -18,55 +26,34 @@ from typing import Optional, Union
 
 import dolfin as dl
 import numpy as np
-from hippylib import Random, vector2Function, MultiVector
+import scipy.optimize
+from hippylib import MultiVector, Random, vector2Function
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.smoothPlusApproximation import SmoothPlusApproximationQuartic
-from ...modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
+from ...modeling.variables import ADJOINT, CONTROL, PARAMETER, STATE
 from .settings import taylor_quadratic_cvar_settings
 
 
 def surrogate_cvar_from_samples(samples, beta, epsilon=1e-4):
-    """Compute CVaR from samples using smooth approximation.
-
-    CVaR_β[Q] = min_t { t + E[max(0, Q - t)] / (1-β) }
-
-    Uses smooth plus approximation and finds optimal t.
-
-    Args:
-        samples: Array of sample values
-        beta: Risk level (e.g., 0.95 for 95% CVaR)
-        epsilon: Smoothing parameter
-
-    Returns:
-        (t_opt, cvar_value): Optimal threshold and CVaR value
-    """
-    # Initial guess from sample quantile
-    t_init = np.percentile(samples, beta * 100)
+    """Compute the smoothed CVaR from scalar samples by minimizing over ``t``."""
+    samples = np.asarray(samples, dtype=float)
+    quantile = float(np.percentile(samples, beta * 100.0))
     smoothplus = SmoothPlusApproximationQuartic(epsilon=epsilon)
 
     def cvar_obj(t):
-        return t + np.mean(smoothplus(samples - t)) / (1 - beta)
+        return float(t + np.mean(smoothplus(samples - t)) / (1.0 - beta))
 
-    def cvar_grad(t):
-        return 1 - np.mean(smoothplus.grad(samples - t)) / (1 - beta)
-
-    # Simple gradient descent to find optimal t
-    t = t_init
-    lr = 0.1
-    for _ in range(100):
-        g = cvar_grad(t)
-        if abs(g) < 1e-8:
-            break
-        t = t - lr * g
-
-    return t, cvar_obj(t)
+    minimum = scipy.optimize.fmin(cvar_obj, quantile, disp=False, xtol=1e-10, ftol=1e-10) # Use the quantile as an initial guess
+    # The quantile here is not the optimal solution as as the smooth-plus approximation is not exact, but it is a good initial guess. 
+    t_opt = float(minimum[0])
+    return t_opt, cvar_obj(t_opt)
 
 
 class _TaylorQuadraticCVaRLegacy:
-    """Implementation of quadratic Taylor approximation with CVaR risk measure."""
+    """Quadratic Taylor CVaR approximation with adjoint-based z-gradient."""
 
     def __init__(self, settings, model, prior, penalization, tol=1e-9):
         self.settings = settings
@@ -78,6 +65,10 @@ class _TaylorQuadraticCVaRLegacy:
         self.tol = tol
 
         self.z = model.generate_vector(CONTROL)
+        self.z_at_objective = model.generate_vector(CONTROL)
+        self.z_diff = model.generate_vector(CONTROL)
+        self.objective_is_current = False
+
         self.m = prior.mean
         self.x = model.generate_vector(STATE)
         self.y = model.generate_vector(STATE)
@@ -88,19 +79,25 @@ class _TaylorQuadraticCVaRLegacy:
 
         self.rhs_fwd = model.generate_vector(STATE)
         self.rhs_adj = model.generate_vector(STATE)
+        self.rhs_adj2 = model.generate_vector(STATE)
+        self.rhs_adj3 = model.generate_vector(STATE)
+        self.rhs_adj4 = model.generate_vector(STATE)
 
         self.xstar = model.generate_vector(STATE)
         self.ystar = model.generate_vector(STATE)
+        self.zero_state = model.generate_vector(STATE)
         self.mhelp = model.generate_vector(PARAMETER)
+        self.Hmhat1 = model.generate_vector(PARAMETER)
         self.Cdmq = model.generate_vector(PARAMETER)
         self.dmq = model.generate_vector(PARAMETER)
 
         self.func_ncalls = 0
         self.grad_ncalls = 0
+        self.hess_ncalls = 0
 
+        self.beta = settings["beta"]
         self.N_tr = settings["N_tr"]
-        self.beta = settings["beta"]  # CVaR risk level
-        self.N_mc = settings["N_mc"]  # Surrogate MC samples
+        self.N_mc = settings["N_mc"]
         self.epsilon = settings["epsilon"]
 
         try:
@@ -108,68 +105,96 @@ class _TaylorQuadraticCVaRLegacy:
         except (KeyError, ValueError):
             self.verbose = False
 
-        try:
-            self.correction = settings["correction"]
-        except (KeyError, ValueError):
-            self.correction = False
-
-        try:
-            self.N_mc_correction = settings["N_mc_correction"]
-        except (KeyError, ValueError):
-            self.N_mc_correction = 0
+        # The theory provided by the user does not include the old PDE correction.
+        # Keep the setting for API compatibility but do not apply an extra correction.
+        self.correction = False
+        self.N_mc_correction = 0
 
         self.xhat = [model.generate_vector(STATE) for _ in range(self.N_tr)]
-        self.yhat = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
+        self.yhat = [model.generate_vector(STATE) for _ in range(self.N_tr)]
+        self.xhatstar = [model.generate_vector(STATE) for _ in range(self.N_tr)]
+        self.yhatstar = [model.generate_vector(STATE) for _ in range(self.N_tr)]
+        self.mhat = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
+        self.mhatstar = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
+        self._omega_base = [model.generate_vector(PARAMETER) for _ in range(self.N_tr + 5)]
+        rand = Random()
+        for i in range(self.N_tr + 5):
+            rand.normal(1.0, self._omega_base[i])
 
-        # MPI setup
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
         self.mpi_size = dl.MPI.size(self.pde.Vh[STATE].mesh().mpi_comm())
 
-        # Eigenvalue storage
-        self.d = None  # Eigenvalues
-        self.U = None  # Eigenvectors (MultiVector)
-
-        # Taylor statistics
-        self.Q_0 = 0.0
-        self.lin_var = 0.0  # Linear Taylor variance
-        self.g_tilde = None  # Projected gradient g̃ = U^T g
-
-        # CVaR components
-        self.cvar = 0.0
-        self.t_opt = 0.0  # Optimal threshold
-        self.Q_surrogate = None  # Surrogate samples
-
-        # Smooth plus for CVaR
         self.smoothplus = SmoothPlusApproximationQuartic(epsilon=self.epsilon)
 
-        # MC correction setup (PDE-based samples)
-        if self.correction and self.N_mc_correction > 0:
-            self.m_mc = []
-            self.x_mc = []
-            self.Q_mc = np.zeros(self.N_mc_correction)
-            randomGen = Random(myid=0, nproc=self.mpi_size)
-            for _ in range(self.N_mc_correction):
-                noise = dl.Vector()
-                prior.init_vector(noise, "noise")
-                randomGen.normal(1.0, noise)
+        self.m_mc = []
+        self.Rm_mc = []
+        random_gen = Random(myid=0, nproc=self.mpi_size)
+        for _ in range(self.N_mc):
+            noise = dl.Vector()
+            prior.init_vector(noise, "noise")
+            random_gen.normal(1.0, noise)
 
-                sample = dl.Vector()
-                prior.init_vector(sample, 1)
-                prior.sample(noise, sample, add_mean=False)
-                self.m_mc.append(sample)
-                self.x_mc.append(self.pde.generate_state())
+            # Sample parameters m^(k) from the prior and store m^(k) - bar m
+            sample = dl.Vector()
+            prior.init_vector(sample, 1)
+            prior.sample(noise, sample, add_mean=False)
+            self.m_mc.append(sample)
 
-            self.cvar_diff = 0.0
+            # Compute C^{-1} (m^(k) - bar m) for the sample
+            rsample = dl.Vector()
+            prior.init_vector(rsample, 1)
+            prior.R.mult(sample, rsample)
+            self.Rm_mc.append(rsample)
 
-    def objectiveLinear(self):
-        """Compute linear Taylor components (Q₀, dmq, Cdmq)."""
+        self.d = np.zeros(self.N_tr)
+        self.U = None
+        self.Q_0 = 0.0
+        self.t_opt = 0.0
+        self.cvar = 0.0
+        self.Q_surrogate = np.zeros(self.N_mc)
+        self.linear_terms = np.zeros(self.N_mc)
+        self.projections = np.zeros((self.N_tr, self.N_mc))
+        self.plus_grad = np.zeros(self.N_mc)
+        self.sample_weights = np.zeros(self.N_mc)
+        self.sample_weight_sum = 0.0
+        self.eig_adjoint_coeffs = np.zeros((self.N_tr, self.N_tr))
+
+        self.tobj = 0.0
+        self.tgrad = 0.0
+
+    def _copy_z(self, z):
+        self.z.zero()
+        if isinstance(z, np.ndarray):
+            idx = self.z.local_range()
+            self.z.set_local(z[idx[0]:idx[1]])
+            self.z.apply("")
+        else:
+            self.z.axpy(1.0, z)
+        self.objective_is_current = False
+
+    def _cache_objective_z(self):
+        self.z_at_objective.zero()
+        self.z_at_objective.axpy(1.0, self.z)
+        self.objective_is_current = True
+
+    def _objective_matches_current_z(self):
+        if not self.objective_is_current:
+            return False
+        self.z_diff.zero()
+        self.z_diff.axpy(1.0, self.z_at_objective)
+        self.z_diff.axpy(-1.0, self.z)
+        return self.z_diff.inner(self.z_diff) <= 1e-20
+
+    def _linearize_at_mean(self):
+        # Solve state equation for the state. 
         self.x_all[CONTROL] = self.z
         self.pde.solveFwd(self.x, self.x_all)
-        Q0 = self.qoi.cost(self.x_all)
+        self.Q_0 = self.qoi.cost(self.x_all)
         self.x_all[STATE] = self.x
 
+        # Solve adjoint equation for the adjoint. 
         rhs = self.model.generate_vector(STATE)
         self.qoi.adj_rhs(self.x_all, rhs)
         self.pde.solveAdj(self.y, self.x_all, rhs)
@@ -178,200 +203,550 @@ class _TaylorQuadraticCVaRLegacy:
         self.pde.setLinearizationPoint(self.x_all, False)
         self.qoi.setLinearizationPoint(self.x_all)
 
-        self.Q_0 = Q0
-        self.x_fun = vector2Function(self.x, self.pde.Vh[STATE])
-        self.y_fun = vector2Function(self.y, self.pde.Vh[ADJOINT])
-        self.m_fun = vector2Function(self.m, self.pde.Vh[PARAMETER])
-        self.z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
+        x_fun = vector2Function(self.x, self.pde.Vh[STATE])
+        y_fun = vector2Function(self.y, self.pde.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.pde.Vh[PARAMETER])
+        z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
+        form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
 
-        form = self.pde.varf_handler(self.x_fun, self.m_fun, self.y_fun, self.z_fun)
+        # Compute \bar Q_m, which is  \bar r_m when the state and adjoint equations holds.  
         m_test = dl.TestFunction(self.pde.Vh[PARAMETER])
         self.dmq.zero()
-        self.dmq.axpy(1.0, dl.assemble(dl.derivative(form, self.m_fun, m_test)))
+        self.dmq.axpy(1.0, dl.assemble(dl.derivative(form, m_fun, m_test)))
         self.prior.Rsolver.solve(self.Cdmq, self.dmq)
-        self.lin_var = self.dmq.inner(self.Cdmq)
 
-        return Q0
-
-    def objective(self):
-        """Compute the CVaR objective using quadratic Taylor surrogate sampling."""
-        Q0 = self.objectiveLinear()
-
-        # Compute dominant Hessian eigenvalues/eigenvectors
+    # Estimate the dominant eigenvalues and dominant eigenvectors (incremental states and adjoints are solved in the Hessian action)
+    def _compute_eigendecomposition(self):
         omega = MultiVector(self.pde.generate_parameter(), self.N_tr + 5)
-        rand = Random()
         for i in range(self.N_tr + 5):
-            rand.normal(1.0, omega[i])
+            omega[i].zero()
+            omega[i].axpy(1.0, self._omega_base[i])
+        self.d, self.U = doublePassG(
+            self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=1
+        )
 
-        self.d, self.U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=1)
+    def _hessian_inner(self, mhat1, mhat2):
+        xhat = self.pde.generate_state()
+        yhat = self.pde.generate_state()
 
-        # Compute state increments for each eigendirection (needed for gradient)
+        # Solve incremental state for \hat u_j
+        self.pde.apply_ij(ADJOINT, PARAMETER, mhat1, self.rhs_fwd)
+        self.pde.solveIncremental(xhat, -self.rhs_fwd, False)
+
+        # Solve incremental adjoint for \hat v_j
+        self.rhs_adj.zero()
+        self.pde.apply_ij(STATE, STATE, xhat, self.rhs_adj)
+        self.pde.apply_ij(STATE, PARAMETER, mhat1, self.rhs_adj2)
+        self.rhs_adj.axpy(1.0, self.rhs_adj2)
+        self.qoi.apply_ij(STATE, STATE, xhat, self.rhs_adj3)
+        self.rhs_adj.axpy(1.0, self.rhs_adj3)
+        self.qoi.apply_ij(STATE, PARAMETER, mhat1, self.rhs_adj4) # this term is zero is Q does not explicitly depends on m
+        self.rhs_adj.axpy(1.0, self.rhs_adj4)
+        self.pde.solveIncremental(yhat, -self.rhs_adj, True)
+
+        # Replace Q_mm \psi_j by r_{mm} \psi_j + r_{mu} \hat{u_j} + r_{mv}\hat{v_j}
+        self.pde.apply_ij(PARAMETER, PARAMETER, mhat1, self.Hmhat1)
+        self.pde.apply_ij(PARAMETER, ADJOINT, yhat, self.mhelp)
+        self.Hmhat1.axpy(1.0, self.mhelp)
+        self.pde.apply_ij(PARAMETER, STATE, xhat, self.mhelp)
+        self.Hmhat1.axpy(1.0, self.mhelp)
+        self.qoi.apply_ij(PARAMETER, ADJOINT, yhat, self.mhelp) # this term is zero is Q does not explicitly depends on m
+        self.Hmhat1.axpy(1.0, self.mhelp)
+        self.qoi.apply_ij(PARAMETER, STATE, xhat, self.mhelp) # this term is zero is Q does not explicitly depends on m
+        self.Hmhat1.axpy(1.0, self.mhelp)
+
+        return mhat2.inner(self.Hmhat1), xhat, yhat
+
+    def _compute_mode_increments(self):
         for i in range(self.N_tr):
+            self.mhat[i].zero()
+            self.mhat[i].axpy(1.0, self.U[i]) # Extracts each eigenvector psi_j
+            _, xhat_i, yhat_i = self._hessian_inner(self.mhat[i], self.mhat[i]) # Extracts incremental states \hat u_j and incremental adjoint \hat v_j
             self.xhat[i].zero()
+            self.xhat[i].axpy(1.0, xhat_i)
             self.yhat[i].zero()
-            self.pde.apply_ij(ADJOINT, PARAMETER, self.U[i], self.rhs_fwd)
-            self.pde.solveIncremental(self.xhat[i], -self.rhs_fwd, False)
-            self.pde.apply_ij(PARAMETER, STATE, self.xhat[i], self.yhat[i])
+            self.yhat[i].axpy(1.0, yhat_i)
 
-        # Compute projected gradient g̃ = U^T (R^{-1} dmq)
-        # Note: dmq = dQ/dm, and we want g̃_k = U_k^T C dmq = U_k^T R^{-1} dmq
-        # Since Cdmq = R^{-1} dmq, g̃_k = U_k · Cdmq (but U is R-orthonormal)
-        # Actually: g̃_k = U_k · dmq (since U^T R U = I, U_k · (R^{-1} dmq) = U_k · Cdmq
-        # Wait, let me reconsider. If U^T R U = I, then U_k is in the R^{-1} inner product space.
-        # For ξ = U^T R (m - m̄), the linear term g^T(m - m̄) becomes:
-        # g^T(m - m̄) = dmq^T (m - m̄) = dmq^T R^{-1} R (m - m̄)
-        # = (R^{-1} dmq)^T R (m - m̄) = Cdmq^T R (m - m̄)
-        # = (U Cdmq)^T U^T R (m - m̄) wait, this is getting confusing.
-        # Let me just compute: g̃_k = R U_k · Cdmq = U_k^T R R^{-1} dmq = U_k^T dmq
-        # So g̃_k = U_k · dmq (standard inner product)
-        self.g_tilde = np.zeros(self.N_tr)
-        for k in range(self.N_tr):
-            self.g_tilde[k] = self.U[k].inner(self.dmq)
+    def _compute_surrogate_samples(self):
+        self.Q_surrogate.fill(self.Q_0) # \bar Q
+        for k in range(self.N_mc):
+            lin_k = self.dmq.inner(self.m_mc[k]) # <Q_m(bar m), m^(k) - bar m>_M
+            self.linear_terms[k] = lin_k
+            self.Q_surrogate[k] += lin_k
 
-        # Generate surrogate samples: Q(ξ) = Q₀ + g̃^T ξ + 0.5 * Σᵢ |dᵢ| ξᵢ²
-        # where ξ ~ N(0, I)
-        # NOTE: We use |d| instead of d for CVaR computation because:
-        # - Negative eigenvalues indicate concave curvature in the parameter space
-        # - For CVaR (tail risk), negative eigenvalues would incorrectly reduce variance
-        # - Using |d| ensures we capture the full spread of the QoI distribution
-        np.random.seed(42)  # For reproducibility
-        xi_samples = np.random.randn(self.N_mc, self.N_tr)
+        for j in range(self.N_tr):
+            for k in range(self.N_mc):
+                self.projections[j, k] = self.U[j].inner(self.Rm_mc[k]) # <C^{-1} psi_j, m^(k) - bar m>_M
+            self.Q_surrogate += 0.5 * self.d[j] * self.projections[j, :] ** 2 # 0.5 sum_j lambda_j <C^{-1} psi_j, m^(k) - bar m>_M^2
 
-        # Use absolute values of eigenvalues for CVaR (captures spread, not just convex part)
-        d_abs = np.abs(self.d)
-
-        self.Q_surrogate = np.zeros(self.N_mc)
-        for i in range(self.N_mc):
-            xi = xi_samples[i, :]
-            # Linear term: g̃^T ξ
-            linear_term = np.dot(self.g_tilde, xi)
-            # Quadratic term: 0.5 * Σ |d_k| ξ_k² (use absolute eigenvalues)
-            quad_term = 0.5 * np.sum(d_abs * xi ** 2)
-            self.Q_surrogate[i] = Q0 + linear_term + quad_term
-
-        # Compute CVaR from surrogate samples
         self.t_opt, self.cvar = surrogate_cvar_from_samples(
             self.Q_surrogate, self.beta, self.epsilon
         )
+        self.plus_grad = self.smoothplus.grad(self.Q_surrogate - self.t_opt) # The gradient of smooth approx (E_1, ..., E_k)
+        scale = 1.0 / ((1.0 - self.beta) * self.N_mc)
+        self.sample_weights = scale * self.plus_grad
+        self.sample_weight_sum = float(np.sum(self.sample_weights))
 
-        # MC correction using actual PDE samples (if enabled)
-        # Uses mean bias correction: shift surrogate samples by E[Q_true - Q_taylor]
-        # This is more stable than trying to correct CVaR directly with few samples
-        self.mean_correction = 0.0
-        self.cvar_corrected = self.cvar
-        if self.correction and self.N_mc_correction > 0:
-            Q_true = np.zeros(self.N_mc_correction)
-            Q_taylor_samples = np.zeros(self.N_mc_correction)
+    def _build_eigen_adjoint_vectors(self):
+        self.eig_adjoint_coeffs.fill(0.0)
+        eig_tol = 1e-12
 
-            # Pre-compute R * m_sample for eigenvector projections
-            R_m_samples = []
-            for i in range(self.N_mc_correction):
-                R_m = self.pde.generate_parameter()
-                self.prior.R.mult(self.m_mc[i], R_m)
-                R_m_samples.append(R_m)
+        # Solve the linear system: system*a = rhs for augmented coefficient vector a. 
+        # The unknown vector to solve for is a = (a_j1, ..., a_jN_tr, lambda_j^*)^T, where psi_j^* \approx \sum_ell a_jell psi_ell
+        # Solve for the coefficients a_jell = <psi_j^*, C^{-1} psi_ell> and lambda_j^*
+        for j in range(self.N_tr):
+            # Solve the projected system formed by:
+            #   1) dL / d lambda_j = 0
+            #   2) dL / d psi_j = 0, tested against the reduced basis {psi_ell}
+            #
+            # Unknowns are the reduced coefficients of psi_j^* in the basis
+            # {psi_ell} together with the scalar lambda_j^*.
+            system = np.zeros((self.N_tr + 1, self.N_tr + 1))
+            rhs = np.zeros(self.N_tr + 1)
 
-            for i in range(self.N_mc_correction):
-                m_sample = self.m_mc[i]
+            # Projected psi_j-stationarity equations.
+            for ell in range(self.N_tr):
+                cross = float(
+                    np.dot(
+                        self.sample_weights, # Sample weights is 1/((1-beta)K) * E_k(t)
+                        self.projections[j, :] * self.projections[ell, :],# The term 1/((1-beta)K) * sum_k p_{jk}^2, where p_{jk} = <C^{-1} psi_j, m^(k) - bar m>_M <C^{-1} psi_ell, m^(k) - bar m>_M 
+                    )
+                )
 
-                # Compute m_i = m_bar + m_sample
-                m_i = self.pde.generate_parameter()
-                m_i.axpy(1.0, self.m)
-                m_i.axpy(1.0, m_sample)
+                # ell == j is the only time such that the term 2\lambda_j^* <psi_ell, C^{-1} psi_j> is 2*lambda_j but not zero
+                if ell == j:
+                    system[ell, -1] = 2.0 # The coefficient for lambda_j^*, which is a component of the unknown vector a
+                    rhs[ell] = -self.d[j] * cross # The term 1/((1-beta)K) * lambda_j * sum_k p_{jk}^2, where p_{jk} = <C^{-1} psi_j, m^(k) - bar m>_M <C^{-1} psi_ell, m^(k) - bar m>_M 
+                    # In this case the term <\psi_j^*, Q_mm psi_ell - \lambda_jC^{-1} psi_ell> is zero because Q_mm psi_ell = \lambda_jC^{-1} psi_ell  
+                    continue
 
-                # Solve forward problem at m_i
-                x_all_mc = [self.x_mc[i], m_i, self.y, self.z]
-                self.pde.solveFwd(self.x_mc[i], x_all_mc)
+                gap = self.d[ell] - self.d[j]
+                if abs(gap) <= eig_tol:
+                    # In a numerically degenerate eigenspace we impose a zero
+                    # off-diagonal coefficient as a gauge condition.
+                    system[ell, ell] = 1.0
+                    rhs[ell] = 0.0
+                else:
+                    # Here is the coefficient for psi_j^*, which is Q_mm psi_ell - lambda_j C^{-1} psi_ell
+                    # r_mm psi_ell - lambda_j C^{-1} psi_ell = (lambda_ell - lambda_j) C^{-1} psi_ell
+                    # So the term is actually (lambda_ell - lambda_j) <psi_j^*, C^{-1} psi_ell>
+                    # Now we decompose psi_j^* = \sum_ell a_jell psi_ell, so the term is (lambda_ell - lambda_j) a_jell
+                    system[ell, ell] = gap
+                    rhs[ell] = -self.d[j] * cross # The term 1/((1-beta)K) * lambda_j * sum_k p_{jk}^2, where p_{jk} = <C^{-1} psi_j, m^(k) - bar m>_M <C^{-1} psi_ell, m^(k) - bar m>_M 
 
-                # Compute true QoI value Q(m_i)
-                Q_true[i] = self.qoi.cost([self.x_mc[i], m_i, self.y, self.z])
-                self.Q_mc[i] = Q_true[i]
-
-                # Compute Taylor approximation at this sample
-                linear_term = self.dmq.inner(m_sample)
-                quad_term = 0.0
-                for k in range(self.N_tr):
-                    Uk_dot_Rm = self.U[k].inner(R_m_samples[i])
-                    quad_term += self.d[k] * Uk_dot_Rm ** 2
-                quad_term *= 0.5
-                Q_taylor_samples[i] = Q0 + linear_term + quad_term
-
-            # Compute mean bias correction: E[Q_true - Q_taylor]
-            self.mean_correction = np.mean(Q_true) - np.mean(Q_taylor_samples)
-
-            # Shift surrogate samples by mean correction and recompute CVaR
-            Q_surrogate_corrected = self.Q_surrogate + self.mean_correction
-            _, self.cvar_corrected = surrogate_cvar_from_samples(
-                Q_surrogate_corrected, self.beta, self.epsilon
+            # Projected lambda_j-stationarity equation:
+            # <psi_j^*, C^{-1} psi_j> = 0.5 * sum_k w_k p_{jk}^2.
+            system[-1, j] = 1.0
+            rhs[-1] = 0.5 * float(
+                np.dot(self.sample_weights, self.projections[j, :] ** 2)
             )
 
-        cost = self.cvar_corrected
+            # Solve linear system
+            try:
+                solution = np.linalg.solve(system, rhs)
+            except np.linalg.LinAlgError:
+                solution, _, _, _ = np.linalg.lstsq(system, rhs, rcond=None)
+
+            self.eig_adjoint_coeffs[j, :] = solution[: self.N_tr]
+
+            # Use \sum_ell <\psi_j^*, C^{-1} \psi_ell> \psi_ell to approximate
+            # the eigenvector adjoint \psi_j^* inside the truncated eigenspace.
+            self.mhatstar[j].zero()
+            for ell in range(self.N_tr):
+                coeff = self.eig_adjoint_coeffs[j, ell]
+                if abs(coeff) > 0.0:
+                    self.mhatstar[j].axpy(coeff, self.U[ell])
+
+    def objective(self):
+        self._linearize_at_mean()
+        self._compute_eigendecomposition()
+        self._compute_mode_increments()
+        self._compute_surrogate_samples()
+        self._build_eigen_adjoint_vectors()
 
         if self.verbose and self.mpi_rank == 0:
-            print(f"  [Quadratic Taylor CVaR] Q0={Q0:.3e}, CVaR={self.cvar:.3e}, t_opt={self.t_opt:.3e}")
-            print(f"                          eigenvalues[:5]={self.d[:min(5, len(self.d))]}")
-            if self.correction and self.N_mc_correction > 0:
-                print(f"                          mean_correction={self.mean_correction:.3e}, CVaR_corrected={self.cvar_corrected:.3e}")
+            print(
+                "  [Quadratic Taylor CVaR] Q0={:.3e}, CVaR={:.3e}, t_opt={:.3e}".format(
+                    self.Q_0, self.cvar, self.t_opt
+                )
+            )
+            print(
+                "                          sum(E_k)/((1-beta)K)={:.6e}".format(
+                    self.sample_weight_sum
+                )
+            )
+            print(
+                "                          eigenvalues[:5]={}".format(
+                    self.d[: min(5, len(self.d))]
+                )
+            )
 
-        return cost
+        return self.cvar
+
+    def _forSolveAdjAdj(self, xhat, xhatstar, mhat, mhatstar):
+        x_fun = vector2Function(self.x, self.pde.Vh[STATE])
+        y_fun = vector2Function(self.y, self.pde.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.pde.Vh[PARAMETER])
+        z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
+        xhat_fun = vector2Function(xhat, self.pde.Vh[STATE])
+        xhatstar_fun = vector2Function(xhatstar, self.pde.Vh[STATE])
+        mhat_fun = vector2Function(mhat, self.pde.Vh[PARAMETER])
+        mhatstar_fun = vector2Function(mhatstar, self.pde.Vh[PARAMETER])
+
+        form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        y_test = dl.TestFunction(self.pde.Vh[ADJOINT])
+
+        dxr = dl.derivative(form, x_fun, xhatstar_fun)
+
+        dxxr = dl.derivative(dxr, x_fun, xhat_fun)
+        dxxyr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dxxr, y_fun, y_test), tensor=dxxyr)
+        [bc.apply(dxxyr) for bc in self.pde.bc0]
+
+        dxmr = dl.derivative(dxr, m_fun, mhat_fun)
+        dxmyr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dxmr, y_fun, y_test), tensor=dxmyr)
+        [bc.apply(dxmyr) for bc in self.pde.bc0]
+
+        dmr = dl.derivative(form, m_fun, mhatstar_fun)
+        dmyr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmr, y_fun, y_test), tensor=dmyr)
+        [bc.apply(dmyr) for bc in self.pde.bc0]
+
+        dmr = dl.derivative(form, m_fun, mhatstar_fun)
+        dmmr = dl.derivative(dmr, m_fun, mhat_fun)
+        dmmyr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmmr, y_fun, y_test), tensor=dmmyr)
+        [bc.apply(dmmyr) for bc in self.pde.bc0]
+
+        dmxr = dl.derivative(dmr, x_fun, xhat_fun)
+        dmxyr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmxr, y_fun, y_test), tensor=dmxyr)
+        [bc.apply(dmxyr) for bc in self.pde.bc0]
+
+        return dmyr, dxxyr, dxmyr, dmmyr, dmxyr
+
+    def _forSolveAdjFwd(self, xhat, xhatstar, mhat, mhatstar, yhat, yhatstar):
+        x_fun = vector2Function(self.x, self.pde.Vh[STATE])
+        y_fun = vector2Function(self.y, self.pde.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.pde.Vh[PARAMETER])
+        z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
+        xhat_fun = vector2Function(xhat, self.pde.Vh[STATE])
+        xhatstar_fun = vector2Function(xhatstar, self.pde.Vh[STATE])
+        mhat_fun = vector2Function(mhat, self.pde.Vh[PARAMETER])
+        mhatstar_fun = vector2Function(mhatstar, self.pde.Vh[PARAMETER])
+        yhat_fun = vector2Function(yhat, self.pde.Vh[ADJOINT])
+        yhatstar_fun = vector2Function(yhatstar, self.pde.Vh[ADJOINT])
+
+        form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        x_test = dl.TestFunction(self.pde.Vh[STATE])
+
+        dyr = dl.derivative(form, y_fun, yhatstar_fun)
+
+        dyxr = dl.derivative(dyr, x_fun, xhat_fun)
+        dyxxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dyxr, x_fun, x_test), tensor=dyxxr)
+        [bc.apply(dyxxr) for bc in self.pde.bc0]
+
+        dymr = dl.derivative(dyr, m_fun, mhat_fun)
+        dymxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dymr, x_fun, x_test), tensor=dymxr)
+        [bc.apply(dymxr) for bc in self.pde.bc0]
+
+        dxr = dl.derivative(form, x_fun, xhatstar_fun)
+
+        dxyr = dl.derivative(dxr, y_fun, yhat_fun)
+        dxyxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dxyr, x_fun, x_test), tensor=dxyxr)
+        [bc.apply(dxyxr) for bc in self.pde.bc0]
+
+        dxxr = dl.derivative(dxr, x_fun, xhat_fun)
+        dxxxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dxxr, x_fun, x_test), tensor=dxxxr)
+        [bc.apply(dxxxr) for bc in self.pde.bc0]
+
+        dxmr = dl.derivative(dxr, m_fun, mhat_fun)
+        dxmxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dxmr, x_fun, x_test), tensor=dxmxr)
+        [bc.apply(dxmxr) for bc in self.pde.bc0]
+
+        dxxxq = self.pde.generate_state()
+        self.qoi.apply_ijk(STATE, STATE, STATE, xhatstar, xhat, dxxxq)
+        [bc.apply(dxxxq) for bc in self.pde.bc0]
+
+        dmr = dl.derivative(form, m_fun, mhat_fun)
+        dmxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmr, x_fun, x_test), tensor=dmxr)
+        [bc.apply(dmxr) for bc in self.pde.bc0]
+
+        dmr = dl.derivative(form, m_fun, mhatstar_fun)
+        dmmr = dl.derivative(dmr, m_fun, mhat_fun)
+        dmmxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmmr, x_fun, x_test), tensor=dmmxr)
+        [bc.apply(dmmxr) for bc in self.pde.bc0]
+
+        dmyr = dl.derivative(dmr, y_fun, yhat_fun)
+        dmyxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmyr, x_fun, x_test), tensor=dmyxr)
+        [bc.apply(dmyxr) for bc in self.pde.bc0]
+
+        dmxr2 = dl.derivative(dmr, x_fun, xhat_fun)
+        dmxxr = self.pde.generate_state()
+        dl.assemble(dl.derivative(dmxr2, x_fun, x_test), tensor=dmxxr)
+        [bc.apply(dmxxr) for bc in self.pde.bc0]
+
+        dxmxq = self.pde.generate_state()
+        self.qoi.apply_ijk(STATE, PARAMETER, STATE, xhatstar, mhat, dxmxq)
+        [bc.apply(dxmxq) for bc in self.pde.bc0]
+
+        dmmxq = self.pde.generate_state()
+        self.qoi.apply_ijk(PARAMETER, PARAMETER, STATE, mhatstar, mhat, dmmxq)
+        [bc.apply(dmmxq) for bc in self.pde.bc0]
+
+        dmxxq = self.pde.generate_state()
+        self.qoi.apply_ijk(PARAMETER, STATE, STATE, mhatstar, xhat, dmxxq)
+        [bc.apply(dmxxq) for bc in self.pde.bc0]
+
+        return (
+            dmxr,
+            dyxxr,
+            dymxr,
+            dxyxr,
+            dxxxr,
+            dxmxr,
+            dxxxq,
+            dmmxr,
+            dmyxr,
+            dmxxr,
+            dxmxq,
+            dmmxq,
+            dmxxq,
+        )
+
+    def solveAdjIncrementalAdj(self):
+        for i in range(self.N_tr):
+            dmyr = self.pde.forSolveAdjIncrementalAdj(self.x_all, self.mhatstar[i])
+            rhs = self.pde.generate_state()
+            rhs.axpy(1.0, dmyr)
+            self.xhatstar[i].zero()
+            self.pde.solveIncremental(self.xhatstar[i], -rhs, False)
+
+    def solveAdjIncrementalFwd(self):
+        for i in range(self.N_tr):
+            dmxr, dxxr, dxxq = self.pde.forSolveAdjIncrementalFwd(
+                self.x_all, self.mhatstar[i], self.xhatstar[i], self.qoi
+            )
+            rhs = self.pde.generate_state()
+            rhs.axpy(1.0, dmxr)
+            rhs.axpy(1.0, dxxr)
+            rhs.axpy(1.0, dxxq)
+            self.yhatstar[i].zero()
+            self.pde.solveIncremental(self.yhatstar[i], -rhs, True)
+
+    def solveAdjAdj(self):
+        xstarrhs = self.pde.generate_state()
+        for k in range(self.N_mc):
+            dmyr_k = self.pde.forSolveAdjIncrementalAdj(self.x_all, self.m_mc[k])
+            xstarrhs.axpy(self.sample_weights[k], dmyr_k)
+
+        for i in range(self.N_tr):
+            _, dxxyr, dxmyr, dmmyr, dmxyr = self._forSolveAdjAdj(
+                self.xhat[i], self.xhatstar[i], self.mhat[i], self.mhatstar[i]
+            )
+            xstarrhs.axpy(1.0, dxxyr)
+            xstarrhs.axpy(1.0, dxmyr)
+            xstarrhs.axpy(1.0, dmmyr)
+            xstarrhs.axpy(1.0, dmxyr)
+
+        self.xstar.zero()
+        self.pde.solveIncremental(self.xstar, -xstarrhs, False)
+
+    def solveAdjFwd(self):
+        ystarrhs = self.pde.generate_state()
+        qoi_grad = self.pde.generate_state()
+        self.qoi.grad(STATE, self.x_all, qoi_grad)
+        [bc.apply(qoi_grad) for bc in self.pde.bc0]
+        ystarrhs.axpy(self.sample_weight_sum, qoi_grad)
+
+        sample_zero = self.zero_state
+        sample_zero.zero()
+        for k in range(self.N_mc):
+            dmxr_k, _, _ = self.pde.forSolveAdjIncrementalFwd(
+                self.x_all, self.m_mc[k], sample_zero, self.qoi
+            )
+            ystarrhs.axpy(self.sample_weights[k], dmxr_k)
+
+        ystarrhspde = self.pde.generate_state()
+        self.qoi.apply_ij(STATE, STATE, self.xstar, ystarrhspde)
+        ystarrhs.axpy(1.0, ystarrhspde)
+        self.pde.apply_ij(STATE, STATE, self.xstar, ystarrhspde)
+        ystarrhs.axpy(1.0, ystarrhspde)
+        [bc.apply(ystarrhs) for bc in self.pde.bc0]
+
+        for i in range(self.N_tr):
+            (
+                _dmxr,
+                dyxxr,
+                dymxr,
+                dxyxr,
+                dxxxr,
+                dxmxr,
+                dxxxq,
+                dmmxr,
+                dmyxr,
+                dmxxr,
+                _dxmxq,
+                _dmmxq,
+                _dmxxq,
+            ) = self._forSolveAdjFwd(
+                self.xhat[i],
+                self.xhatstar[i],
+                self.mhat[i],
+                self.mhatstar[i],
+                self.yhat[i],
+                self.yhatstar[i],
+            )
+            ystarrhs.axpy(1.0, dyxxr)
+            ystarrhs.axpy(1.0, dymxr)
+            ystarrhs.axpy(1.0, dxyxr)
+            ystarrhs.axpy(1.0, dxxxr)
+            ystarrhs.axpy(1.0, dxmxr)
+            ystarrhs.axpy(1.0, dxxxq)
+            ystarrhs.axpy(1.0, dmmxr)
+            ystarrhs.axpy(1.0, dmxxr)
+            ystarrhs.axpy(1.0, dmyxr)
+
+        self.ystar.zero()
+        self.pde.solveIncremental(self.ystar, -ystarrhs, True)
 
     def costValue(self, z):
-        """Evaluate cost at control z."""
         self.func_ncalls += 1
-        self.z.zero()
-        self.z.axpy(1.0, z)
+        self._copy_z(z)
+
+        tobj = time.time()
         objective = self.objective()
-        penalty = 0.0 if self.penalization is None else self.penalization.cost(self.z)
-        return objective + penalty
+        self.tobj = time.time() - tobj
+
+        self._cache_objective_z()
+        self.grad_cache = None
+
+        penalization = 0.0 if self.penalization is None else self.penalization.cost(self.z)
+        return objective + penalization
 
     def costGradient(self, z):
-        """Compute gradient of cost at control z.
-
-        This is the simplified version that ignores ∂d/∂z and ∂U/∂z terms.
-        The gradient is computed using the chain rule through the CVaR.
-        """
         self.grad_ncalls += 1
-        self.z.zero()
-        self.z.axpy(1.0, z)
-        self.objective()  # Ensure components are computed
+        self._copy_z(z)
+
+        if not self._objective_matches_current_z():
+            self.objective()
+            self._cache_objective_z()
+
+        tgrad = time.time()
+        self.solveAdjIncrementalAdj()
+        self.solveAdjIncrementalFwd()
+        self.solveAdjAdj()
+        self.solveAdjFwd()
+
+        dzq = self.model.generate_vector(CONTROL)
+
+        x_fun = vector2Function(self.x, self.pde.Vh[STATE])
+        y_fun = vector2Function(self.y, self.pde.Vh[ADJOINT])
+        m_fun = vector2Function(self.m, self.pde.Vh[PARAMETER])
+        z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
+        form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
+        z_test = dl.TestFunction(self.pde.Vh[CONTROL])
+
+        # Final z-gradient closed-form expression. 
+        for k in range(self.N_mc):
+            mhat_fun = vector2Function(self.m_mc[k], self.pde.Vh[PARAMETER])
+            dmr = dl.derivative(form, m_fun, mhat_fun)
+            dmzr = self.model.generate_vector(CONTROL)
+            dl.assemble(dl.derivative(dmr, z_fun, z_test), tensor=dmzr)
+            dzq.axpy(self.sample_weights[k], dmzr)
+
+        ystar_fun = vector2Function(self.ystar, self.pde.Vh[ADJOINT])
+        dyr = dl.derivative(form, y_fun, ystar_fun)
+        dyzr = self.model.generate_vector(CONTROL)
+        dl.assemble(dl.derivative(dyr, z_fun, z_test), tensor=dyzr)
+        dzq.axpy(1.0, dyzr)
+
+        xstar_fun = vector2Function(self.xstar, self.pde.Vh[STATE])
+        dxr = dl.derivative(form, x_fun, xstar_fun)
+        dxzr = self.model.generate_vector(CONTROL)
+        dl.assemble(dl.derivative(dxr, z_fun, z_test), tensor=dxzr)
+        dzq.axpy(1.0, dxzr)
+
+        for i in range(self.N_tr):
+            (
+                _dyzr,
+                _dxzr,
+                dyxzr,
+                dymzr,
+                dxyzr,
+                dxxzr,
+                dxmzr,
+                dmmzr,
+                dmyzr,
+                dmxzr,
+                dmxzq,
+                dmmzq,
+                dxxzq,
+                dxmzq,
+            ) = self.pde.gradientControl(
+                self.x_all,
+                self.xstar,
+                self.ystar,
+                self.xhat[i],
+                self.xhatstar[i],
+                self.mhat[i],
+                self.mhatstar[i],
+                self.yhat[i],
+                self.yhatstar[i],
+                self.qoi,
+            )
+
+            dzq.axpy(1.0, dyxzr)
+            dzq.axpy(1.0, dymzr)
+            dzq.axpy(1.0, dxyzr)
+            dzq.axpy(1.0, dxxzr)
+            dzq.axpy(1.0, dxmzr)
+            dzq.axpy(1.0, dmmzr)
+            dzq.axpy(1.0, dmyzr)
+            dzq.axpy(1.0, dmxzr)
+            # The terms below are all zero if QoI doesn not explicitly depends on m and z. 
+            dzq.axpy(1.0, dmxzq)
+            dzq.axpy(1.0, dmmzq)
+            dzq.axpy(1.0, dxxzq)
+            dzq.axpy(1.0, dxmzq)
 
         dz = self.model.generate_vector(CONTROL)
-
-        # For the simplified gradient, we use the fact that:
-        # CVaR = t + E[max(0, Q - t)] / (1-β)
-        # And Q_surrogate depends on z through Q₀, g̃, and d
-        #
-        # The full gradient would be:
-        # d(CVaR)/dz = E[smoothplus'(Q_s - t) * dQ_s/dz] / (1-β)
-        #
-        # where dQ_s/dz includes ∂Q₀/∂z, ∂g̃/∂z, and ∂d/∂z terms.
-        #
-        # Simplified: We only include ∂Q₀/∂z term (the dominant contribution)
-
-        # d(Q₀)/dz: gradient through adjoint (same as mean-variance case)
-        self.pde.evalGradientControl(self.x_all, dz)
-
-        # Add penalization gradient
+        dz.axpy(1.0, dzq)
         if self.penalization is not None:
             pen = self.model.generate_vector(CONTROL)
             self.penalization.grad(self.z, pen)
             dz.axpy(1.0, pen)
 
-        norm = np.sqrt(dz.inner(dz))
+        self.tgrad = time.time() - tgrad
         self.grad_cache = dz.copy()
-        return dz, norm
+        return dz, np.sqrt(dz.inner(dz))
 
     def costHessian(self, z, z_dir):
-        """Compute Hessian-vector product (simplified)."""
-        self.z.zero()
-        self.z.axpy(1.0, z)
+        """Fallback Hessian-vector product around the current linearization point.
+
+        The user request focused on correcting the quadratic CVaR objective and
+        its first derivative. For compatibility with the existing interface we
+        retain the same local second-variation fallback used in the previous port.
+        """
+        self.hess_ncalls += 1
+        self._copy_z(z)
         self.z_dir.zero()
         self.z_dir.axpy(1.0, z_dir)
 
-        # Ensure objective has been computed
-        self.objective()
+        if not self._objective_matches_current_z():
+            self.objective()
+            self._cache_objective_z()
 
         Vh = self.pde.Vh
-
         z_fun = vector2Function(self.z, Vh[CONTROL])
         z_dir_fun = vector2Function(self.z_dir, Vh[CONTROL])
         m_fun = vector2Function(self.m, Vh[PARAMETER])
@@ -380,7 +755,6 @@ class _TaylorQuadraticCVaRLegacy:
 
         r_form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
 
-        # Solve incremental forward
         x_trial = dl.TrialFunction(Vh[STATE])
         x_star = dl.Function(Vh[STATE])
         y_test = dl.TestFunction(Vh[ADJOINT])
@@ -391,10 +765,8 @@ class _TaylorQuadraticCVaRLegacy:
         rz_form = dl.derivative(r_form, z_fun, z_dir_fun)
         rzy_form = dl.derivative(rz_form, y_fun, y_test)
         Ly_form = -rzy_form
-
         dl.solve(rxy_form == Ly_form, x_star, self.pde.bc0)
 
-        # Solve incremental adjoint
         x_test = dl.TestFunction(Vh[STATE])
         y_trial = dl.TrialFunction(Vh[ADJOINT])
         y_star = dl.Function(Vh[ADJOINT])
@@ -412,10 +784,8 @@ class _TaylorQuadraticCVaRLegacy:
         rzx_form = dl.derivative(rz_form, x_fun, x_test)
 
         Lx_form = -(rxx_form + qxx_form + rzx_form)
-
         dl.solve(ryx_form == Lx_form, y_star, self.pde.bc0)
 
-        # Assemble Hessian action
         z_test = dl.TestFunction(Vh[CONTROL])
         ry_form = dl.derivative(r_form, y_fun, y_star)
         ryz_form = dl.derivative(ry_form, z_fun, z_test)
@@ -426,9 +796,7 @@ class _TaylorQuadraticCVaRLegacy:
         rz_form = dl.derivative(r_form, z_fun, z_dir_fun)
         rzz_form = dl.derivative(rz_form, z_fun, z_test)
 
-        Lz_form = ryz_form + rxz_form + rzz_form
-
-        Hz = dl.assemble(Lz_form)
+        Hz = dl.assemble(ryz_form + rxz_form + rzz_form)
 
         if self.penalization is not None:
             dzzp = self.model.generate_vector(CONTROL)
@@ -439,10 +807,7 @@ class _TaylorQuadraticCVaRLegacy:
 
 
 class TaylorQuadraticCVaRControlCostFunctional(ControlCostFunctional):
-    """Wrapper exposing the quadratic Taylor CVaR approximation.
-
-    Uses surrogate MC sampling from the generalized chi-squared distribution.
-    """
+    """Wrapper exposing the quadratic Taylor CVaR approximation."""
 
     def __init__(
         self,
@@ -459,33 +824,27 @@ class TaylorQuadraticCVaRControlCostFunctional(ControlCostFunctional):
 
     @property
     def Q_0(self):
-        """Return Q at prior mean."""
         return self._legacy.Q_0
 
     @property
     def cvar(self):
-        """Return the CVaR value from surrogate sampling."""
         return self._legacy.cvar
 
     @property
     def t_opt(self):
-        """Return the optimal CVaR threshold."""
         return self._legacy.t_opt
 
     @property
     def d(self):
-        """Return the Hessian eigenvalues."""
         return self._legacy.d
 
     @property
     def Q_surrogate(self):
-        """Return the surrogate samples."""
         return self._legacy.Q_surrogate
 
     @property
     def Q_mc(self):
-        """Return the PDE MC samples (if correction enabled)."""
-        return self._legacy.Q_mc if hasattr(self._legacy, 'Q_mc') else None
+        return None
 
     def generate_vector(self, component="ALL"):
         return self._legacy.model.generate_vector(component)
