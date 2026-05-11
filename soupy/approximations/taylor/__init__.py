@@ -15,6 +15,12 @@ from .mixture_linear_cvar import (
 from .mixture_quadratic_cvar import (
     TaylorMixtureQuadraticCVaRControlCostFunctional,
 )  # noqa: F401
+from .alternating_hep_linear_cvar import (
+    TaylorAlternatingHEPLinearCVaRControlCostFunctional,
+)  # noqa: F401
+from .alternating_hep_quadratic_cvar import (
+    TaylorAlternatingHEPQuadraticCVaRControlCostFunctional,
+)  # noqa: F401
 from .mixture_linear import (
     TaylorMixtureLinearControlCostFunctional,
     gaussian_mixture_mean_variance,
@@ -47,6 +53,8 @@ __all__ = [
     # Gaussian mixture Taylor CVaR approximations
     "TaylorMixtureLinearCVaRControlCostFunctional",
     "TaylorMixtureQuadraticCVaRControlCostFunctional",
+    "TaylorAlternatingHEPLinearCVaRControlCostFunctional",
+    "TaylorAlternatingHEPQuadraticCVaRControlCostFunctional",
     # Gaussian mixture Taylor mean-variance approximations
     "TaylorMixtureLinearControlCostFunctional",
     "TaylorMixtureQuadraticControlCostFunctional",

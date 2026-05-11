@@ -1,0 +1,1 @@
+iteration,model_cost,residual,iter_time_sec,rss_mb,peak_rss_mb,cost_rss_before_mb,cost_rss_after_mb,grad_rss_before_mb,grad_rss_after_mb

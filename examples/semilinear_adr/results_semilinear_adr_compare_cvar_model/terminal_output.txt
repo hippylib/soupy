@@ -1,0 +1,89 @@
+==========================================================================================
+Semilinear ADR CVaR Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep / alternating_hep_linear_cvar
+  mixture_quadratic_kle / mixture_quadratic_hep / alternating_hep_quadratic_cvar
+  saa_1 / saa_10 / saa_39 / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000
+  serial: linear / quadratic / saa_1 / saa_10 / saa_39
+  parallel on all ranks: mixture_* / alternating_hep_* / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000
+==========================================================================================
+Ground-truth exact-CVaR sample count: 100000
+cvar_beta=0.95, n_tr=10, n_mix=39, quadratic_cvar_n_mc=1000
+alternating_hep_steps=5
+penalty=0.001
+box constraint on control: 0.0 <= z <= 10.0
+control source term: f -> f + z
+initial control: zero everywhere
+terminal log file: results_semilinear_adr_compare_cvar_model/terminal_output.txt
+==========================================================================================
+/work/Wenbo/soupy/examples/semilinear_adr/semilinear_adr_problem.py:234: hIPPYlibExperimentalWarning: WARNING: VariationalQoi  is an experimental function in v3.0.0. Still need to work on handling Dirichlet boundary conditions for x[STATE]
+  qoi = hp.VariationalQoi(Vh, qoi_varf)
+
+Optimizing linear with L-BFGS-B ...
+  [linear              ] initial guess: zero control with t=0
+  [linear              ] initial: J_model(init)=1.215118e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=7.638e-01
+/work/Wenbo/soupy/examples/semilinear_adr/driver_semilinear_adr_compare_cvar_models.py:539: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
+  result = scipy.optimize.minimize(
+  [linear              ] done [root-only serial]: success=True, nit=0, avg_iter_time=0.37s
+  [linear              ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [linear              ] optimal: J_model(z*)=1.215118e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=7.638e-01
+
+Optimizing quadratic with L-BFGS-B ...
+  [quadratic           ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [quadratic           ] initial: J_model(init)=4.146831e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.938e-01
+  [quadratic           ] iter    1: J_model=3.092627e+00, ||g||=7.685e-02, RSS=1652.1 MB, PeakRSS=1637.7 MB, cost_mem=1652.1->1652.1 MB, grad_mem=1652.1->1652.1 MB
+  [quadratic           ] iter    2: J_model=3.090638e+00, ||g||=6.615e-02, RSS=1652.2 MB, PeakRSS=1637.7 MB, cost_mem=1652.2->1652.2 MB, grad_mem=1652.2->1652.2 MB
+  [quadratic           ] iter    3: J_model=3.090445e+00, ||g||=6.385e-02, RSS=1652.2 MB, PeakRSS=1637.7 MB, cost_mem=1652.2->1652.2 MB, grad_mem=1652.2->1652.2 MB
+  [quadratic           ] done [root-only serial]: success=True, nit=3, avg_iter_time=35.63s
+  [quadratic           ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [quadratic           ] optimal: J_model(z*)=3.090445e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=3.992e-01
+
+Optimizing mixture_linear_kle with L-BFGS-B ...
+  [mixture_linear_kle  ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_linear_kle  ] initial: J_model(init)=4.510756e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.231e-01
+  [mixture_linear_kle  ] done: success=True, nit=0, avg_iter_time=1.43s
+  [mixture_linear_kle  ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [mixture_linear_kle  ] optimal: J_model(z*)=4.510756e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=1.231e-01
+
+Optimizing mixture_linear_hep with L-BFGS-B ...
+  [mixture_linear_hep  ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_linear_hep  ] initial: J_model(init)=5.415257e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=5.277e-02
+  [mixture_linear_hep  ] done: success=True, nit=0, avg_iter_time=1.42s
+  [mixture_linear_hep  ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [mixture_linear_hep  ] optimal: J_model(z*)=5.415257e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=5.277e-02
+
+Optimizing alternating_hep_linear_cvar with L-BFGS-B ...
+  [alternating_hep_linear_cvar] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [alternating_hep_linear_cvar] initial: J_model(init)=5.415257e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=5.277e-02
+  [alternating_hep_linear_cvar] alternating outer step 1/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[1/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[1/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 2/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[2/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[2/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 3/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[3/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[3/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 4/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[4/5]] done: success=True, nit=0, avg_iter_time=3.33s
+  [alternating_hep_linear_cvar[4/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 5/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[5/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[5/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] optimal: J_model(z*)=5.415257e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=5.277e-02
+
+Optimizing mixture_quadratic_kle with L-BFGS-B ...
+  [mixture_quadratic_kle] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_quadratic_kle] initial: J_model(init)=1.511553e+01, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.939e+00
+  [mixture_quadratic_kle] iter    1: J_model=5.643105e+00, ||g||=7.937e-01, RSS=1691.6 MB, PeakRSS=1676.3 MB, cost_mem=1691.6->1691.6 MB, grad_mem=1691.6->1691.6 MB
+  [mixture_quadratic_kle] iter    2: J_model=5.425077e+00, ||g||=4.282e-01, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.6->1691.6 MB, grad_mem=1691.6->1691.7 MB
+  [mixture_quadratic_kle] iter    3: J_model=5.316626e+00, ||g||=1.519e-01, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
+  [mixture_quadratic_kle] iter    4: J_model=5.304734e+00, ||g||=9.036e-02, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
+  [mixture_quadratic_kle] iter    5: J_model=5.304301e+00, ||g||=8.595e-02, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
+  [mixture_quadratic_kle] iter    6: J_model=5.304301e+00, ||g||=8.597e-02, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
+  [mixture_quadratic_kle] done: success=True, nit=6, avg_iter_time=66.92s
+  [mixture_quadratic_kle] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] optimal: J_model(z*)=5.304301e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=3.120e-02
+
+Optimizing mixture_quadratic_hep with L-BFGS-B ...
+  [mixture_quadratic_hep] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_quadratic_hep] initial: J_model(init)=1.500907e+01, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.918e+00

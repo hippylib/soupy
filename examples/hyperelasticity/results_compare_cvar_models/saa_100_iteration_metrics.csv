@@ -1,0 +1,2 @@
+iteration,model_cost,residual,iter_time_sec,rss_mb,peak_rss_mb,cost_rss_before_mb,cost_rss_after_mb,grad_rss_before_mb,grad_rss_after_mb
+1,0.08319170306671822,0.0035518832558336525,nan,2600.17578125,2646.11328125,2600.17578125,2600.17578125,2600.17578125,2600.17578125

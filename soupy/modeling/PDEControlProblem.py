@@ -12,7 +12,7 @@
 # Software Foundation) version 3.0 dated June 2007.
 
 import numpy as np 
-import dolfin as dl 
+import dolfin as dl
 
 import sys, os
 import hippylib as hp
@@ -238,26 +238,55 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             self.Wzu = None
             self.Wzz = None
         else:
-            self.Wuu = dl.assemble(dl.derivative(g_form[STATE],x_fun[STATE]))
+            self.Wuu = self._assemble_matrix_reuse(
+                dl.derivative(g_form[STATE],x_fun[STATE]),
+                self.Wuu,
+            )
             # bc.zero can be used the set the rows corresponding to the d.o.f. of solution's Dirichlet B.C. to zero 
             # Since we have used full space for all function spaces, we have to set the coresponding rows and columns to zero. d
             [bc.zero(self.Wuu) for bc in self.bc0]
-            # print("WUU NORM", np.linalg.norm(self.Wuu.array()))
-            Wuu_t = hp.Transpose(self.Wuu)
-            [bc.zero(Wuu_t) for bc in self.bc0]
-            self.Wuu = hp.Transpose(Wuu_t)
-            self.Wmu = dl.assemble(dl.derivative(g_form[PARAMETER],x_fun[STATE]))
-            Wmu_t = hp.Transpose(self.Wmu)
-            [bc.zero(Wmu_t) for bc in self.bc0]
-            self.Wmu = hp.Transpose(Wmu_t)
-            self.Wmm = dl.assemble(dl.derivative(g_form[PARAMETER],x_fun[PARAMETER]))
+            self._zero_columns_in_place(self.Wuu)
+            self.Wmu = self._assemble_matrix_reuse(
+                dl.derivative(g_form[PARAMETER],x_fun[STATE]),
+                self.Wmu,
+            )
+            self._zero_columns_in_place(self.Wmu)
+            self.Wmm = self._assemble_matrix_reuse(
+                dl.derivative(g_form[PARAMETER],x_fun[PARAMETER]),
+                self.Wmm,
+            )
 
-            self.Wzu = dl.assemble(dl.derivative(g_form[CONTROL],x_fun[STATE]))
-            Wzu_t = hp.Transpose(self.Wzu)
-            [bc.zero(Wzu_t) for bc in self.bc0]
-            self.Wzu = hp.Transpose(Wzu_t)
-            self.Wzz = dl.assemble(dl.derivative(g_form[CONTROL],x_fun[CONTROL]))
+            self.Wzu = self._assemble_matrix_reuse(
+                dl.derivative(g_form[CONTROL],x_fun[STATE]),
+                self.Wzu,
+            )
+            self._zero_columns_in_place(self.Wzu)
+            self.Wzz = self._assemble_matrix_reuse(
+                dl.derivative(g_form[CONTROL],x_fun[CONTROL]),
+                self.Wzz,
+            )
 
+
+
+            # self.Wuu = dl.assemble(dl.derivative(g_form[STATE],x_fun[STATE]))
+            # # bc.zero can be used the set the rows corresponding to the d.o.f. of solution's Dirichlet B.C. to zero 
+            # # Since we have used full space for all function spaces, we have to set the coresponding rows and columns to zero. d
+            # [bc.zero(self.Wuu) for bc in self.bc0]
+            # # print("WUU NORM", np.linalg.norm(self.Wuu.array()))
+            # Wuu_t = hp.Transpose(self.Wuu)
+            # [bc.zero(Wuu_t) for bc in self.bc0]
+            # self.Wuu = hp.Transpose(Wuu_t)
+            # self.Wmu = dl.assemble(dl.derivative(g_form[PARAMETER],x_fun[STATE]))
+            # Wmu_t = hp.Transpose(self.Wmu)
+            # [bc.zero(Wmu_t) for bc in self.bc0]
+            # self.Wmu = hp.Transpose(Wmu_t)
+            # self.Wmm = dl.assemble(dl.derivative(g_form[PARAMETER],x_fun[PARAMETER]))
+
+            # self.Wzu = dl.assemble(dl.derivative(g_form[CONTROL],x_fun[STATE]))
+            # Wzu_t = hp.Transpose(self.Wzu)
+            # [bc.zero(Wzu_t) for bc in self.bc0]
+            # self.Wzu = hp.Transpose(Wzu_t)
+            # self.Wzz = dl.assemble(dl.derivative(g_form[CONTROL],x_fun[CONTROL]))
         
     def solveIncremental(self, out, rhs, is_adj):
         """ If :code:`is_adj == False`:
@@ -306,15 +335,13 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
 
         KKT[CONTROL, STATE] = self.Wzu
         KKT[CONTROL, CONTROL] = self.Wzz
-        if self.Cz is not None:
-            KKT[CONTROL, ADJOINT] = hp.Transpose(self.Cz)
-        else:
-            KKT[CONTROL, ADJOINT] = None
 
         if i == ADJOINT and j == CONTROL and self.Cz is not None:
             # Check Cz first since the index ordering is different with CONTROL 
-            # This avoids doing transpmult of hp.Tranpose(Cz)
+            # This avoids constructing an explicit transpose of Cz.
             self.Cz.mult(dir, out) 
+        elif i == CONTROL and j == ADJOINT and self.Cz is not None:
+            self.Cz.transpmult(dir, out)
 
         elif i >= j:
             if KKT[i,j] is None:
@@ -351,6 +378,38 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method=self.lu_method)
         else:
             return hp.PETScLUSolver(self.Vh[STATE].mesh().mpi_comm(), method="default")
+
+    def _assemble_matrix_reuse(self, form, tensor):
+        if tensor is None:
+            return dl.assemble(form)
+
+        dl.assemble(form, tensor=tensor)
+        return tensor
+
+    def _zero_columns_in_place(self, matrix):
+        col_scale = dl.Vector(self.Vh[STATE].mesh().mpi_comm())
+        matrix.init_vector(col_scale, 1)
+
+        local_range = col_scale.local_range()
+        local_values = np.ones(local_range[1] - local_range[0], dtype=np.float64)
+
+        constrained = set()
+        for bc in self.bc0:
+            constrained.update(bc.get_boundary_values().keys())
+
+        for dof in constrained:
+            if local_range[0] <= dof < local_range[1]:
+                local_values[dof - local_range[0]] = 0.0
+
+        col_scale.set_local(local_values)
+        col_scale.apply("")
+
+        matrix_backend = dl.as_backend_type(matrix)
+        matrix_mat = matrix_backend.mat() if hasattr(matrix_backend, "mat") else matrix_backend
+        scale_backend = dl.as_backend_type(col_scale)
+        scale_vec = scale_backend.vec() if hasattr(scale_backend, "vec") else scale_backend
+        matrix_mat.diagonalScale(None, scale_vec)
+        matrix_mat.assemble()
 
     # ------------------------------------------------------------------
     # Helpers for higher-order Taylor approximations

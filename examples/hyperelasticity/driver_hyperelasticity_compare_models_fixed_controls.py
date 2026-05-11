@@ -192,7 +192,8 @@ def main():
     parser.add_argument("--n-mix", type=int, default=11)
     parser.add_argument("--saa-samples", type=int, default=1000)
     parser.add_argument("--saa-seed", type=int, default=1)
-    parser.add_argument("--qoi-type", type=str, default="stiffness", choices=["all", "stiffness", "point"])
+    parser.add_argument("--qoi-type", type=str, default="virtual_work",
+                        choices=["all", "stiffness", "point", "virtual_work"])
     parser.add_argument("--penalty", type=float, default=1e-2)
     parser.add_argument("--z-seed", type=int, default=7)
     parser.add_argument("--save-dir", type=str, default="results_fixed_z_model_error")

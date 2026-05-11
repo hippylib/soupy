@@ -67,14 +67,14 @@ def fit_loglog_slope(epsilons, errors, start_idx, end_idx):
     slope, _ = np.polyfit(x, y, 1)
     return slope
 
-
 def main():
     parser = argparse.ArgumentParser(description="z-gradient FD check for hyperelasticity")
     parser.add_argument("--beta", type=float, default=1.0)
     parser.add_argument("--n-tr", type=int, default=10)
     parser.add_argument("--n-mix", type=int, default=11)
     parser.add_argument("--mix-direction", type=str, default="kle", choices=["hep", "kle"])
-    parser.add_argument("--qoi-type", type=str, default="stiffness", choices=["all", "stiffness", "point"])
+    parser.add_argument("--qoi-type", type=str, default="virtual_work",
+                        choices=["all", "stiffness", "point", "virtual_work"])
     parser.add_argument("--penalty", type=float, default=1e-1)
     parser.add_argument("--eps-min", type=float, default=1e-4)
     parser.add_argument("--eps-max", type=float, default=1e1)

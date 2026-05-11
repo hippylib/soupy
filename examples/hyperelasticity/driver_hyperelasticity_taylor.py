@@ -54,7 +54,7 @@ Arguments:
     --n-tr              : Number of dominant Hessian modes for quadratic (default: 10)
     --correction        : Enable Monte Carlo correction
     --num-mc            : Number of MC samples for correction (default: 16)
-    -q, --qoi_type      : QoI type {all, stiffness, point} (default: stiffness)
+    -q, --qoi_type      : QoI type {all, stiffness, point, virtual_work} (default: virtual_work)
     -p, --penalization  : Penalization scaling (default: 0.1)
     --maxiter           : Max L-BFGS-B iterations (default: 100)
     --print-every       : Print iteration info every N iterations (default: 1)
@@ -161,8 +161,8 @@ if __name__ == "__main__":
                         help="Enable Monte Carlo correction")
     parser.add_argument('--num-mc', type=int, default=16,
                         help="Number of MC samples for correction")
-    parser.add_argument('-q', '--qoi_type', type=str, default="stiffness",
-                        choices=["all", "stiffness", "point"])
+    parser.add_argument('-q', '--qoi_type', type=str, default="virtual_work",
+                        choices=["all", "stiffness", "point", "virtual_work"])
     parser.add_argument('-p', '--penalization', type=float, default=1e-1,
                         help="Scaling of penalization")
     parser.add_argument('--maxiter', type=int, default=100,

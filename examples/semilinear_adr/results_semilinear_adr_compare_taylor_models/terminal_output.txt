@@ -1,0 +1,336 @@
+==========================================================================================
+Semilinear ADR Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep
+  mixture_quadratic_kle / mixture_quadratic_hep
+  saa_1 / saa_10 / saa_39 / saa_100 / saa_1000 / saa_10000
+==========================================================================================
+Ground-truth SAA samples: 100000
+beta=0.1, n_tr=10, n_mix=39
+control source term: f -> f + z
+initial control: zero everywhere
+terminal log file: results_semilinear_adr_compare_taylor_models/terminal_output.txt
+==========================================================================================
+/work2/wenbo/soupy/examples/semilinear_adr/semilinear_adr_problem.py:234: hIPPYlibExperimentalWarning: WARNING: VariationalQoi  is an experimental function in v3.0.0. Still need to work on handling Dirichlet boundary conditions for x[STATE]
+  qoi = hp.VariationalQoi(Vh, qoi_varf)
+
+Optimizing linear with L-BFGS-B ...
+  [linear              ] initial: J_model(z0)=3.098936e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=6.454e-01
+/work2/wenbo/soupy/examples/semilinear_adr/driver_semilinear_adr_compare_taylor_models.py:455: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
+  result = scipy.optimize.minimize(
+  [linear              ] iter    1: J_model=1.876406e-01, ||g||=2.096e-02, RSS=2764.6 MB, PeakRSS=2789.7 MB, cost_mem=2764.6->2764.6 MB, grad_mem=2764.6->2764.6 MB
+  [linear              ] iter    2: J_model=1.447347e-02, ||g||=3.099e-03, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    3: J_model=1.006349e-02, ||g||=5.546e-04, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    4: J_model=9.780025e-03, ||g||=5.143e-04, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    5: J_model=8.709217e-03, ||g||=9.725e-04, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    6: J_model=6.793480e-03, ||g||=1.623e-03, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    7: J_model=3.732752e-03, ||g||=1.896e-03, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    8: J_model=1.182530e-03, ||g||=9.198e-04, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter    9: J_model=7.641208e-04, ||g||=1.516e-04, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] iter   10: J_model=7.411013e-04, ||g||=6.513e-05, RSS=2764.7 MB, PeakRSS=2789.7 MB, cost_mem=2764.7->2764.7 MB, grad_mem=2764.7->2764.7 MB
+  [linear              ] done [root-only serial]: success=True, nit=10, avg_iter_time=0.18s
+  [linear              ] optimal: J_model(z*)=7.411013e-04, J_true(z*)=4.601847e-03, mean_true(z*)=4.576386e-03, var_true(z*)=2.546124e-04, rel_err(z*)=8.390e-01
+
+Optimizing quadratic with L-BFGS-B ...
+  [quadratic           ] initial: J_model(z0)=6.408264e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=2.667e-01
+  [quadratic           ] iter    1: J_model=3.953505e-01, ||g||=4.222e-02, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    2: J_model=3.555519e-02, ||g||=5.454e-03, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    3: J_model=2.880371e-02, ||g||=1.510e-03, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    4: J_model=2.766252e-02, ||g||=1.535e-03, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    5: J_model=2.147714e-02, ||g||=3.370e-03, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    6: J_model=1.370894e-02, ||g||=4.400e-03, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    7: J_model=4.579581e-03, ||g||=2.878e-03, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    8: J_model=2.388990e-03, ||g||=7.516e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter    9: J_model=2.190608e-03, ||g||=2.041e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   10: J_model=2.149719e-03, ||g||=3.058e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   11: J_model=2.083117e-03, ||g||=4.104e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   12: J_model=1.900502e-03, ||g||=5.254e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   13: J_model=1.609271e-03, ||g||=4.931e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   14: J_model=9.501435e-04, ||g||=4.657e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   15: J_model=3.444055e-04, ||g||=4.458e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   16: J_model=2.307981e-04, ||g||=2.068e-04, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   17: J_model=1.590658e-04, ||g||=6.751e-05, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] iter   18: J_model=1.425538e-04, ||g||=5.774e-05, RSS=2782.4 MB, PeakRSS=2803.1 MB, cost_mem=2782.4->2782.4 MB, grad_mem=2782.4->2782.4 MB
+  [quadratic           ] done [root-only serial]: success=True, nit=18, avg_iter_time=0.98s
+  [quadratic           ] optimal: J_model(z*)=1.425538e-04, J_true(z*)=3.169365e-04, mean_true(z*)=3.168005e-04, var_true(z*)=1.360073e-06, rel_err(z*)=5.502e-01
+
+Optimizing mixture_linear_kle with L-BFGS-B ...
+  [mixture_linear_kle  ] initial: J_model(z0)=7.308888e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=1.637e-01
+  [mixture_linear_kle  ] iter    1: J_model=4.425351e-01, ||g||=4.970e-02, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    2: J_model=3.280741e-02, ||g||=4.568e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    3: J_model=2.848436e-02, ||g||=1.500e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    4: J_model=2.745137e-02, ||g||=1.512e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    5: J_model=2.344736e-02, ||g||=2.932e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    6: J_model=1.702899e-02, ||g||=4.410e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    7: J_model=8.323145e-03, ||g||=4.259e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    8: J_model=2.550514e-03, ||g||=1.009e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter    9: J_model=2.082387e-03, ||g||=8.048e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   10: J_model=1.652985e-03, ||g||=1.467e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   11: J_model=1.589131e-03, ||g||=2.920e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   12: J_model=1.477411e-03, ||g||=5.678e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   13: J_model=1.238490e-03, ||g||=9.126e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   14: J_model=8.405039e-04, ||g||=1.093e-03, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   15: J_model=4.310852e-04, ||g||=6.365e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   16: J_model=2.781903e-04, ||g||=2.644e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   17: J_model=2.535614e-04, ||g||=1.268e-04, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   18: J_model=2.487405e-04, ||g||=9.254e-05, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   19: J_model=2.390018e-04, ||g||=7.384e-05, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   20: J_model=1.834338e-04, ||g||=6.932e-05, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   21: J_model=1.191502e-04, ||g||=9.353e-05, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] iter   22: J_model=5.646628e-05, ||g||=6.195e-05, RSS=3065.8 MB, PeakRSS=3086.0 MB, cost_mem=3065.8->3065.8 MB, grad_mem=3065.8->3065.8 MB
+  [mixture_linear_kle  ] done [root-only serial]: success=True, nit=22, avg_iter_time=2.68s
+  [mixture_linear_kle  ] optimal: J_model(z*)=5.646628e-05, J_true(z*)=1.342823e-04, mean_true(z*)=1.342641e-04, var_true(z*)=1.826153e-07, rel_err(z*)=5.795e-01
+
+Optimizing mixture_linear_hep with L-BFGS-B ...
+  [mixture_linear_hep  ] initial: J_model(z0)=9.254230e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=5.892e-02
+  [mixture_linear_hep  ] iter    1: J_model=5.900898e-01, ||g||=5.895e-02, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    2: J_model=2.800293e-02, ||g||=2.641e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    3: J_model=2.796597e-02, ||g||=2.359e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    4: J_model=2.789604e-02, ||g||=1.933e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    5: J_model=2.782591e-02, ||g||=1.507e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    6: J_model=2.778731e-02, ||g||=1.505e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    7: J_model=2.773990e-02, ||g||=1.829e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    8: J_model=2.364797e-02, ||g||=6.415e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter    9: J_model=1.318162e-02, ||g||=6.313e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   10: J_model=5.825779e-03, ||g||=4.338e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   11: J_model=3.279654e-03, ||g||=2.651e-03, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   12: J_model=2.687964e-03, ||g||=4.726e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   13: J_model=2.410215e-03, ||g||=9.923e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   14: J_model=2.328463e-03, ||g||=8.476e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   15: J_model=1.821364e-03, ||g||=5.840e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   16: J_model=1.729393e-03, ||g||=3.832e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   17: J_model=1.586365e-03, ||g||=2.003e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   18: J_model=1.392815e-03, ||g||=1.980e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   19: J_model=6.177529e-04, ||g||=4.094e-04, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   20: J_model=3.490880e-04, ||g||=7.279e-05, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   21: J_model=3.267133e-04, ||g||=8.497e-05, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] iter   22: J_model=2.457096e-04, ||g||=4.281e-05, RSS=3572.2 MB, PeakRSS=3591.3 MB, cost_mem=3572.2->3572.2 MB, grad_mem=3572.2->3572.2 MB
+  [mixture_linear_hep  ] done [root-only serial]: success=True, nit=22, avg_iter_time=5.12s
+  [mixture_linear_hep  ] optimal: J_model(z*)=2.457096e-04, J_true(z*)=5.978524e-04, mean_true(z*)=5.972402e-04, var_true(z*)=6.121474e-06, rel_err(z*)=5.890e-01
+
+Optimizing mixture_quadratic_kle with L-BFGS-B ...
+  [mixture_quadratic_kle] initial: J_model(z0)=8.661133e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=8.950e-03
+  [mixture_quadratic_kle] iter    1: J_model=5.448358e-01, ||g||=5.609e-02, RSS=5718.6 MB, PeakRSS=5700.7 MB, cost_mem=5237.0->5237.0 MB, grad_mem=5237.0->5718.6 MB
+  [mixture_quadratic_kle] iter    2: J_model=4.969527e-02, ||g||=3.977e-03, RSS=6715.5 MB, PeakRSS=6697.7 MB, cost_mem=5718.6->6217.1 MB, grad_mem=6217.1->6715.5 MB
+  [mixture_quadratic_kle] iter    3: J_model=4.620203e-02, ||g||=2.453e-03, RSS=7716.3 MB, PeakRSS=7698.2 MB, cost_mem=6715.5->7218.0 MB, grad_mem=7218.0->7716.3 MB
+  [mixture_quadratic_kle] iter    4: J_model=4.246402e-02, ||g||=3.113e-03, RSS=8713.1 MB, PeakRSS=8695.2 MB, cost_mem=7716.3->8214.8 MB, grad_mem=8214.8->8713.1 MB
+  [mixture_quadratic_kle] iter    5: J_model=3.254426e-02, ||g||=5.307e-03, RSS=9710.0 MB, PeakRSS=9692.2 MB, cost_mem=8713.1->9211.6 MB, grad_mem=9211.6->9710.0 MB
+  [mixture_quadratic_kle] iter    6: J_model=1.779672e-02, ||g||=6.111e-03, RSS=10706.8 MB, PeakRSS=10688.2 MB, cost_mem=9710.0->10208.5 MB, grad_mem=10208.5->10706.8 MB
+  [mixture_quadratic_kle] iter    7: J_model=5.112575e-03, ||g||=2.501e-03, RSS=11703.6 MB, PeakRSS=11685.2 MB, cost_mem=10706.8->11205.3 MB, grad_mem=11205.3->11703.6 MB
+  [mixture_quadratic_kle] iter    8: J_model=3.610234e-03, ||g||=4.408e-04, RSS=12700.4 MB, PeakRSS=12682.2 MB, cost_mem=11703.6->12202.1 MB, grad_mem=12202.1->12700.4 MB
+  [mixture_quadratic_kle] iter    9: J_model=3.468479e-03, ||g||=3.819e-04, RSS=13697.2 MB, PeakRSS=13679.2 MB, cost_mem=12700.4->13198.9 MB, grad_mem=13198.9->13697.2 MB
+  [mixture_quadratic_kle] iter   10: J_model=3.356804e-03, ||g||=5.909e-04, RSS=14702.2 MB, PeakRSS=14684.2 MB, cost_mem=13697.2->14203.9 MB, grad_mem=14203.9->14702.2 MB
+  [mixture_quadratic_kle] iter   11: J_model=3.150849e-03, ||g||=7.533e-04, RSS=15699.1 MB, PeakRSS=15681.2 MB, cost_mem=14702.2->15200.7 MB, grad_mem=15200.7->15699.1 MB
+  [mixture_quadratic_kle] iter   12: J_model=2.619634e-03, ||g||=8.044e-04, RSS=16695.9 MB, PeakRSS=16677.7 MB, cost_mem=15699.1->16197.5 MB, grad_mem=16197.5->16695.9 MB
+  [mixture_quadratic_kle] iter   13: J_model=1.459174e-03, ||g||=9.529e-04, RSS=17692.7 MB, PeakRSS=17674.7 MB, cost_mem=16695.9->17194.4 MB, grad_mem=17194.4->17692.7 MB
+  [mixture_quadratic_kle] iter   14: J_model=7.264662e-04, ||g||=3.909e-04, RSS=18689.5 MB, PeakRSS=18671.7 MB, cost_mem=17692.7->18191.2 MB, grad_mem=18191.2->18689.5 MB
+  [mixture_quadratic_kle] iter   15: J_model=3.986018e-04, ||g||=2.821e-04, RSS=19686.3 MB, PeakRSS=19668.2 MB, cost_mem=18689.5->19188.0 MB, grad_mem=19188.0->19686.3 MB
+  [mixture_quadratic_kle] iter   16: J_model=2.978429e-04, ||g||=1.350e-04, RSS=20683.1 MB, PeakRSS=20665.2 MB, cost_mem=19686.3->20184.8 MB, grad_mem=20184.8->20683.1 MB
+  [mixture_quadratic_kle] iter   17: J_model=2.595174e-04, ||g||=1.106e-04, RSS=21679.9 MB, PeakRSS=21662.2 MB, cost_mem=20683.1->21181.7 MB, grad_mem=21181.7->21679.9 MB
+  [mixture_quadratic_kle] iter   18: J_model=1.744899e-04, ||g||=1.242e-04, RSS=22676.8 MB, PeakRSS=22658.7 MB, cost_mem=21679.9->22178.5 MB, grad_mem=22178.5->22676.8 MB
+  [mixture_quadratic_kle] iter   19: J_model=1.134697e-04, ||g||=9.250e-05, RSS=23673.6 MB, PeakRSS=23655.2 MB, cost_mem=22676.8->23175.3 MB, grad_mem=23175.3->23673.6 MB
+  [mixture_quadratic_kle] iter   20: J_model=9.175514e-05, ||g||=2.313e-04, RSS=25667.3 MB, PeakRSS=25649.2 MB, cost_mem=24670.4->25168.9 MB, grad_mem=25168.9->25667.3 MB
+  [mixture_quadratic_kle] iter   21: J_model=6.434576e-05, ||g||=4.094e-05, RSS=26664.1 MB, PeakRSS=26646.2 MB, cost_mem=25667.3->26165.8 MB, grad_mem=26165.8->26664.1 MB
+  [mixture_quadratic_kle] done [root-only serial]: success=True, nit=21, avg_iter_time=75.79s
+  [mixture_quadratic_kle] optimal: J_model(z*)=6.434576e-05, J_true(z*)=8.289703e-05, mean_true(z*)=8.289126e-05, var_true(z*)=5.772561e-08, rel_err(z*)=2.238e-01
+
+Optimizing mixture_quadratic_hep with L-BFGS-B ...
+  [mixture_quadratic_hep] initial: J_model(z0)=8.455162e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=3.252e-02
+  [mixture_quadratic_hep] iter    1: J_model=5.344351e-01, ||g||=5.403e-02, RSS=30683.0 MB, PeakRSS=30664.7 MB, cost_mem=30194.1->30194.1 MB, grad_mem=30194.1->30683.0 MB
+  [mixture_quadratic_hep] iter    2: J_model=4.673332e-02, ||g||=3.920e-03, RSS=31684.4 MB, PeakRSS=31665.7 MB, cost_mem=30683.0->31186.0 MB, grad_mem=31186.0->31684.4 MB
+  [mixture_quadratic_hep] iter    3: J_model=4.096856e-02, ||g||=2.880e-03, RSS=32685.7 MB, PeakRSS=32667.7 MB, cost_mem=31684.4->32187.4 MB, grad_mem=32187.4->32685.7 MB
+  [mixture_quadratic_hep] iter    4: J_model=3.501869e-02, ||g||=2.045e-03, RSS=34688.4 MB, PeakRSS=34670.2 MB, cost_mem=33687.1->34190.1 MB, grad_mem=34190.1->34688.4 MB
+  [mixture_quadratic_hep] iter    5: J_model=1.779254e-02, ||g||=3.496e-03, RSS=35689.8 MB, PeakRSS=35671.7 MB, cost_mem=34688.4->35191.5 MB, grad_mem=35191.5->35689.8 MB
+  [mixture_quadratic_hep] iter    6: J_model=3.779312e-03, ||g||=1.993e-03, RSS=36691.2 MB, PeakRSS=36673.2 MB, cost_mem=35689.8->36192.8 MB, grad_mem=36192.8->36691.2 MB
+  [mixture_quadratic_hep] iter    7: J_model=3.011188e-03, ||g||=1.097e-03, RSS=37692.5 MB, PeakRSS=37673.7 MB, cost_mem=36691.2->37194.2 MB, grad_mem=37194.2->37692.5 MB
+  [mixture_quadratic_hep] iter    8: J_model=2.523367e-03, ||g||=1.050e-03, RSS=38693.8 MB, PeakRSS=38675.7 MB, cost_mem=37692.5->38195.6 MB, grad_mem=38195.6->38693.8 MB
+  [mixture_quadratic_hep] iter    9: J_model=1.804413e-03, ||g||=8.538e-04, RSS=40696.6 MB, PeakRSS=40677.7 MB, cost_mem=39695.2->40198.3 MB, grad_mem=40198.3->40696.6 MB
+  [mixture_quadratic_hep] iter   10: J_model=8.934514e-04, ||g||=4.003e-04, RSS=41697.9 MB, PeakRSS=41679.2 MB, cost_mem=40696.6->41199.6 MB, grad_mem=41199.6->41697.9 MB
+  [mixture_quadratic_hep] iter   11: J_model=7.007074e-04, ||g||=1.460e-04, RSS=42699.3 MB, PeakRSS=42681.2 MB, cost_mem=41697.9->42201.0 MB, grad_mem=42201.0->42699.3 MB
+  [mixture_quadratic_hep] iter   12: J_model=5.547637e-04, ||g||=3.410e-04, RSS=43700.7 MB, PeakRSS=43682.2 MB, cost_mem=42699.3->43202.4 MB, grad_mem=43202.4->43700.7 MB
+  [mixture_quadratic_hep] iter   13: J_model=3.268963e-04, ||g||=1.899e-04, RSS=45703.4 MB, PeakRSS=45685.2 MB, cost_mem=44702.0->45205.1 MB, grad_mem=45205.1->45703.4 MB
+  [mixture_quadratic_hep] iter   14: J_model=1.118158e-04, ||g||=5.248e-05, RSS=46704.8 MB, PeakRSS=46686.2 MB, cost_mem=45703.4->46206.4 MB, grad_mem=46206.4->46704.8 MB
+  [mixture_quadratic_hep] done [root-only serial]: success=True, nit=14, avg_iter_time=91.04s
+  [mixture_quadratic_hep] optimal: J_model(z*)=1.118158e-04, J_true(z*)=1.351991e-04, mean_true(z*)=1.351768e-04, var_true(z*)=2.233432e-07, rel_err(z*)=1.730e-01
+
+Optimizing saa_1 with L-BFGS-B ...
+  [saa_1               ] initial: J_model(z0)=3.139293e+00, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=2.592e+00
+  [saa_1               ] iter    1: J_model=2.198410e+00, ||g||=1.741e-01, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    2: J_model=2.687130e-01, ||g||=6.260e-02, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    3: J_model=2.390288e-02, ||g||=4.507e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    4: J_model=2.257664e-02, ||g||=1.145e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    5: J_model=2.178212e-02, ||g||=1.678e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    6: J_model=1.748288e-02, ||g||=4.794e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    7: J_model=1.181744e-02, ||g||=6.378e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    8: J_model=7.136854e-03, ||g||=4.241e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter    9: J_model=5.373513e-03, ||g||=1.104e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   10: J_model=4.973725e-03, ||g||=1.133e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   11: J_model=4.753105e-03, ||g||=1.797e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   12: J_model=4.163359e-03, ||g||=2.856e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   13: J_model=3.157613e-03, ||g||=3.529e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   14: J_model=1.890200e-03, ||g||=2.756e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   15: J_model=1.273884e-03, ||g||=9.734e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   16: J_model=1.179262e-03, ||g||=1.978e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   17: J_model=1.165941e-03, ||g||=3.288e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   18: J_model=1.146662e-03, ||g||=4.697e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   19: J_model=1.081094e-03, ||g||=7.707e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   20: J_model=9.419204e-04, ||g||=1.130e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   21: J_model=6.812090e-04, ||g||=1.384e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   22: J_model=4.074578e-04, ||g||=1.102e-03, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   23: J_model=3.569090e-04, ||g||=5.506e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   24: J_model=2.763599e-04, ||g||=1.698e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   25: J_model=2.653960e-04, ||g||=6.016e-05, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   26: J_model=2.632244e-04, ||g||=8.779e-05, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   27: J_model=2.586590e-04, ||g||=9.430e-05, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   28: J_model=2.545675e-04, ||g||=2.545e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   29: J_model=2.375017e-04, ||g||=2.518e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   30: J_model=1.529937e-04, ||g||=4.578e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   31: J_model=6.567879e-05, ||g||=2.071e-04, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] iter   32: J_model=1.991165e-05, ||g||=4.143e-05, RSS=49716.4 MB, PeakRSS=49728.4 MB, cost_mem=49716.4->49716.4 MB, grad_mem=49716.4->49716.4 MB
+  [saa_1               ] done [root-only serial]: success=True, nit=32, avg_iter_time=0.04s
+  [saa_1               ] optimal: J_model(z*)=1.991165e-05, J_true(z*)=7.040305e-05, mean_true(z*)=7.039953e-05, var_true(z*)=3.519608e-08, rel_err(z*)=7.172e-01
+
+Optimizing saa_10 with L-BFGS-B ...
+  [saa_10              ] initial: J_model(z0)=8.118156e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=7.108e-02
+  [saa_10              ] iter    1: J_model=5.203253e-01, ||g||=5.088e-02, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    2: J_model=4.348338e-02, ||g||=7.023e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    3: J_model=3.215167e-02, ||g||=1.936e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    4: J_model=3.031356e-02, ||g||=1.863e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    5: J_model=2.436116e-02, ||g||=3.266e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    6: J_model=1.560702e-02, ||g||=4.465e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    7: J_model=6.295125e-03, ||g||=3.210e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    8: J_model=2.928867e-03, ||g||=8.540e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter    9: J_model=2.495094e-03, ||g||=3.955e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   10: J_model=2.385581e-03, ||g||=5.627e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   11: J_model=2.153022e-03, ||g||=6.818e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   12: J_model=1.870815e-03, ||g||=4.197e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   13: J_model=1.687943e-03, ||g||=1.808e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   14: J_model=1.586007e-03, ||g||=4.079e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   15: J_model=1.437796e-03, ||g||=7.091e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   16: J_model=1.135238e-03, ||g||=1.044e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   17: J_model=6.862370e-04, ||g||=1.107e-03, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   18: J_model=2.999138e-04, ||g||=2.476e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   19: J_model=2.144924e-04, ||g||=1.192e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   20: J_model=1.570853e-04, ||g||=1.266e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   21: J_model=1.441613e-04, ||g||=1.242e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   22: J_model=1.186353e-04, ||g||=1.870e-04, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   23: J_model=7.487168e-05, ||g||=9.622e-05, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] iter   24: J_model=5.839415e-05, ||g||=4.289e-05, RSS=49718.4 MB, PeakRSS=49728.7 MB, cost_mem=49718.4->49718.4 MB, grad_mem=49718.4->49718.4 MB
+  [saa_10              ] done [root-only serial]: success=True, nit=24, avg_iter_time=0.12s
+  [saa_10              ] optimal: J_model(z*)=5.839415e-05, J_true(z*)=1.245667e-04, mean_true(z*)=1.245541e-04, var_true(z*)=1.261076e-07, rel_err(z*)=5.312e-01
+
+Optimizing saa_39 with L-BFGS-B ...
+  [saa_39              ] initial: J_model(z0)=1.058880e+00, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=2.116e-01
+  [saa_39              ] iter    1: J_model=6.643864e-01, ||g||=6.868e-02, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    2: J_model=5.937359e-02, ||g||=5.609e-03, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    3: J_model=5.363952e-02, ||g||=2.914e-03, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    4: J_model=4.992704e-02, ||g||=3.331e-03, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    5: J_model=3.796206e-02, ||g||=5.956e-03, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    6: J_model=2.293388e-02, ||g||=6.904e-03, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    7: J_model=7.474491e-03, ||g||=3.406e-03, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    8: J_model=4.416480e-03, ||g||=5.290e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter    9: J_model=4.152465e-03, ||g||=6.007e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   10: J_model=3.981504e-03, ||g||=7.598e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   11: J_model=3.639058e-03, ||g||=6.685e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   12: J_model=2.853889e-03, ||g||=5.074e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   13: J_model=1.612263e-03, ||g||=5.379e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   14: J_model=8.170828e-04, ||g||=3.876e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   15: J_model=6.476808e-04, ||g||=5.971e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   16: J_model=3.387006e-04, ||g||=1.700e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   17: J_model=2.569248e-04, ||g||=1.156e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   18: J_model=1.423602e-04, ||g||=6.591e-05, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   19: J_model=1.108504e-04, ||g||=3.012e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   20: J_model=9.061459e-05, ||g||=1.009e-04, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] iter   21: J_model=8.504731e-05, ||g||=3.748e-05, RSS=49720.6 MB, PeakRSS=49728.9 MB, cost_mem=49720.6->49720.6 MB, grad_mem=49720.6->49720.6 MB
+  [saa_39              ] done [root-only serial]: success=True, nit=21, avg_iter_time=0.45s
+  [saa_39              ] optimal: J_model(z*)=8.504731e-05, J_true(z*)=8.686496e-05, mean_true(z*)=8.685804e-05, var_true(z*)=6.911203e-08, rel_err(z*)=2.092e-02
+
+Optimizing saa_100 with L-BFGS-B ...
+  [saa_100             ] initial: J_model(z0)=7.575923e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=1.331e-01
+  [saa_100             ] iter    1: J_model=4.740877e-01, ||g||=4.935e-02, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    2: J_model=4.302022e-02, ||g||=3.686e-03, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    3: J_model=3.940352e-02, ||g||=2.163e-03, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    4: J_model=3.620130e-02, ||g||=2.590e-03, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    5: J_model=2.739303e-02, ||g||=4.483e-03, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    6: J_model=1.583721e-02, ||g||=5.116e-03, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    7: J_model=4.850595e-03, ||g||=2.178e-03, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    8: J_model=3.286478e-03, ||g||=3.204e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter    9: J_model=3.163078e-03, ||g||=3.954e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   10: J_model=3.052368e-03, ||g||=5.410e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   11: J_model=2.821114e-03, ||g||=5.827e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   12: J_model=2.155339e-03, ||g||=5.765e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   13: J_model=8.140451e-04, ||g||=5.785e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   14: J_model=6.341886e-04, ||g||=3.018e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   15: J_model=3.021179e-04, ||g||=2.498e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   16: J_model=1.656738e-04, ||g||=2.151e-04, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] iter   17: J_model=9.977431e-05, ||g||=6.644e-05, RSS=49723.1 MB, PeakRSS=49730.2 MB, cost_mem=49723.1->49723.1 MB, grad_mem=49723.1->49723.1 MB
+  [saa_100             ] done [root-only serial]: success=True, nit=17, avg_iter_time=1.18s
+  [saa_100             ] optimal: J_model(z*)=9.977431e-05, J_true(z*)=1.452082e-04, mean_true(z*)=1.451821e-04, var_true(z*)=2.613023e-07, rel_err(z*)=3.129e-01
+
+Optimizing saa_1000 with L-BFGS-B ...
+  [saa_1000            ] initial: J_model(z0)=9.365736e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=7.167e-02
+  [saa_1000            ] iter    1: J_model=5.907355e-01, ||g||=6.038e-02, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    2: J_model=5.634631e-02, ||g||=3.966e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    3: J_model=5.251052e-02, ||g||=2.811e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    4: J_model=4.657241e-02, ||g||=3.750e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    5: J_model=3.422281e-02, ||g||=6.042e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    6: J_model=1.794873e-02, ||g||=6.253e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    7: J_model=4.421988e-03, ||g||=1.651e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    8: J_model=3.863299e-03, ||g||=4.914e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter    9: J_model=3.734512e-03, ||g||=4.110e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   10: J_model=3.554735e-03, ||g||=7.703e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   11: J_model=3.288749e-03, ||g||=1.173e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   12: J_model=2.890682e-03, ||g||=1.364e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   13: J_model=2.042333e-03, ||g||=1.352e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   14: J_model=9.589784e-04, ||g||=1.419e-03, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   15: J_model=5.518254e-04, ||g||=4.540e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   16: J_model=3.972690e-04, ||g||=1.159e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   17: J_model=3.395859e-04, ||g||=2.966e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   18: J_model=3.060142e-04, ||g||=3.522e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   19: J_model=1.983500e-04, ||g||=3.375e-04, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   20: J_model=9.103087e-05, ||g||=6.505e-05, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   21: J_model=8.449625e-05, ||g||=6.662e-05, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] iter   22: J_model=6.658852e-05, ||g||=6.193e-05, RSS=49748.1 MB, PeakRSS=49753.2 MB, cost_mem=49748.1->49748.1 MB, grad_mem=49748.1->49748.1 MB
+  [saa_1000            ] done [root-only serial]: success=True, nit=22, avg_iter_time=11.33s
+  [saa_1000            ] optimal: J_model(z*)=6.658852e-05, J_true(z*)=6.239940e-05, mean_true(z*)=6.239577e-05, var_true(z*)=3.627319e-08, rel_err(z*)=6.713e-02
+
+Optimizing saa_10000 with L-BFGS-B ...
+  [saa_10000           ] initial: J_model(z0)=9.276161e-01, J_true(z0)=8.739351e-01, mean_true(z0)=7.125785e-01, var_true(z0)=1.613566e+00, rel_err(z0)=6.142e-02
+  [saa_10000           ] iter    1: J_model=5.879639e-01, ||g||=5.943e-02, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    2: J_model=5.552294e-02, ||g||=3.590e-03, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    3: J_model=5.215569e-02, ||g||=2.752e-03, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    4: J_model=4.522938e-02, ||g||=3.944e-03, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    5: J_model=3.243684e-02, ||g||=6.182e-03, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    6: J_model=1.586957e-02, ||g||=6.055e-03, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    7: J_model=4.129559e-03, ||g||=1.133e-03, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    8: J_model=3.839049e-03, ||g||=5.784e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter    9: J_model=3.488199e-03, ||g||=6.689e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   10: J_model=3.331199e-03, ||g||=8.468e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   11: J_model=2.972553e-03, ||g||=9.077e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   12: J_model=1.997672e-03, ||g||=9.177e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   13: J_model=6.612074e-04, ||g||=5.992e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   14: J_model=3.030578e-04, ||g||=1.496e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   15: J_model=2.240641e-04, ||g||=2.037e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   16: J_model=1.817575e-04, ||g||=2.361e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   17: J_model=1.492214e-04, ||g||=1.524e-04, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] iter   18: J_model=9.018881e-05, ||g||=5.578e-05, RSS=49978.4 MB, PeakRSS=49983.6 MB, cost_mem=49978.4->49978.4 MB, grad_mem=49978.4->49978.4 MB
+  [saa_10000           ] done [root-only serial]: success=True, nit=18, avg_iter_time=111.58s
+  [saa_10000           ] optimal: J_model(z*)=9.018881e-05, J_true(z*)=8.394155e-05, mean_true(z*)=8.393434e-05, var_true(z*)=7.211305e-08, rel_err(z*)=7.442e-02
+
+------------------------------------------------------------------------------------------
+Summary (ground-truth SAA evaluated at z0 and z*)
+------------------------------------------------------------------------------------------
+linear               | nit= 10 | avg_iter_time=    0.18s | J_model(z*)=7.411013e-04 | init rel_err=6.454e-01 | opt rel_err=8.390e-01 | J_true(z*)=4.601847e-03
+quadratic            | nit= 18 | avg_iter_time=    0.98s | J_model(z*)=1.425538e-04 | init rel_err=2.667e-01 | opt rel_err=5.502e-01 | J_true(z*)=3.169365e-04
+mixture_linear_kle   | nit= 22 | avg_iter_time=    2.68s | J_model(z*)=5.646628e-05 | init rel_err=1.637e-01 | opt rel_err=5.795e-01 | J_true(z*)=1.342823e-04
+mixture_linear_hep   | nit= 22 | avg_iter_time=    5.12s | J_model(z*)=2.457096e-04 | init rel_err=5.892e-02 | opt rel_err=5.890e-01 | J_true(z*)=5.978524e-04
+mixture_quadratic_kle | nit= 21 | avg_iter_time=   75.79s | J_model(z*)=6.434576e-05 | init rel_err=8.950e-03 | opt rel_err=2.238e-01 | J_true(z*)=8.289703e-05
+mixture_quadratic_hep | nit= 14 | avg_iter_time=   91.04s | J_model(z*)=1.118158e-04 | init rel_err=3.252e-02 | opt rel_err=1.730e-01 | J_true(z*)=1.351991e-04
+saa_1                | nit= 32 | avg_iter_time=    0.04s | J_model(z*)=1.991165e-05 | init rel_err=2.592e+00 | opt rel_err=7.172e-01 | J_true(z*)=7.040305e-05
+saa_10               | nit= 24 | avg_iter_time=    0.12s | J_model(z*)=5.839415e-05 | init rel_err=7.108e-02 | opt rel_err=5.312e-01 | J_true(z*)=1.245667e-04
+saa_39               | nit= 21 | avg_iter_time=    0.45s | J_model(z*)=8.504731e-05 | init rel_err=2.116e-01 | opt rel_err=2.092e-02 | J_true(z*)=8.686496e-05
+saa_100              | nit= 17 | avg_iter_time=    1.18s | J_model(z*)=9.977431e-05 | init rel_err=1.331e-01 | opt rel_err=3.129e-01 | J_true(z*)=1.452082e-04
+saa_1000             | nit= 22 | avg_iter_time=   11.33s | J_model(z*)=6.658852e-05 | init rel_err=7.167e-02 | opt rel_err=6.713e-02 | J_true(z*)=6.239940e-05
+saa_10000            | nit= 18 | avg_iter_time=  111.58s | J_model(z*)=9.018881e-05 | init rel_err=6.142e-02 | opt rel_err=7.442e-02 | J_true(z*)=8.394155e-05
+------------------------------------------------------------------------------------------
+All outputs written to: results_semilinear_adr_compare_taylor_models
+Terminal outputs saved to: results_semilinear_adr_compare_taylor_models/terminal_output.txt

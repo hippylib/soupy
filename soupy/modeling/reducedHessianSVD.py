@@ -5,6 +5,7 @@
 
 import dolfin as dl
 import hippylib as hp
+import time
 
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
 
@@ -47,6 +48,7 @@ class ReducedHessianSVD:
         self.rhs_adj.axpy(1.0, self.rhs_adj3)
         self.qoi.apply_ij(STATE, PARAMETER, mhat, self.rhs_adj4) # Should be zero if Q doesn't explicitly depend on the parameter
         self.rhs_adj.axpy(1.0, self.rhs_adj4)
+
         self.pde.solveIncremental(yhat, -self.rhs_adj, True)
 
         self.pde.apply_ij(PARAMETER, PARAMETER, mhat, self.Hmhat1) # \partial_{mm} \bar{r} \hat{m}

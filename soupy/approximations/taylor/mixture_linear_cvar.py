@@ -25,6 +25,7 @@ from hippylib.algorithms.randomizedEigensolver import doublePassG
 from scipy.stats import norm
 from scipy.optimize import brentq
 
+from ...collectives.collective import MultipleSerialPDEsCollective, NullCollective
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.variables import STATE, PARAMETER, ADJOINT, CONTROL
@@ -133,7 +134,7 @@ def gaussian_mixture_cvar(means, stds, weights, beta, tol=1e-10):
 class _TaylorMixtureLinearCVaRLegacy:
     """Implementation of Gaussian-mixture linear Taylor CVaR."""
 
-    def __init__(self, settings, model, prior, penalization, tol=1e-9):
+    def __init__(self, settings, model, prior, penalization, tol=1e-9, comm_sampler=None):
         self.settings = settings
         self.model = model
         self.pde = model.problem
@@ -169,8 +170,20 @@ class _TaylorMixtureLinearCVaRLegacy:
             self.verbose = False
 
         # MPI setup
-        self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
-        self.mpi_size = dl.MPI.size(self.pde.Vh[STATE].mesh().mpi_comm())
+        self.mesh_comm = self.pde.Vh[STATE].mesh().mpi_comm()
+        self.mesh_rank = dl.MPI.rank(self.mesh_comm)
+        self.mesh_size = dl.MPI.size(self.mesh_comm)
+        self.mix_comm = MPI.COMM_WORLD if comm_sampler is None else comm_sampler
+        self.mix_rank = self.mix_comm.Get_rank()
+        self.mix_size = self.mix_comm.Get_size()
+        self.cluster_parallel = self.mesh_size == 1 and self.mix_size > 1
+        self.collective = (
+            MultipleSerialPDEsCollective(self.mix_comm)
+            if self.cluster_parallel
+            else NullCollective()
+        )
+        self.mpi_rank = self.mix_rank if self.cluster_parallel else self.mesh_rank
+        self.mpi_size = self.mesh_size
 
         # Get 1D mixture parameters
         self.mix_1d = get_1d_gmm_library_mixture(
@@ -186,6 +199,7 @@ class _TaylorMixtureLinearCVaRLegacy:
         self.x_components = []
         self.y_components = []
         self.Cdmq_components = []
+        self.local_component_results = {}
 
         # Direction and components (computed on first objective call)
         self.psi = None  # Decomposition direction
@@ -202,6 +216,51 @@ class _TaylorMixtureLinearCVaRLegacy:
         self.cvar = 0.0
         self.mixture_mean = 0.0
         self.mixture_std = 0.0
+
+    def _is_print_root(self):
+        return self.mix_rank == 0 if self.cluster_parallel else self.mesh_rank == 0
+
+    def _owned_component_indices(self):
+        if not self.cluster_parallel:
+            return tuple(range(self.N_mix))
+        return tuple(i for i in range(self.N_mix) if i % self.mix_size == self.mix_rank)
+
+    def _reset_component_storage(self):
+        self.component_means = [None] * self.N_mix
+        self.component_stds = [None] * self.N_mix
+        self.component_vars = [None] * self.N_mix
+        self.x_components = {}
+        self.y_components = {}
+        self.Cdmq_components = {}
+        self.local_component_results = {}
+
+    def _store_component_result(self, index, result):
+        self.local_component_results[index] = result
+        self.component_means[index] = result["mean"]
+        self.component_stds[index] = result["std"]
+        self.component_vars[index] = result["var"]
+        self.x_components[index] = result["x"]
+        self.y_components[index] = result["y"]
+        self.Cdmq_components[index] = result["Cdmq"]
+
+    def _gather_component_summaries(self):
+        local_payload = []
+        for index, comp in self.local_component_results.items():
+            local_payload.append(
+                {
+                    "index": index,
+                    "mean": float(comp["mean"]),
+                    "std": float(comp["std"]),
+                    "var": float(comp["var"]),
+                }
+            )
+
+        for payloads in self.mix_comm.allgather(local_payload):
+            for payload in payloads:
+                index = payload["index"]
+                self.component_means[index] = payload["mean"]
+                self.component_stds[index] = payload["std"]
+                self.component_vars[index] = payload["var"]
 
     def _z_has_changed(self, z):
         """Return True when the incoming control differs from the cached one."""
@@ -257,8 +316,7 @@ class _TaylorMixtureLinearCVaRLegacy:
 
         if self.direction == "hep":
             # Compute dominant HEP eigenvector on rank 0 and broadcast it.
-            world_comm = MPI.COMM_WORLD
-            if world_comm.rank == 0:
+            if self.mix_rank == 0:
                 omega = MultiVector(self.pde.generate_parameter(), 64)
                 rand = Random(seed=self.seed)
                 for i in range(64):
@@ -274,16 +332,16 @@ class _TaylorMixtureLinearCVaRLegacy:
                 lambda_psi = None
                 dominant_eigenvalue = None
 
-            psi_local = world_comm.bcast(psi_local, root=0)
-            lambda_psi = world_comm.bcast(lambda_psi, root=0)
-            dominant_eigenvalue = world_comm.bcast(dominant_eigenvalue, root=0)
+            psi_local = self.mix_comm.bcast(psi_local, root=0)
+            lambda_psi = self.mix_comm.bcast(lambda_psi, root=0)
+            dominant_eigenvalue = self.mix_comm.bcast(dominant_eigenvalue, root=0)
 
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
             self.psi.set_local(psi_local)
             self.psi.apply("")
             self.lambda_psi = lambda_psi
 
-            if self.verbose and world_comm.rank == 0:
+            if self.verbose and self._is_print_root():
                 print(f"  [Mixture] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}")
 
         else:  # KLE direction
@@ -311,7 +369,7 @@ class _TaylorMixtureLinearCVaRLegacy:
             self.psi = v
             self.lambda_psi = 1.0
 
-            if self.verbose and self.mpi_rank == 0:
+            if self.verbose and self._is_print_root():
                 print(f"  [Mixture] Using KLE direction")
 
         # Construct mixture component means in parameter space
@@ -335,18 +393,15 @@ class _TaylorMixtureLinearCVaRLegacy:
         sigma_1d = self.mix_1d['sigma']
         sigma_sq = sigma_1d ** 2
 
-        self.component_means = []
-        self.component_stds = []
-        self.component_vars = []
-        self.x_components = []
-        self.y_components = []
-        self.Cdmq_components = []
+        self._reset_component_storage()
+        local_mean = 0.0
+        local_second_moment = 0.0
 
         # Pre-compute R @ psi = C^{-1} @ psi
         R_psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
         self.prior.R.mult(self.psi, R_psi)
 
-        for i in range(self.N_mix):
+        for i in self._owned_component_indices():
             m_i = self.m_bar_i[i]
 
             # Solve forward at component mean m_i
@@ -359,8 +414,6 @@ class _TaylorMixtureLinearCVaRLegacy:
 
             # Compute QoI at component mean
             Q_i = self.qoi.cost(x_all_i)
-            self.component_means.append(Q_i)
-
             # Solve adjoint at component mean
             rhs_i = self.model.generate_vector(STATE)
             self.qoi.adj_rhs(x_all_i, rhs_i)
@@ -395,19 +448,33 @@ class _TaylorMixtureLinearCVaRLegacy:
 
             var_i = var_C + correction
             C_g_i.axpy((sigma_sq - 1.0) * self.lambda_psi * g_dot_psi, self.psi)
-            self.component_vars.append(var_i)
             std_i = np.sqrt(max(0.0, var_i))
-            self.component_stds.append(std_i)
-            self.x_components.append(x_i)
-            self.y_components.append(y_i)
-            self.Cdmq_components.append(C_g_i)
+            self._store_component_result(
+                i,
+                {
+                    "mean": float(Q_i),
+                    "std": float(std_i),
+                    "var": float(var_i),
+                    "x": x_i,
+                    "y": y_i,
+                    "Cdmq": C_g_i,
+                },
+            )
+            local_mean += self.component_weights[i] * float(Q_i)
+            local_second_moment += self.component_weights[i] * float(Q_i ** 2 + var_i)
 
         weights = np.asarray(self.component_weights)
-        means = np.asarray(self.component_means)
-        vars_ = np.asarray(self.component_vars)
+        if self.cluster_parallel:
+            self._gather_component_summaries()
+            self.mixture_mean = float(self.collective.allReduce(local_mean, "sum"))
+            second_moment = float(self.collective.allReduce(local_second_moment, "sum"))
+        else:
+            means = np.asarray(self.component_means)
+            vars_ = np.asarray(self.component_vars)
+            self.mixture_mean = float(np.sum(weights * means))
+            second_moment = float(np.sum(weights * (means ** 2 + vars_)))
 
-        self.mixture_mean = float(np.sum(weights * means))
-        second_moment = float(np.sum(weights * (means ** 2 + vars_)))
+        means = np.asarray(self.component_means)
         mixture_var = max(0.0, second_moment - self.mixture_mean ** 2)
         self.mixture_std = np.sqrt(mixture_var)
         self.var, self.cvar = gaussian_mixture_cvar(
@@ -417,7 +484,7 @@ class _TaylorMixtureLinearCVaRLegacy:
             self.beta,
         )
 
-        if self.verbose and self.mpi_rank == 0:
+        if self.verbose and self._is_print_root():
             print(
                 f"  [Mixture Linear CVaR] N_mix={self.N_mix}, "
                 f"mean={self.mixture_mean:.4e}, std={self.mixture_std:.4e}, "
@@ -540,7 +607,7 @@ class _TaylorMixtureLinearCVaRLegacy:
         dz = self.model.generate_vector(CONTROL)
         denom = max(1.0 - self.beta, 1e-14)
 
-        for i in range(self.N_mix):
+        for i in self._owned_component_indices():
             m_i = self.m_bar_i[i]
             x_i = self.x_components[i]
             y_i = self.y_components[i]
@@ -569,6 +636,9 @@ class _TaylorMixtureLinearCVaRLegacy:
             )
             dz.axpy(1.0, dcomp_i)
 
+        if self.cluster_parallel:
+            self.collective.allReduce(dz, "sum")
+
         # Add penalization gradient
         if self.penalization is not None:
             pen = self.model.generate_vector(CONTROL)
@@ -596,10 +666,11 @@ class TaylorMixtureLinearCVaRControlCostFunctional(ControlCostFunctional):
         penalization=None,
         settings: Optional[Union[dict, "ParameterList"]] = None,
         tol=1e-9,
+        comm_sampler=None,
     ):
         self.settings = taylor_mixture_linear_cvar_settings(settings)
         self._legacy = _TaylorMixtureLinearCVaRLegacy(
-            self.settings, control_model, prior, penalization, tol
+            self.settings, control_model, prior, penalization, tol, comm_sampler=comm_sampler
         )
 
     @property
@@ -626,6 +697,14 @@ class TaylorMixtureLinearCVaRControlCostFunctional(ControlCostFunctional):
     def component_weights(self):
         """Return mixture weights."""
         return self._legacy.component_weights
+
+    @property
+    def cluster_parallel_enabled(self):
+        return self._legacy.cluster_parallel
+
+    @property
+    def owned_component_indices(self):
+        return self._legacy._owned_component_indices()
 
     def generate_vector(self, component="ALL"):
         return self._legacy.model.generate_vector(component)

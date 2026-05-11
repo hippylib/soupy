@@ -1,0 +1,231 @@
+==============================================================================
+Hyperelasticity CVaR Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep / alternating_hep_linear_cvar
+  mixture_quadratic_kle / mixture_quadratic_hep / alternating_hep_quadratic_cvar / saa_1 / saa_10 / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000
+  serial: linear / quadratic / saa_1 / saa_10
+  parallel on all ranks: mixture_* / alternating_hep_* / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000
+==============================================================================
+Ground-truth exact-CVaR sample count: 100000
+cvar_beta=0.95, n_tr=10, n_mix=39, quadratic_cvar_n_mc=1000
+alternating_hep_steps=5
+penalty=0.01
+mesh=128x32
+terminal log file: results_compare_cvar_models/terminal_output.txt
+==============================================================================
+
+Optimizing linear with L-BFGS-B ...
+  [linear              ] initial guess: 0.5 control
+  [linear              ] initial: J_model(init)=2.650127e-01, J_true(init)=3.711832e-01, cvar_true(init)=3.686832e-01, mean_qoi(init)=1.485518e-01, var_qoi(init)=6.250007e-03, rel_err(init)=2.860e-01
+/work2/wenbo/soupy/examples/hyperelasticity/driver_hyperelasticity_compare_cvar_models.py:468: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
+  result = scipy.optimize.minimize(
+  [linear              ] iter    1: J_model=2.647657e-01, ||g||=1.571e-02, RSS=1324.1 MB, PeakRSS=1343.4 MB, cost_mem=1323.9->1324.1 MB, grad_mem=1324.1->1324.1 MB
+  [linear              ] iter    2: J_model=1.050323e-01, ||g||=5.333e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    3: J_model=8.202619e-02, ||g||=3.970e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    4: J_model=6.997865e-02, ||g||=3.127e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    5: J_model=6.761109e-02, ||g||=2.899e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    6: J_model=6.673250e-02, ||g||=2.801e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    7: J_model=6.627378e-02, ||g||=2.747e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    8: J_model=6.591819e-02, ||g||=2.703e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter    9: J_model=6.560306e-02, ||g||=2.664e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter   10: J_model=6.541303e-02, ||g||=2.641e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter   11: J_model=6.531787e-02, ||g||=2.631e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] iter   12: J_model=6.525561e-02, ||g||=2.626e-03, RSS=1324.3 MB, PeakRSS=1343.4 MB, cost_mem=1324.3->1324.3 MB, grad_mem=1324.3->1324.3 MB
+  [linear              ] done [root-only serial]: success=True, nit=12, avg_iter_time=0.50s
+  [linear              ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [linear              ] optimal: J_model(z*)=6.525561e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=3.096e-01
+
+Optimizing quadratic with L-BFGS-B ...
+  [quadratic           ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [quadratic           ] initial: J_model(init)=8.711256e-02, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=7.840e-02
+  [quadratic           ] iter    1: J_model=8.104107e-02, ||g||=2.028e-02, RSS=1414.6 MB, PeakRSS=1398.0 MB, cost_mem=1414.6->1414.6 MB, grad_mem=1414.6->1414.6 MB
+  [quadratic           ] iter    2: J_model=8.103945e-02, ||g||=1.816e-02, RSS=1414.6 MB, PeakRSS=1398.0 MB, cost_mem=1414.6->1414.6 MB, grad_mem=1414.6->1414.6 MB
+  [quadratic           ] iter    3: J_model=8.103906e-02, ||g||=1.149e-02, RSS=1414.6 MB, PeakRSS=1398.0 MB, cost_mem=1414.6->1414.6 MB, grad_mem=1414.6->1414.6 MB
+  [quadratic           ] iter    4: J_model=8.103887e-02, ||g||=3.503e-03, RSS=1414.6 MB, PeakRSS=1398.0 MB, cost_mem=1414.6->1414.6 MB, grad_mem=1414.6->1414.6 MB
+  [quadratic           ] iter    5: J_model=8.103887e-02, ||g||=3.451e-03, RSS=1414.6 MB, PeakRSS=1398.0 MB, cost_mem=1414.6->1414.6 MB, grad_mem=1414.6->1414.6 MB
+  [quadratic           ] done [root-only serial]: success=True, nit=5, avg_iter_time=24.09s
+  [quadratic           ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [quadratic           ] optimal: J_model(z*)=8.103887e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=1.427e-01
+
+Optimizing mixture_linear_kle with L-BFGS-B ...
+  [mixture_linear_kle  ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_linear_kle  ] initial: J_model(init)=8.562664e-02, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=9.412e-02
+  [mixture_linear_kle  ] iter    1: J_model=8.562664e-02, ||g||=3.680e-03, RSS=1428.1 MB, PeakRSS=1411.5 MB, cost_mem=1427.9->1428.0 MB, grad_mem=1428.0->1428.1 MB
+  [mixture_linear_kle  ] iter    2: J_model=8.557766e-02, ||g||=3.677e-03, RSS=1428.2 MB, PeakRSS=1411.5 MB, cost_mem=1428.1->1428.1 MB, grad_mem=1428.1->1428.2 MB
+  [mixture_linear_kle  ] done: success=True, nit=2, avg_iter_time=3.67s
+  [mixture_linear_kle  ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [mixture_linear_kle  ] optimal: J_model(z*)=8.557766e-02, J_true(z*)=9.446223e-02, cvar_true(z*)=8.466178e-02, mean_qoi(z*)=3.183715e-02, var_qoi(z*)=3.308260e-04, rel_err(z*)=9.405e-02
+
+Optimizing mixture_linear_hep with L-BFGS-B ...
+  [mixture_linear_hep  ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_linear_hep  ] initial: J_model(init)=9.092543e-02, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=3.806e-02
+  [mixture_linear_hep  ] iter    1: J_model=9.092542e-02, ||g||=3.945e-03, RSS=1428.4 MB, PeakRSS=1411.5 MB, cost_mem=1428.3->1428.3 MB, grad_mem=1428.3->1428.4 MB
+  [mixture_linear_hep  ] iter    2: J_model=9.087055e-02, ||g||=3.941e-03, RSS=1428.4 MB, PeakRSS=1411.5 MB, cost_mem=1428.4->1428.4 MB, grad_mem=1428.4->1428.4 MB
+  [mixture_linear_hep  ] done: success=True, nit=2, avg_iter_time=3.58s
+  [mixture_linear_hep  ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [mixture_linear_hep  ] optimal: J_model(z*)=9.087055e-02, J_true(z*)=9.446313e-02, cvar_true(z*)=8.466369e-02, mean_qoi(z*)=3.183897e-02, var_qoi(z*)=3.308364e-04, rel_err(z*)=3.803e-02
+
+Optimizing alternating_hep_linear_cvar with L-BFGS-B ...
+  [alternating_hep_linear_cvar] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [alternating_hep_linear_cvar] initial: J_model(init)=9.092543e-02, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=3.806e-02
+  [alternating_hep_linear_cvar] alternating outer step 1/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[1/5]] iter    1: J_model=9.092542e-02, ||g||=3.945e-03, RSS=1428.5 MB, PeakRSS=1412.0 MB, cost_mem=1428.5->1428.5 MB, grad_mem=1428.5->1428.5 MB
+  [alternating_hep_linear_cvar[1/5]] iter    2: J_model=9.087054e-02, ||g||=3.941e-03, RSS=1428.5 MB, PeakRSS=1412.0 MB, cost_mem=1428.5->1428.5 MB, grad_mem=1428.5->1428.5 MB
+  [alternating_hep_linear_cvar[1/5]] done: success=True, nit=2, avg_iter_time=2.71s
+  [alternating_hep_linear_cvar[1/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 2/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[2/5]] done: success=True, nit=0, avg_iter_time=3.08s
+  [alternating_hep_linear_cvar[2/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 3/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[3/5]] done: success=True, nit=0, avg_iter_time=3.00s
+  [alternating_hep_linear_cvar[3/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 4/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[4/5]] done: success=True, nit=0, avg_iter_time=3.00s
+  [alternating_hep_linear_cvar[4/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] alternating outer step 5/5: rebuild fixed-HEP objective
+  [alternating_hep_linear_cvar[5/5]] done: success=True, nit=0, avg_iter_time=3.01s
+  [alternating_hep_linear_cvar[5/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [alternating_hep_linear_cvar] optimal: J_model(z*)=9.087055e-02, J_true(z*)=9.446313e-02, cvar_true(z*)=8.466369e-02, mean_qoi(z*)=3.183897e-02, var_qoi(z*)=3.308364e-04, rel_err(z*)=3.803e-02
+
+Optimizing mixture_quadratic_kle with L-BFGS-B ...
+  [mixture_quadratic_kle] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_quadratic_kle] initial: J_model(init)=6.909571e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=6.310e+00
+  [mixture_quadratic_kle] iter    1: J_model=1.032801e-01, ||g||=7.384e-01, RSS=1404.4 MB, PeakRSS=1441.5 MB, cost_mem=1404.4->1404.4 MB, grad_mem=1404.4->1404.4 MB
+  [mixture_quadratic_kle] iter    2: J_model=9.572817e-02, ||g||=4.793e-01, RSS=1404.4 MB, PeakRSS=1441.5 MB, cost_mem=1404.4->1404.4 MB, grad_mem=1404.4->1404.4 MB
+  [mixture_quadratic_kle] iter    3: J_model=9.283629e-02, ||g||=4.511e-02, RSS=1404.5 MB, PeakRSS=1441.5 MB, cost_mem=1404.5->1404.5 MB, grad_mem=1404.5->1404.5 MB
+  [mixture_quadratic_kle] iter    4: J_model=9.281939e-02, ||g||=1.560e-02, RSS=1404.5 MB, PeakRSS=1441.5 MB, cost_mem=1404.5->1404.5 MB, grad_mem=1404.5->1404.5 MB
+  [mixture_quadratic_kle] iter    5: J_model=9.281806e-02, ||g||=5.980e-03, RSS=1404.6 MB, PeakRSS=1441.5 MB, cost_mem=1404.5->1404.5 MB, grad_mem=1404.5->1404.6 MB
+  [mixture_quadratic_kle] iter    6: J_model=9.281792e-02, ||g||=4.061e-03, RSS=1404.6 MB, PeakRSS=1441.5 MB, cost_mem=1404.6->1404.6 MB, grad_mem=1404.6->1404.6 MB
+  [mixture_quadratic_kle] iter    7: J_model=9.281792e-02, ||g||=4.053e-03, RSS=1404.6 MB, PeakRSS=1441.5 MB, cost_mem=1404.6->1404.6 MB, grad_mem=1404.6->1404.6 MB
+  [mixture_quadratic_kle] done: success=True, nit=7, avg_iter_time=46.73s
+  [mixture_quadratic_kle] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] optimal: J_model(z*)=9.281792e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=1.804e-02
+
+Optimizing mixture_quadratic_hep with L-BFGS-B ...
+  [mixture_quadratic_hep] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [mixture_quadratic_hep] initial: J_model(init)=6.898853e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=6.299e+00
+  [mixture_quadratic_hep] iter    1: J_model=1.039818e-01, ||g||=7.273e-01, RSS=1479.2 MB, PeakRSS=1462.6 MB, cost_mem=1479.1->1479.1 MB, grad_mem=1479.1->1479.2 MB
+  [mixture_quadratic_hep] iter    2: J_model=9.657997e-02, ||g||=4.707e-01, RSS=1479.2 MB, PeakRSS=1462.6 MB, cost_mem=1479.2->1479.2 MB, grad_mem=1479.2->1479.2 MB
+  [mixture_quadratic_hep] iter    3: J_model=9.370125e-02, ||g||=5.058e-02, RSS=1479.2 MB, PeakRSS=1462.6 MB, cost_mem=1479.2->1479.2 MB, grad_mem=1479.2->1479.2 MB
+  [mixture_quadratic_hep] iter    4: J_model=9.368591e-02, ||g||=2.806e-02, RSS=1479.2 MB, PeakRSS=1462.6 MB, cost_mem=1479.2->1479.2 MB, grad_mem=1479.2->1479.2 MB
+  [mixture_quadratic_hep] iter    5: J_model=9.368006e-02, ||g||=4.789e-03, RSS=1479.2 MB, PeakRSS=1462.6 MB, cost_mem=1479.2->1479.2 MB, grad_mem=1479.2->1479.2 MB
+  [mixture_quadratic_hep] iter    6: J_model=9.368001e-02, ||g||=4.092e-03, RSS=1479.3 MB, PeakRSS=1462.6 MB, cost_mem=1479.2->1479.2 MB, grad_mem=1479.2->1479.3 MB
+  [mixture_quadratic_hep] iter    7: J_model=9.368001e-02, ||g||=4.089e-03, RSS=1479.3 MB, PeakRSS=1462.6 MB, cost_mem=1479.3->1479.3 MB, grad_mem=1479.3->1479.3 MB
+  [mixture_quadratic_hep] done: success=True, nit=7, avg_iter_time=55.33s
+  [mixture_quadratic_hep] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_hep] optimal: J_model(z*)=9.368001e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=8.918e-03
+
+Optimizing alternating_hep_quadratic_cvar with L-BFGS-B ...
+  [alternating_hep_quadratic_cvar] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [alternating_hep_quadratic_cvar] initial: J_model(init)=6.898853e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=6.299e+00
+  [alternating_hep_quadratic_cvar] alternating outer step 1/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[1/5]] iter    1: J_model=1.039818e-01, ||g||=7.273e-01, RSS=1507.0 MB, PeakRSS=1490.2 MB, cost_mem=1507.0->1507.0 MB, grad_mem=1507.0->1507.0 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    2: J_model=9.657997e-02, ||g||=4.707e-01, RSS=1507.0 MB, PeakRSS=1490.2 MB, cost_mem=1507.0->1507.0 MB, grad_mem=1507.0->1507.0 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    3: J_model=9.370125e-02, ||g||=5.058e-02, RSS=1507.1 MB, PeakRSS=1490.2 MB, cost_mem=1507.1->1507.1 MB, grad_mem=1507.1->1507.1 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    4: J_model=9.368591e-02, ||g||=2.806e-02, RSS=1507.1 MB, PeakRSS=1490.2 MB, cost_mem=1507.1->1507.1 MB, grad_mem=1507.1->1507.1 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    5: J_model=9.368006e-02, ||g||=4.789e-03, RSS=1507.1 MB, PeakRSS=1490.2 MB, cost_mem=1507.1->1507.1 MB, grad_mem=1507.1->1507.1 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    6: J_model=9.368001e-02, ||g||=4.092e-03, RSS=1507.1 MB, PeakRSS=1490.2 MB, cost_mem=1507.1->1507.1 MB, grad_mem=1507.1->1507.1 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    7: J_model=9.368001e-02, ||g||=4.089e-03, RSS=1507.1 MB, PeakRSS=1490.2 MB, cost_mem=1507.1->1507.1 MB, grad_mem=1507.1->1507.1 MB
+  [alternating_hep_quadratic_cvar[1/5]] done: success=True, nit=7, avg_iter_time=46.74s
+  [alternating_hep_quadratic_cvar[1/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 2/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[2/5]] iter    1: J_model=9.368001e-02, ||g||=4.096e-03, RSS=1507.2 MB, PeakRSS=1490.2 MB, cost_mem=1507.2->1507.2 MB, grad_mem=1507.2->1507.2 MB
+  [alternating_hep_quadratic_cvar[2/5]] done: success=True, nit=1, avg_iter_time=93.83s
+  [alternating_hep_quadratic_cvar[2/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 3/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[3/5]] iter    1: J_model=9.368001e-02, ||g||=4.089e-03, RSS=1507.2 MB, PeakRSS=1490.2 MB, cost_mem=1507.2->1507.2 MB, grad_mem=1507.2->1507.2 MB
+  [alternating_hep_quadratic_cvar[3/5]] done: success=True, nit=1, avg_iter_time=93.88s
+  [alternating_hep_quadratic_cvar[3/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 4/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[4/5]] iter    1: J_model=9.368001e-02, ||g||=4.092e-03, RSS=1507.3 MB, PeakRSS=1490.2 MB, cost_mem=1507.3->1507.3 MB, grad_mem=1507.3->1507.3 MB
+  [alternating_hep_quadratic_cvar[4/5]] done: success=True, nit=1, avg_iter_time=93.98s
+  [alternating_hep_quadratic_cvar[4/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 5/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[5/5]] iter    1: J_model=9.368001e-02, ||g||=4.089e-03, RSS=1507.3 MB, PeakRSS=1490.2 MB, cost_mem=1507.3->1507.3 MB, grad_mem=1507.3->1507.3 MB
+  [alternating_hep_quadratic_cvar[5/5]] done: success=True, nit=1, avg_iter_time=93.97s
+  [alternating_hep_quadratic_cvar[5/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] optimal: J_model(z*)=9.368001e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=8.918e-03
+
+Optimizing saa_1 with L-BFGS-B ...
+  [saa_1               ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [saa_1               ] initial: J_model(init)=7.695449e-02, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=1.859e-01
+  [saa_1               ] iter    1: J_model=6.931987e-02, ||g||=1.000e+00, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    2: J_model=6.041454e-02, ||g||=7.414e+00, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    3: J_model=6.033730e-02, ||g||=1.000e+00, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    4: J_model=6.031591e-02, ||g||=8.599e-01, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    5: J_model=6.031364e-02, ||g||=6.455e-01, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    6: J_model=6.031252e-02, ||g||=5.174e-01, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    7: J_model=6.031171e-02, ||g||=8.959e-02, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    8: J_model=6.031168e-02, ||g||=8.898e-03, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] iter    9: J_model=6.031168e-02, ||g||=2.381e-03, RSS=1547.9 MB, PeakRSS=1530.7 MB, cost_mem=1547.9->1547.9 MB, grad_mem=1547.9->1547.9 MB
+  [saa_1               ] done [root-only serial]: success=True, nit=9, avg_iter_time=0.32s
+  [saa_1               ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_1               ] optimal: J_model(z*)=6.031168e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=3.619e-01
+
+Optimizing saa_10 with L-BFGS-B ...
+  [saa_10              ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [saa_10              ] initial: J_model(init)=1.333474e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=4.107e-01
+  [saa_10              ] iter    1: J_model=8.802434e-02, ||g||=1.000e+00, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_10              ] iter    2: J_model=7.762332e-02, ||g||=1.000e+00, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_10              ] iter    3: J_model=7.756404e-02, ||g||=5.250e-01, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_10              ] iter    4: J_model=7.755919e-02, ||g||=6.837e-02, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_10              ] iter    5: J_model=7.755911e-02, ||g||=4.867e-03, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_10              ] iter    6: J_model=7.755911e-02, ||g||=3.263e-03, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_10              ] done [root-only serial]: success=True, nit=6, avg_iter_time=2.98s
+  [saa_10              ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_10              ] optimal: J_model(z*)=7.755911e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=1.795e-01
+
+Optimizing saa_100 with L-BFGS-B ...
+  [saa_100             ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [saa_100             ] initial: J_model(init)=6.686980e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=6.074e+00
+  [saa_100             ] iter    1: J_model=8.324297e-02, ||g||=3.559e-03, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_100             ] iter    2: J_model=8.324245e-02, ||g||=3.559e-03, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_100             ] iter    3: J_model=8.319684e-02, ||g||=3.556e-03, RSS=1497.0 MB, PeakRSS=1530.7 MB, cost_mem=1497.0->1497.0 MB, grad_mem=1497.0->1497.0 MB
+  [saa_100             ] done: success=True, nit=3, avg_iter_time=2.07s
+  [saa_100             ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [saa_100             ] optimal: J_model(z*)=8.319684e-02, J_true(z*)=9.446302e-02, cvar_true(z*)=8.466343e-02, mean_qoi(z*)=3.183790e-02, var_qoi(z*)=3.308382e-04, rel_err(z*)=1.193e-01
+
+Optimizing saa_200 with L-BFGS-B ...
+  [saa_200             ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [saa_200             ] initial: J_model(init)=6.715343e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=6.104e+00
+  [saa_200             ] iter    1: J_model=1.014001e-01, ||g||=9.000e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    2: J_model=9.101810e-02, ||g||=7.000e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    3: J_model=8.712516e-02, ||g||=1.372e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    4: J_model=8.712301e-02, ||g||=1.001e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    5: J_model=8.711506e-02, ||g||=8.419e-03, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    6: J_model=8.711502e-02, ||g||=4.092e-03, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    7: J_model=8.711502e-02, ||g||=3.790e-03, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] iter    8: J_model=8.711502e-02, ||g||=3.753e-03, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_200             ] done: success=True, nit=8, avg_iter_time=1.01s
+  [saa_200             ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_200             ] optimal: J_model(z*)=8.711502e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=7.837e-02
+
+Optimizing saa_500 with L-BFGS-B ...
+  [saa_500             ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [saa_500             ] initial: J_model(init)=6.546330e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=5.926e+00
+  [saa_500             ] iter    1: J_model=9.972744e-02, ||g||=7.200e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_500             ] iter    2: J_model=9.209001e-02, ||g||=4.800e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_500             ] iter    3: J_model=8.991034e-02, ||g||=1.201e-01, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_500             ] iter    4: J_model=8.987322e-02, ||g||=4.020e-02, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_500             ] iter    5: J_model=8.986905e-02, ||g||=3.938e-03, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_500             ] iter    6: J_model=8.986905e-02, ||g||=3.905e-03, RSS=1497.1 MB, PeakRSS=1530.7 MB, cost_mem=1497.1->1497.1 MB, grad_mem=1497.1->1497.1 MB
+  [saa_500             ] done: success=True, nit=6, avg_iter_time=2.57s
+  [saa_500             ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_500             ] optimal: J_model(z*)=8.986905e-02, J_true(z*)=9.452299e-02, cvar_true(z*)=8.475254e-02, mean_qoi(z*)=3.186999e-02, var_qoi(z*)=3.315382e-04, rel_err(z*)=4.924e-02
+
+Optimizing saa_1000 with L-BFGS-B ...
+  [saa_1000            ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [saa_1000            ] initial: J_model(init)=6.595253e-01, J_true(init)=9.452299e-02, cvar_true(init)=8.475254e-02, mean_qoi(init)=3.186999e-02, var_qoi(init)=3.315382e-04, rel_err(init)=5.977e+00
+  [saa_1000            ] iter    1: J_model=1.001625e-01, ||g||=7.000e-01, RSS=1497.2 MB, PeakRSS=1530.7 MB, cost_mem=1497.2->1497.2 MB, grad_mem=1497.2->1497.2 MB
+  [saa_1000            ] iter    2: J_model=9.324147e-02, ||g||=4.200e-01, RSS=1497.2 MB, PeakRSS=1530.7 MB, cost_mem=1497.2->1497.2 MB, grad_mem=1497.2->1497.2 MB
+  [saa_1000            ] iter    3: J_model=9.147031e-02, ||g||=6.012e-02, RSS=1497.2 MB, PeakRSS=1530.7 MB, cost_mem=1497.2->1497.2 MB, grad_mem=1497.2->1497.2 MB
+  [saa_1000            ] iter    4: J_model=9.145330e-02, ||g||=2.041e-02, RSS=1497.2 MB, PeakRSS=1530.7 MB, cost_mem=1497.2->1497.2 MB, grad_mem=1497.2->1497.2 MB
+  [saa_1000            ] iter    5: J_model=9.145083e-02, ||g||=3.978e-03, RSS=1497.2 MB, PeakRSS=1530.7 MB, cost_mem=1497.2->1497.2 MB, grad_mem=1497.2->1497.2 MB
+  [saa_1000            ] iter    6: J_model=9.145020e-02, ||g||=3.978e-03, RSS=1497.3 MB, PeakRSS=1530.7 MB, cost_mem=1497.3->1497.3 MB, grad_mem=1497.3->1497.3 MB
+  [saa_1000            ] iter    7: J_model=9.144109e-02, ||g||=2.038e-02, RSS=1497.3 MB, PeakRSS=1530.7 MB, cost_mem=1497.3->1497.3 MB, grad_mem=1497.3->1497.3 MB
+  [saa_1000            ] iter    8: J_model=9.143002e-02, ||g||=3.983e-02, RSS=1497.3 MB, PeakRSS=1530.7 MB, cost_mem=1497.3->1497.3 MB, grad_mem=1497.3->1497.3 MB
+  [saa_1000            ] iter    9: J_model=9.136464e-02, ||g||=6.012e-02, RSS=1497.3 MB, PeakRSS=1530.7 MB, cost_mem=1497.3->1497.3 MB, grad_mem=1497.3->1497.3 MB
+  [saa_1000            ] iter   10: J_model=9.135466e-02, ||g||=4.018e-02, RSS=1497.3 MB, PeakRSS=1530.7 MB, cost_mem=1497.3->1497.3 MB, grad_mem=1497.3->1497.3 MB
+  [saa_1000            ] iter   11: J_model=9.134547e-02, ||g||=3.971e-03, RSS=1497.3 MB, PeakRSS=1530.7 MB, cost_mem=1497.3->1497.3 MB, grad_mem=1497.3->1497.3 MB
+  [saa_1000            ] done: success=True, nit=11, avg_iter_time=6.33s
+  [saa_1000            ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
+  [saa_1000            ] optimal: J_model(z*)=9.134547e-02, J_true(z*)=9.440860e-02, cvar_true(z*)=8.457059e-02, mean_qoi(z*)=3.180614e-02, var_qoi(z*)=3.301038e-04, rel_err(z*)=3.245e-02

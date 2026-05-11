@@ -38,7 +38,7 @@ def sample_superquantile(samples, beta):
     return quantile + np.mean(np.maximum(samples - quantile, 0))/(1-beta)
     
 
-def sample_superquantile_by_minimization(samples, beta, epsilon=1e-2):
+def sample_superquantile_by_minimization(samples, beta, epsilon=1e-4):
     """
     Evaluate superquantile from samples by minimization 
     """ 
@@ -54,7 +54,7 @@ def sample_superquantile_by_minimization(samples, beta, epsilon=1e-2):
 def superquantileRiskMeasureSAASettings(data = {}):
     data['sample_size'] = [100,'Number of Monte Carlo samples']
     data['beta'] = [0.95, 'Quantile value for superquantile']
-    data['epsilon'] = [0.01, 'Sharpness of smooth plus approximation']
+    data['epsilon'] = [1e-4, 'Sharpness of smooth plus approximation']
     data['seed'] = [1, 'rng seed for sampling']
     data['smoothplus_type'] = ['quartic', 'approximation type for smooth plus function']
     return ParameterList(data)
@@ -371,5 +371,4 @@ class SuperquantileRiskMeasureSAA(RiskMeasure):
         q_all = self.gather_samples()
         value = sample_superquantile(q_all, self.beta)
         return value 
-
 

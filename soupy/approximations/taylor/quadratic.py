@@ -83,9 +83,9 @@ class _TaylorQuadraticLegacy:
         self.mhatstar = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
-        self._omega_template = MultiVector(self.pde.generate_parameter(), self.N_tr)
+        self._omega_template = MultiVector(self.pde.generate_parameter(), self.N_tr + 10) # N_tr + 10 is for the purpose of oversampling
         rand = Random(seed=self.seed)
-        for i in range(self.N_tr):
+        for i in range(self.N_tr + 10): # N_tr + 10 is for the purpose of oversampling
             rand.normal(1.0, self._omega_template[i])
 
         # MPI setup
@@ -207,12 +207,27 @@ class _TaylorQuadraticLegacy:
     def objective(self):
         Q0 = self.objectiveLinear()
 
-        omega = MultiVector(self.pde.generate_parameter(), self.N_tr)
-        for i in range(self.N_tr):
+        omega = MultiVector(self.pde.generate_parameter(), self.N_tr + 10) # Later need to change back
+        for i in range(self.N_tr + 10): # N_tr + 10 is for the purpose of oversampling
             omega[i].zero()
             omega[i].axpy(1.0, self._omega_template[i])
 
-        self.d, self.U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=2)
+        self.d, self.U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr + 10, s=1) # N_tr + 10 is for the purpose of oversampling
+        
+        # Arranging the modes in descending order of absolute value and selecting N_tr modes (for the oversampling case)
+        perm = np.argsort(np.abs(self.d))[::-1][:self.N_tr]
+        self.d = self.d[perm]
+
+        U_full = self.U
+        U_sel = MultiVector(U_full[0], self.N_tr)
+        for j, idx in enumerate(perm):
+            U_sel[j].zero()
+            U_sel[j].axpy(1.0, U_full[int(idx)])
+
+        self.U = U_sel
+        # If using oversampling, should also change the shape of omega and 
+        # omega_template (as well as omega_template's random initialization) to N_tr + k. 
+        
         mean_quad_diff = self._mean_quad_diff()
 
         for i in range(self.N_tr):

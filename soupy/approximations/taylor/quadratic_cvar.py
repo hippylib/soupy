@@ -124,9 +124,9 @@ class _TaylorQuadraticCVaRLegacy:
         self.mhatstar = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
-        self._omega_template = MultiVector(self.pde.generate_parameter(), self.N_tr)
+        self._omega_template = MultiVector(self.pde.generate_parameter(), self.N_tr + 10) # N_tr + 10 is for the purpose of oversampling
         rand = Random(seed=self.seed)
-        for i in range(self.N_tr):
+        for i in range(self.N_tr + 10): # N_tr + 10 is for the purpose of oversampling
             rand.normal(1.0, self._omega_template[i])
 
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
@@ -138,7 +138,7 @@ class _TaylorQuadraticCVaRLegacy:
         self.Rm_mc = []
         self._mc_samples_initialized = False
 
-        self.d = np.zeros(self.N_tr)
+        self.d = np.zeros(self.N_tr + 10) # N_tr + 10 is for the purpose of oversampling
         self.U = None
         self.Q_0 = 0.0
         self.t_opt = 0.0
@@ -242,7 +242,7 @@ class _TaylorQuadraticCVaRLegacy:
         z_fun = vector2Function(self.z, self.pde.Vh[CONTROL])
         form = self.pde.varf_handler(x_fun, m_fun, y_fun, z_fun)
 
-        # Compute \bar Q_m, which is  \bar r_m when the state and adjoint equations holds.  
+        # # Compute \bar Q_m, which is  \bar r_m when the state and adjoint equations holds.  
         m_test = dl.TestFunction(self.pde.Vh[PARAMETER])
         self.dmq.zero()
         self.dmq.axpy(1.0, dl.assemble(dl.derivative(form, m_fun, m_test)))
@@ -250,13 +250,26 @@ class _TaylorQuadraticCVaRLegacy:
 
     # Estimate the dominant eigenvalues and dominant eigenvectors (incremental states and adjoints are solved in the Hessian action)
     def _compute_eigendecomposition(self):
-        omega = MultiVector(self.pde.generate_parameter(), self.N_tr)
-        for i in range(self.N_tr):
+        omega = MultiVector(self.pde.generate_parameter(), self.N_tr + 10) # N_tr + 10 is for the purpose of oversampling
+        for i in range(self.N_tr + 10): # N_tr + 10 is for the purpose of oversampling
             omega[i].zero()
             omega[i].axpy(1.0, self._omega_template[i])
         self.d, self.U = doublePassG(
-            self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=2
+            self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr + 10, s=1
         )
+        # Arranging the modes in descending order of absolute value and selecting N_tr modes (for the oversampling case)
+        perm = np.argsort(np.abs(self.d))[::-1][:self.N_tr]
+        self.d = self.d[perm]
+
+        U_full = self.U
+        U_sel = MultiVector(U_full[0], self.N_tr)
+        for j, idx in enumerate(perm):
+            U_sel[j].zero()
+            U_sel[j].axpy(1.0, U_full[int(idx)])
+
+        self.U = U_sel
+        # If using oversampling, should also change the shape of omega and 
+        # omega_template (as well as omega_template's random initialization) to N_tr + k. 
 
     def _hessian_inner(self, mhat1, mhat2):
         xhat = self.pde.generate_state()

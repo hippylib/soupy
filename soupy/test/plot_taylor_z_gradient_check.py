@@ -150,7 +150,7 @@ def main():
         description="Check z-gradient accuracy for linear/quadratic/mixture-linear/mixture-quadratic Taylor approximations"
     )
     parser.add_argument("--beta", type=float, default=10.0, help="Variance weight beta")
-    parser.add_argument("--n-tr", type=int, default=50, help="N_tr for quadratic Taylor")
+    parser.add_argument("--n-tr", type=int, default=10, help="N_tr for quadratic Taylor")
     parser.add_argument("--n-mix", type=int, default=5, help="N_mix for mixture Taylor")
     parser.add_argument(
         "--mix-direction",
@@ -164,7 +164,7 @@ def main():
     parser.add_argument(
         "--z-value",
         type=float,
-        default=0.5,
+        default=10.0,
         help="Constant control value at the test point",
     )
     parser.add_argument("--nx", type=int, default=16, help="Mesh cells in x")

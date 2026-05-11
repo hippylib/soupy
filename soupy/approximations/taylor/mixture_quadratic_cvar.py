@@ -25,11 +25,17 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
+import gc
+import os
+import sys
+
 import dolfin as dl
 import numpy as np
+from mpi4py import MPI
 from hippylib import MultiVector, Random
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
+from ...collectives.collective import MultipleSerialPDEsCollective, NullCollective
 from ...modeling.augmentedVector import AugmentedVector
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
@@ -43,7 +49,7 @@ from .settings import taylor_mixture_quadratic_cvar_settings, taylor_quadratic_c
 class _TaylorMixtureQuadraticCVaRLegacy:
     """Gaussian-mixture quadratic Taylor CVaR with adjoint-based z-gradient."""
 
-    def __init__(self, settings, model, prior, penalization, tol=1e-9):
+    def __init__(self, settings, model, prior, penalization, tol=1e-9, comm_sampler=None):
         self.settings = settings
         self.model = model
         self.pde = model.problem
@@ -89,8 +95,20 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         if self.N_mc <= 0:
             raise RuntimeError("mixture quadratic CVaR requires N_mc > 0.")
 
-        self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
-        self.mpi_size = dl.MPI.size(self.pde.Vh[STATE].mesh().mpi_comm())
+        self.mesh_comm = self.pde.Vh[STATE].mesh().mpi_comm()
+        self.mesh_rank = dl.MPI.rank(self.mesh_comm)
+        self.mesh_size = dl.MPI.size(self.mesh_comm)
+        self.mix_comm = MPI.COMM_WORLD if comm_sampler is None else comm_sampler
+        self.mix_rank = self.mix_comm.Get_rank()
+        self.mix_size = self.mix_comm.Get_size()
+        self.cluster_parallel = self.mesh_size == 1 and self.mix_size > 1
+        self.collective = (
+            MultipleSerialPDEsCollective(self.mix_comm)
+            if self.cluster_parallel
+            else NullCollective()
+        )
+        self.mpi_rank = self.mix_rank if self.cluster_parallel else self.mesh_rank
+        self.mpi_size = self.mesh_size
 
         self.mix_1d = get_1d_gmm_library_mixture(
             self.N_mix, rule=1, warn=(self.mpi_rank == 0)
@@ -120,10 +138,52 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         self.shared_m_mc = []
         self.shared_Rm_mc = []
         self._shared_samples_direction_version = -1
+        self.local_component_solvers = {}
 
         self.Q_surrogate = np.zeros(0)
         self.t_opt = 0.0
         self.cvar = 0.0
+
+    def _is_print_root(self):
+        return self.mix_rank == 0 if self.cluster_parallel else self.mesh_rank == 0
+
+    def _owned_component_indices(self):
+        if not self.cluster_parallel:
+            return tuple(range(self.N_mix))
+        return tuple(i for i in range(self.N_mix) if i % self.mix_size == self.mix_rank)
+
+    def _reset_component_storage(self):
+        self.component_solvers = [None] * self.N_mix
+        self.component_Q0 = [None] * self.N_mix
+        self.component_d = [None] * self.N_mix
+        self.component_samples = [None] * self.N_mix
+        self.local_component_solvers = {}
+
+    def _store_component_solver(self, index, solver):
+        self.local_component_solvers[index] = solver
+        self.component_solvers[index] = solver
+        self.component_Q0[index] = float(solver.Q_0)
+        self.component_d[index] = np.array(solver.d, copy=True)
+        self.component_samples[index] = np.array(solver.Q_surrogate, copy=True)
+
+    def _gather_component_summaries(self):
+        local_payload = []
+        for index, solver in self.local_component_solvers.items():
+            local_payload.append(
+                {
+                    "index": index,
+                    "Q0": float(solver.Q_0),
+                    "d": np.array(solver.d, copy=True),
+                    "samples": np.array(solver.Q_surrogate, copy=True),
+                }
+            )
+
+        for payloads in self.mix_comm.allgather(local_payload):
+            for payload in payloads:
+                index = payload["index"]
+                self.component_Q0[index] = payload["Q0"]
+                self.component_d[index] = payload["d"]
+                self.component_samples[index] = payload["samples"]
 
     def _copy_zt(self, zt):
         self.z.zero()
@@ -220,7 +280,7 @@ class _TaylorMixtureQuadraticCVaRLegacy:
             self.psi.axpy(1.0, U[dominant_idx])
             self.lambda_psi = 1.0
 
-            if self.verbose and self.mpi_rank == 0:
+            if self.verbose and self._is_print_root():
                 print(
                     f"  [Mixture Quad CVaR] Using HEP direction, "
                     f"dominant eigenvalue = {dominant_eigenvalue:.4e}"
@@ -248,7 +308,7 @@ class _TaylorMixtureQuadraticCVaRLegacy:
             self.psi = v
             self.lambda_psi = 1.0
 
-            if self.verbose and self.mpi_rank == 0:
+            if self.verbose and self._is_print_root():
                 print("  [Mixture Quad CVaR] Using KLE direction")
 
         mix_means_1d = self.mix_1d["means"]
@@ -287,7 +347,9 @@ class _TaylorMixtureQuadraticCVaRLegacy:
             return
 
         sigma = float(self.mix_1d["sigma"])
-        random_gen = Random(myid=0, nproc=self.mpi_size)
+        # Keep the surrogate parameter samples deterministic across direction
+        # rebuilds so HEP updates do not introduce fresh Monte Carlo noise.
+        random_gen = Random(myid=0, nproc=self.mpi_size, seed=self.seed)
 
         self.shared_m_mc = []
         self.shared_Rm_mc = []
@@ -370,14 +432,14 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         value = float(t)
         scale = 1.0 / (1.0 - self.beta)
         # Each component's contribution to cvar is 1/(1-beta) * w_i * np.mean(smoothplus(Q_surrogate - t)), w_i the component weight
-        for i, solver in enumerate(self.component_solvers):
+        for i, solver in self.local_component_solvers.items():
             value += self.component_weights[i] * np.mean(
                 self.smoothplus(solver.Q_surrogate - t)
             ) * scale
         return float(value)
 
     def _refresh_component_weights_and_adjoint_data(self):
-        for i, solver in enumerate(self.component_solvers):
+        for i, solver in self.local_component_solvers.items():
             solver.t = float(self.t)
             solver.t_opt = float(self.t)
             solver.cvar = float(
@@ -407,27 +469,34 @@ class _TaylorMixtureQuadraticCVaRLegacy:
             sigma_sq,
             self.lambda_psi,
         )
+        
         self._build_shared_component_samples(shared_prior)
 
-        self.component_solvers = []
-        self.component_Q0 = []
-        self.component_d = []
-        self.component_samples = []
+        self._reset_component_storage()
+        local_objective_excess = 0.0
 
-        for i in range(self.N_mix):
+        for i in self._owned_component_indices():
             solver = self._prepare_component_solver(self.m_bar_i[i])
-            self.component_solvers.append(solver)
-            self.component_Q0.append(float(solver.Q_0))
-            self.component_d.append(np.array(solver.d, copy=True))
-            self.component_samples.append(np.array(solver.Q_surrogate, copy=True))
+            self._store_component_solver(i, solver)
+            local_objective_excess += self.component_weights[i] * np.mean(
+                self.smoothplus(solver.Q_surrogate - self.t)
+            )
+    
 
         # Evaluate the mixture CVaR objective at the current optimization scalar t.
         self.t_opt = float(self.t)
-        self.cvar = self._mixture_cvar_objective(self.t)
+        if self.cluster_parallel:
+            self._gather_component_summaries()
+            total_excess = float(self.collective.allReduce(local_objective_excess, "sum"))
+            self.cvar = float(self.t + total_excess / (1.0 - self.beta))
+        else:
+            self.cvar = self._mixture_cvar_objective(self.t)
+        
         self._refresh_component_weights_and_adjoint_data()
+
         self.Q_surrogate = np.concatenate(self.component_samples)
 
-        if self.verbose and self.mpi_rank == 0:
+        if self.verbose and self._is_print_root():
             print(
                 f"  [Mixture Quad CVaR] N_mix={self.N_mix}, "
                 f"t={self.t:.4e}, CVaR={self.cvar:.4e}"
@@ -437,7 +506,7 @@ class _TaylorMixtureQuadraticCVaRLegacy:
                     self.component_Q0[: min(5, len(self.component_Q0))]
                 )
             )
-
+            
         return self.cvar
 
     def _component_z_gradient(self, solver):
@@ -451,13 +520,12 @@ class _TaylorMixtureQuadraticCVaRLegacy:
     def costValue(self, zt, FD_gradient_check=False):
         self.func_ncalls += 1
         self._copy_zt(zt)
-
-        objective = self.objective(FD_gradient_check=FD_gradient_check)
+        objective_value = self.objective(FD_gradient_check=FD_gradient_check)
         self._cache_objective_zt()
         self.grad_cache = None
 
         penalty = 0.0 if self.penalization is None else self.penalization.cost(self.z)
-        return objective + penalty
+        return objective_value + penalty
 
     def costGradient(self, zt):
         self.grad_ncalls += 1
@@ -470,18 +538,24 @@ class _TaylorMixtureQuadraticCVaRLegacy:
         dz = AugmentedVector(self.model.generate_vector(CONTROL), copy_vector=False)
 
         # Final mixture gradient is the weighted combination sum_i w_i * grad_i.
-        for i, solver in enumerate(self.component_solvers):
+        for i, solver in self.local_component_solvers.items():
             dz.get_vector().axpy(self.component_weights[i], self._component_z_gradient(solver))
+
+        if self.cluster_parallel:
+            self.collective.allReduce(dz.get_vector(), "sum")
 
         if self.penalization is not None:
             pen = self.model.generate_vector(CONTROL)
             self.penalization.grad(self.z, pen)
             dz.get_vector().axpy(1.0, pen)
 
-        mixture_t_grad = 1.0 - sum(
+        local_t_grad_sum = sum(
             self.component_weights[i] * solver.sample_weight_sum
-            for i, solver in enumerate(self.component_solvers)
+            for i, solver in self.local_component_solvers.items()
         )
+        if self.cluster_parallel:
+            local_t_grad_sum = float(self.collective.allReduce(local_t_grad_sum, "sum"))
+        mixture_t_grad = 1.0 - local_t_grad_sum
         dz.set_scalar(float(mixture_t_grad))
 
         self.grad_cache = dz.copy()
@@ -498,6 +572,7 @@ class TaylorMixtureQuadraticCVaRControlCostFunctional(ControlCostFunctional):
         penalization=None,
         settings: Optional[Union[dict, "ParameterList"]] = None,
         tol=1e-9,
+        comm_sampler=None,
     ):
         self.settings = taylor_mixture_quadratic_cvar_settings(settings)
         self._legacy = _TaylorMixtureQuadraticCVaRLegacy(
@@ -506,6 +581,7 @@ class TaylorMixtureQuadraticCVaRControlCostFunctional(ControlCostFunctional):
             prior,
             penalization,
             tol,
+            comm_sampler=comm_sampler,
         )
 
     @property
@@ -535,6 +611,14 @@ class TaylorMixtureQuadraticCVaRControlCostFunctional(ControlCostFunctional):
     @property
     def Q_surrogate(self):
         return self._legacy.Q_surrogate
+
+    @property
+    def cluster_parallel_enabled(self):
+        return self._legacy.cluster_parallel
+
+    @property
+    def owned_component_indices(self):
+        return self._legacy._owned_component_indices()
 
     def generate_vector(self, component="ALL"):
         if component == CONTROL:

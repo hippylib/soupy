@@ -138,7 +138,8 @@ if __name__ == "__main__":
     parser.add_argument('-r', '--risk_measure', type=str, default="deterministic", choices=["deterministic", "mean_var"], help="Risk measure type")
     parser.add_argument('-n', '--sample_size', type=int, default=32, help="Sample size for risk measure computation")
     parser.add_argument('-b', '--beta', type=float, default=1.0, help="Variance weight for risk measure")
-    parser.add_argument('-q', '--qoi_type', type=str, default="stiffness", choices=["all", "stiffness", "point"])
+    parser.add_argument('-q', '--qoi_type', type=str, default="virtual_work",
+                        choices=["all", "stiffness", "point", "virtual_work"])
     parser.add_argument('-p', '--penalization', type=float, default=1e-1, help="Scaling of penalization")
 
     parser.add_argument('--maxiter', type=int, default=100, help="Maximum number of SD iterations")

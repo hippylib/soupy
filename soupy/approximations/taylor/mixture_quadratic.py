@@ -21,6 +21,7 @@ from mpi4py import MPI
 from hippylib import MultiVector, Random
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
+from ...collectives.collective import MultipleSerialPDEsCollective, NullCollective
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.variables import ADJOINT, CONTROL, PARAMETER, STATE
@@ -148,7 +149,7 @@ class _ShiftedPrior:
 class _TaylorMixtureQuadraticLegacy:
     """Gaussian-mixture quadratic Taylor risk objective and gradient."""
 
-    def __init__(self, settings, model, prior, penalization, tol=1e-9):
+    def __init__(self, settings, model, prior, penalization, tol=1e-9, comm_sampler=None):
         self.settings = settings
         self.model = model
         self.pde = model.problem
@@ -180,10 +181,22 @@ class _TaylorMixtureQuadraticLegacy:
         except (KeyError, ValueError):
             self.verbose = False
 
-        self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
+        self.mesh_comm = self.pde.Vh[STATE].mesh().mpi_comm()
+        self.mesh_rank = dl.MPI.rank(self.mesh_comm)
+        self.mesh_size = dl.MPI.size(self.mesh_comm)
+        self.mix_comm = MPI.COMM_WORLD if comm_sampler is None else comm_sampler
+        self.mix_rank = self.mix_comm.Get_rank()
+        self.mix_size = self.mix_comm.Get_size()
+        self.cluster_parallel = self.mesh_size == 1 and self.mix_size > 1
+        self.collective = (
+            MultipleSerialPDEsCollective(self.mix_comm)
+            if self.cluster_parallel
+            else NullCollective()
+        )
+        self.mpi_rank = self.mix_rank if self.cluster_parallel else self.mesh_rank
 
         self.mix_1d = get_1d_gmm_library_mixture(
-            self.N_mix, rule=1, warn=(self.mpi_rank == 0)
+            self.N_mix, rule=1, warn=(self.mix_rank == 0)
         )
         self.component_weights = np.asarray(self.mix_1d["weights"])
 
@@ -191,6 +204,7 @@ class _TaylorMixtureQuadraticLegacy:
         self.lambda_psi = None
         self.m_bar_i = []
         self.direction_computed = False
+        self.local_component_results = {}
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
         self._hep_omega_template = MultiVector(self.pde.generate_parameter(), 11)
@@ -232,11 +246,36 @@ class _TaylorMixtureQuadraticLegacy:
         self.z_diff.axpy(-1.0, self.z)
         return self.z_diff.inner(self.z_diff) <= 1e-20
 
-    def _compute_direction(self):
-        """Compute decomposition direction (KLE or HEP)."""
-        if self.direction_computed:
-            return
+    def _is_print_root(self):
+        return self.mix_rank == 0 if self.cluster_parallel else self.mesh_rank == 0
 
+    def _owned_component_indices(self):
+        if not self.cluster_parallel:
+            return tuple(range(self.N_mix))
+        return tuple(i for i in range(self.N_mix) if i % self.mix_size == self.mix_rank)
+
+    def _reset_component_storage(self):
+        self.component_Q0 = [None] * self.N_mix
+        self.component_lin_var = [None] * self.N_mix
+        self.component_d = [None] * self.N_mix
+        self.component_quad_mean = [None] * self.N_mix
+        self.component_quad_var = [None] * self.N_mix
+        self.component_dmu = [None] * self.N_mix
+        self.component_dvar = [None] * self.N_mix
+        self.local_component_results = {}
+
+    def _build_component_means(self):
+        mix_means_1d = self.mix_1d["means"]
+        sqrt_lambda = np.sqrt(self.lambda_psi)
+
+        self.m_bar_i = []
+        for i in range(self.N_mix):
+            m_i = dl.Function(self.pde.Vh[PARAMETER]).vector()
+            m_i.axpy(1.0, self.prior.mean)
+            m_i.axpy(mix_means_1d[i] * sqrt_lambda, self.psi)
+            self.m_bar_i.append(m_i)
+
+    def _compute_direction_local(self):
         # Solve forward and adjoint PDE at the mean parameter for estimating Hessian at the mean. 
         self.x_all[CONTROL] = self.z
         self.x_all[PARAMETER] = self.prior.mean
@@ -267,9 +306,6 @@ class _TaylorMixtureQuadraticLegacy:
             self.psi.zero()
             self.psi.axpy(1.0, U[dominant_idx])
             self.lambda_psi = 1.0
-
-            if self.verbose and self.mpi_rank == 0:
-                print(f"  [Mixture Quad] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}")
         else:
             v = dl.Function(self.pde.Vh[PARAMETER]).vector()
             v.zero()
@@ -294,18 +330,42 @@ class _TaylorMixtureQuadraticLegacy:
             self.psi = v
             self.lambda_psi = 1.0
 
-            if self.verbose and self.mpi_rank == 0:
+            dominant_eigenvalue = None
+
+        return dominant_eigenvalue
+
+    def _compute_direction(self):
+        """Compute decomposition direction (KLE or HEP)."""
+        if self.direction_computed:
+            return
+
+        dominant_eigenvalue = None
+        if self.cluster_parallel:
+            if self.mix_rank == 0:
+                dominant_eigenvalue = self._compute_direction_local()
+            else:
+                self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
+                self.psi.zero()
+                self.lambda_psi = 0.0
+
+            self.collective.bcast(self.psi, root=0)
+            self.lambda_psi = self.collective.bcast(self.lambda_psi, root=0)
+            if self.direction == "hep":
+                if dominant_eigenvalue is None:
+                    dominant_eigenvalue = 0.0
+                dominant_eigenvalue = self.collective.bcast(dominant_eigenvalue, root=0)
+        else:
+            dominant_eigenvalue = self._compute_direction_local()
+
+        self._build_component_means()
+
+        if self.verbose and self._is_print_root():
+            if self.direction == "hep":
+                print(
+                    f"  [Mixture Quad] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}"
+                )
+            else:
                 print("  [Mixture Quad] Using KLE direction")
-
-        mix_means_1d = self.mix_1d["means"]
-        sqrt_lambda = np.sqrt(self.lambda_psi)
-
-        self.m_bar_i = []
-        for i in range(self.N_mix):
-            m_i = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            m_i.axpy(1.0, self.prior.mean)
-            m_i.axpy(mix_means_1d[i] * sqrt_lambda, self.psi)
-            self.m_bar_i.append(m_i)
 
         self.direction_computed = True
 
@@ -411,37 +471,70 @@ class _TaylorMixtureQuadraticLegacy:
             "d": d_i,
         }
 
+    def _store_component_result(self, index, comp):
+        self.local_component_results[index] = comp
+        self.component_Q0[index] = comp["Q0"]
+        self.component_lin_var[index] = comp["lin_var"]
+        self.component_d[index] = comp["d"]
+        self.component_quad_mean[index] = comp["mu"]
+        self.component_quad_var[index] = comp["var"]
+        self.component_dmu[index] = comp["dmu"]
+        self.component_dvar[index] = comp["dvar"]
+
+    def _gather_component_summaries(self):
+        local_payload = []
+        for index, comp in self.local_component_results.items():
+            local_payload.append(
+                {
+                    "index": index,
+                    "Q0": float(comp["Q0"]),
+                    "lin_var": float(comp["lin_var"]),
+                    "d": np.array(comp["d"], copy=True),
+                    "mu": float(comp["mu"]),
+                    "var": float(comp["var"]),
+                }
+            )
+
+        for payloads in self.mix_comm.allgather(local_payload):
+            for payload in payloads:
+                index = payload["index"]
+                self.component_Q0[index] = payload["Q0"]
+                self.component_lin_var[index] = payload["lin_var"]
+                self.component_d[index] = payload["d"]
+                self.component_quad_mean[index] = payload["mu"]
+                self.component_quad_var[index] = payload["var"]
+
     def objective(self):
         """Compute mixture objective and cache per-component sensitivities."""
         self._compute_direction()
 
-        self.component_Q0 = []
-        self.component_lin_var = []
-        self.component_d = []
-        self.component_quad_mean = []
-        self.component_quad_var = []
-        self.component_dmu = []
-        self.component_dvar = []
+        self._reset_component_storage()
 
-        for i in range(self.N_mix):
+        local_mean = 0.0
+        local_second_moment = 0.0
+
+        for i in self._owned_component_indices():
             comp = self._evaluate_component(self.m_bar_i[i])
-            self.component_Q0.append(comp["Q0"])
-            self.component_lin_var.append(comp["lin_var"])
-            self.component_d.append(comp["d"])
-            self.component_quad_mean.append(comp["mu"])
-            self.component_quad_var.append(comp["var"])
-            self.component_dmu.append(comp["dmu"])
-            self.component_dvar.append(comp["dvar"])
+            self._store_component_result(i, comp)
 
-        mu = np.asarray(self.component_quad_mean)
-        var = np.asarray(self.component_quad_var)
-        w = self.component_weights
+            w_i = self.component_weights[i]
+            local_mean += w_i * comp["mu"]
+            local_second_moment += w_i * (comp["mu"] ** 2 + comp["var"])
 
-        self.mixture_mean = float(np.sum(w * mu))
-        second_moment = np.sum(w * (mu ** 2 + var))
+        if self.cluster_parallel:
+            self._gather_component_summaries()
+            self.mixture_mean = float(self.collective.allReduce(local_mean, "sum"))
+            second_moment = float(self.collective.allReduce(local_second_moment, "sum"))
+        else:
+            mu = np.asarray(self.component_quad_mean)
+            var = np.asarray(self.component_quad_var)
+            w = self.component_weights
+            self.mixture_mean = float(np.sum(w * mu))
+            second_moment = float(np.sum(w * (mu ** 2 + var)))
+
         self.mixture_var = float(second_moment - self.mixture_mean ** 2)
 
-        if self.verbose and self.mpi_rank == 0:
+        if self.verbose and self._is_print_root():
             print(
                 f"  [Mixture Quad] N_mix={self.N_mix}, Mean={self.mixture_mean:.4e}, Var={self.mixture_var:.4e}"
             )
@@ -492,19 +585,29 @@ class _TaylorMixtureQuadraticLegacy:
         dsecond_mix = self.model.generate_vector(CONTROL)
         dsecond_mix.zero()
 
-        for i in range(self.N_mix):
-            w_i = self.component_weights[i]
-            mu_i = self.component_quad_mean[i]
-            # dmu_i and dvar_i are both full derivatives for component i.
-            dmu_mix.axpy(w_i, self.component_dmu[i])
-            dsecond_mix.axpy(2.0 * w_i * mu_i, self.component_dmu[i])
-            dsecond_mix.axpy(w_i, self.component_dvar[i])
+        if self.cluster_parallel:
+            for i, comp in self.local_component_results.items():
+                w_i = self.component_weights[i]
+                mu_i = comp["mu"]
+                dmu_mix.axpy(w_i, comp["dmu"])
+                dsecond_mix.axpy(2.0 * w_i * mu_i, comp["dmu"])
+                dsecond_mix.axpy(w_i, comp["dvar"])
+
+            self.collective.allReduce(dmu_mix, "sum")
+            self.collective.allReduce(dsecond_mix, "sum")
+        else:
+            for i in range(self.N_mix):
+                w_i = self.component_weights[i]
+                mu_i = self.component_quad_mean[i]
+                # dmu_i and dvar_i are both full derivatives for component i.
+                dmu_mix.axpy(w_i, self.component_dmu[i])
+                dsecond_mix.axpy(2.0 * w_i * mu_i, self.component_dmu[i])
+                dsecond_mix.axpy(w_i, self.component_dvar[i])
 
         # Equivalent form:
         # dJ = sum_i w_i*(1 + 2*beta*(mu_i - mu_mix))*dmu_i + beta*sum_i w_i*dvar_i
         # where mu_mix = sum_i w_i*mu_i. The implementation below uses the
         # second-moment form dJ = dmu_mix + beta*(dsecond_mix - 2*mu_mix*dmu_mix).
-
 
         dz.axpy(1.0, dmu_mix)
         dz.axpy(self.beta, dsecond_mix)
@@ -529,6 +632,7 @@ class TaylorMixtureQuadraticControlCostFunctional(ControlCostFunctional):
         penalization=None,
         settings: Optional[Union[dict, "ParameterList"]] = None,
         tol=1e-9,
+        comm_sampler=None,
     ):
         self.settings = taylor_mixture_quadratic_settings(settings)
         self._legacy = _TaylorMixtureQuadraticLegacy(
@@ -537,6 +641,7 @@ class TaylorMixtureQuadraticControlCostFunctional(ControlCostFunctional):
             prior,
             penalization,
             tol,
+            comm_sampler=comm_sampler,
         )
 
     @property
@@ -566,6 +671,14 @@ class TaylorMixtureQuadraticControlCostFunctional(ControlCostFunctional):
     @property
     def component_weights(self):
         return self._legacy.component_weights
+
+    @property
+    def cluster_parallel_enabled(self):
+        return self._legacy.cluster_parallel
+
+    @property
+    def owned_component_indices(self):
+        return self._legacy._owned_component_indices()
 
     def generate_vector(self, component="ALL"):
         return self._legacy.model.generate_vector(component)

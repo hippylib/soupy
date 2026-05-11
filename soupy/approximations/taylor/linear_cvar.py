@@ -47,6 +47,13 @@ def gaussian_cvar(mean, std, beta):
     return mean + std * pdf_at_quantile / (1 - beta)
 
 
+def gaussian_var(mean, std, beta):
+    """Compute VaR/quantile for a Gaussian distribution."""
+    if std < 1e-14:
+        return mean
+    return mean + std * norm.ppf(beta)
+
+
 def gaussian_cvar_grad_mean(beta):
     """Gradient of Gaussian CVaR with respect to mean.
 
@@ -121,6 +128,7 @@ class _TaylorLinearCVaRLegacy:
 
         # CVaR value
         self.cvar = 0.0
+        self.var = 0.0
 
         # MC correction storage
         self.lin_diff_cvar = np.zeros(self.N_mc) if self.N_mc > 0 else np.array([])
@@ -257,6 +265,8 @@ class _TaylorLinearCVaRLegacy:
         self.lin_var = self.dmq.inner(self.Cdmq)
         self.lin_std = np.sqrt(max(0.0, self.lin_var))
 
+        # Compute analytical VaR and CVaR for Gaussian
+        self.var = gaussian_var(self.lin_mean, self.lin_std, self.beta)
         # Compute analytical CVaR for Gaussian
         self.cvar = gaussian_cvar(self.lin_mean, self.lin_std, self.beta)
 
@@ -539,6 +549,11 @@ class TaylorLinearCVaRControlCostFunctional(ControlCostFunctional):
         return self._legacy.cvar
 
     @property
+    def var(self):
+        """Return the analytical VaR/quantile value."""
+        return self._legacy.var
+
+    @property
     def Q_mc(self):
         """Return MC samples (if correction enabled)."""
         return self._legacy.Q_mc
@@ -571,4 +586,4 @@ class TaylorLinearCVaRControlCostFunctional(ControlCostFunctional):
         Hzhat.axpy(1.0, Hz)
 
 
-__all__ = ["TaylorLinearCVaRControlCostFunctional", "gaussian_cvar"]
+__all__ = ["TaylorLinearCVaRControlCostFunctional", "gaussian_cvar", "gaussian_var"]

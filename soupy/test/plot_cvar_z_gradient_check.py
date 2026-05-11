@@ -195,7 +195,7 @@ def main():
     parser.add_argument(
         "--n-tr",
         type=int,
-        default=50,
+        default=10,
         help="Number of dominant Hessian modes for quadratic CVaR models",
     )
     parser.add_argument(
@@ -227,13 +227,13 @@ def main():
     parser.add_argument(
         "--z-value",
         type=float,
-        default=0.5,
+        default=10.0,
         help="Constant value used to initialize the control vector",
     )
     parser.add_argument(
         "--t-value",
         type=float,
-        default=0.5,
+        default=10.0,
         help="Constant value used to initialize the auxiliary scalar t",
     )
     parser.add_argument(
