@@ -38,14 +38,14 @@ class ReducedHessianSVD:
         xhat = self.pde.generate_state() # Initialize state increment
         yhat = self.pde.generate_state() # Initialize adjoint increment
         self.pde.apply_ij(ADJOINT, PARAMETER, mhat, self.rhs_fwd) # Compute RHS of forward increment (\partial_{vm} \bar{r} \hat{m})
-        self.pde.solveIncremental(xhat, -self.rhs_fwd, False) # Solve for forward increment
+        self.pde.solveIncremental(xhat, -self.rhs_fwd, False) # Solve for forward increment (false indicates that this is not incremental adjoint)
 
         self.pde.apply_ij(STATE, STATE, xhat, self.rhs_adj) # Compute RHS of adjoint increment (\partial_{uu} \bar{r} \hat{u})
         self.pde.apply_ij(STATE, PARAMETER, mhat, self.rhs_adj2) # Compute contribution from \partial_{um} \bar{r} \hat{m}
         self.rhs_adj.axpy(1.0, self.rhs_adj2)
         self.qoi.apply_ij(STATE, STATE, xhat, self.rhs_adj3) # contribution from Q_{uu}\hat{u}
         self.rhs_adj.axpy(1.0, self.rhs_adj3)
-        self.qoi.apply_ij(STATE, PARAMETER, mhat, self.rhs_adj4)
+        self.qoi.apply_ij(STATE, PARAMETER, mhat, self.rhs_adj4) # Should be zero if Q doesn't explicitly depend on the parameter
         self.rhs_adj.axpy(1.0, self.rhs_adj4)
         self.pde.solveIncremental(yhat, -self.rhs_adj, True)
 

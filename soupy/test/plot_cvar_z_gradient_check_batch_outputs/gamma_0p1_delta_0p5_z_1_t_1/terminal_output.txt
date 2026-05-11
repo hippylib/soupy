@@ -1,0 +1,28 @@
+/nethome/whao36/.conda/envs/soupy/lib/python3.11/site-packages/ufl/__init__.py:250: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+z-directional derivative check:
+  linear                 g.dz = 2.669393836028e-02
+  quadratic              g.dz = 3.365707283717e-01
+  mixture-linear-kle     g.dz = 1.645455459866e-01
+  mixture-linear-hep     g.dz = 1.619286873344e-01
+  mixture-quadratic-kle  g.dz = 7.572465730502e-01
+  mixture-quadratic-hep  g.dz = 7.572667645142e-01
+Estimated z-gradient convergence slope (log-log error vs epsilon):
+  linear                 slope ~ 1.000
+  quadratic              slope ~ 0.057
+  mixture-linear-kle     slope ~ 1.000
+  mixture-linear-hep     slope ~ 1.000
+  mixture-quadratic-kle  slope ~ 0.204
+  mixture-quadratic-hep  slope ~ 0.171
+t-directional derivative check:
+  quadratic              g.dt = -1.435841785727e+01
+  mixture-quadratic-kle  g.dt = -1.058642000000e+01
+  mixture-quadratic-hep  g.dt = -1.044452000000e+01
+Estimated t-gradient convergence slope (log-log error vs epsilon):
+  quadratic              slope ~ 0.655
+  mixture-quadratic-kle  slope ~ 0.748
+  mixture-quadratic-hep  slope ~ 0.759
+Saved plot to: /work/Wenbo/soupy/soupy/test/plot_cvar_z_gradient_check_batch_outputs/gamma_0p1_delta_0p5_z_1_t_1/cvar_z_gradient_fd_error.png
+Saved plot to: /work/Wenbo/soupy/soupy/test/plot_cvar_z_gradient_check_batch_outputs/gamma_0p1_delta_0p5_z_1_t_1/cvar_z_gradient_fd_error_relative.png
+Saved plot to: /work/Wenbo/soupy/soupy/test/plot_cvar_z_gradient_check_batch_outputs/gamma_0p1_delta_0p5_z_1_t_1/cvar_z_gradient_fd_error_t_gradient.png
+Saved plot to: /work/Wenbo/soupy/soupy/test/plot_cvar_z_gradient_check_batch_outputs/gamma_0p1_delta_0p5_z_1_t_1/cvar_z_gradient_fd_error_t_gradient_relative.png

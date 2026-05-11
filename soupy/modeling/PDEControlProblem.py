@@ -217,7 +217,7 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
         for i in range(4):
             g_form[i] = dl.derivative(f_form, x_fun[i])
             
-        self.A, dummy = dl.assemble_system(dl.derivative(g_form[ADJOINT],x_fun[STATE]), g_form[ADJOINT], self.bc0)
+        self.A, dummy = dl.assemble_system(dl.derivative(g_form[ADJOINT],x_fun[STATE]), g_form[ADJOINT], self.bc0) # The second g_form[ADJOINT] is just a place holder for RHS
         self.At, dummy = dl.assemble_system(dl.derivative(g_form[STATE],x_fun[ADJOINT]),  g_form[STATE], self.bc0)
         self.C = dl.assemble(dl.derivative(g_form[ADJOINT],x_fun[PARAMETER]))
         self.Cz = dl.assemble(dl.derivative(g_form[ADJOINT],x_fun[CONTROL]))
@@ -239,6 +239,8 @@ class PDEVariationalControlProblem(hp.PDEVariationalProblem):
             self.Wzz = None
         else:
             self.Wuu = dl.assemble(dl.derivative(g_form[STATE],x_fun[STATE]))
+            # bc.zero can be used the set the rows corresponding to the d.o.f. of solution's Dirichlet B.C. to zero 
+            # Since we have used full space for all function spaces, we have to set the coresponding rows and columns to zero. d
             [bc.zero(self.Wuu) for bc in self.bc0]
             # print("WUU NORM", np.linalg.norm(self.Wuu.array()))
             Wuu_t = hp.Transpose(self.Wuu)

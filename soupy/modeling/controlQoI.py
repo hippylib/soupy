@@ -105,7 +105,7 @@ class L2MisfitVarfHandler:
             return self.chi*(self.ud - u)**2*dl.dx
 
     
-
+# This is the one we currently used in experiment
 class VariationalControlQoI(ControlQoI):
     """
     Class for a QoI defined by its variational form 
@@ -126,6 +126,7 @@ class VariationalControlQoI(ControlQoI):
                   dl.Function(Vh[ADJOINT]).vector(), dl.Function(Vh[CONTROL]).vector()]
         self.x_test = [dl.TestFunction(Vh[STATE]), dl.TestFunction(Vh[PARAMETER]),
                        dl.TestFunction(Vh[ADJOINT]), dl.TestFunction(Vh[CONTROL])]
+        # These are placeholder test functions for constructing Q's derivatives, don't need to be set to specific values now.
 
         self.form_handler = form_handler
 
@@ -203,7 +204,7 @@ class VariationalControlQoI(ControlQoI):
         out.zero()
 
         x_fun = [hp.vector2Function(self.x[s], self.Vh[s]) for s in range(len(self.x))]
-        f_form = self.form_handler(x_fun[STATE], x_fun[PARAMETER], x_fun[CONTROL])
+        f_form = self.form_handler(x_fun[STATE], x_fun[PARAMETER], x_fun[CONTROL]) # This is Q
         dir_fun = hp.vector2Function(dir, self.Vh[j])
 
         f_i = dl.derivative(f_form, x_fun[i], self.x_test[i])

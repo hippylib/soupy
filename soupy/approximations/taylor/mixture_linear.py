@@ -26,7 +26,7 @@ from hippylib.algorithms.randomizedEigensolver import doublePassG
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.variables import ADJOINT, CONTROL, PARAMETER, STATE
-from .mixture_data import get_1d_mixture
+from .gmm_library import get_1d_gmm_library_mixture
 from .settings import taylor_mixture_linear_settings
 
 
@@ -72,6 +72,7 @@ class _TaylorMixtureLinearLegacy:
         self.beta = settings["beta"]
         self.N_mix = settings["N_mix"]
         self.direction = settings["direction"]
+        self.seed = settings["seed"]
 
         try:
             self.verbose = settings["verbose"]
@@ -80,7 +81,9 @@ class _TaylorMixtureLinearLegacy:
 
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
 
-        self.mix_1d = get_1d_mixture(self.N_mix)
+        self.mix_1d = get_1d_gmm_library_mixture(
+            self.N_mix, rule=1, warn=(self.mpi_rank == 0)
+        )
         self.component_weights = self.mix_1d["weights"]
 
         self.psi = None
@@ -137,36 +140,25 @@ class _TaylorMixtureLinearLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            world_comm = MPI.COMM_WORLD
-            if world_comm.rank == 0:
-                omega = MultiVector(self.pde.generate_parameter(), 15)
-                rand = Random()
-                for i in range(15):
-                    rand.normal(1.0, omega[i])
+            omega = MultiVector(self.pde.generate_parameter(), 15)
+            rand = Random(seed=self.seed)
+            for i in range(15):
+                rand.normal(1.0, omega[i])
 
-                d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
-                psi_local = U[0].get_local()
-                lambda_psi = 1.0
-                dominant_eigenvalue = float(d[0])
-            else:
-                psi_local = None
-                lambda_psi = None
-                dominant_eigenvalue = None
-
-            psi_local = world_comm.bcast(psi_local, root=0)
-            lambda_psi = world_comm.bcast(lambda_psi, root=0)
-            dominant_eigenvalue = world_comm.bcast(dominant_eigenvalue, root=0)
+            d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, omega.nvec(), s=1)
+            dominant_idx = int(np.argmax(np.abs(d)))
+            dominant_eigenvalue = float(d[dominant_idx])
 
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            self.psi.set_local(psi_local)
-            self.psi.apply("")
-            self.lambda_psi = lambda_psi
+            self.psi.zero()
+            self.psi.axpy(1.0, U[dominant_idx])
+            self.lambda_psi = 1.0
 
-            if self.verbose and world_comm.rank == 0:
+            if self.verbose and self.mpi_rank == 0:
                 print(f"  [Mixture] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}")
         else:
             v = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            rand = Random()
+            rand = Random(seed=self.seed)
             rand.normal(1.0, v)
 
             # Power iteration for KLE direction. 
@@ -386,7 +378,7 @@ class _TaylorMixtureLinearLegacy:
 
         return grad
 
-    def costValue(self, z):
+    def costValue(self, z, FD_gradient_check=False):
         """Evaluate cost at control z."""
         self.func_ncalls += 1
         z_changed = self._z_has_changed(z)
@@ -399,7 +391,7 @@ class _TaylorMixtureLinearLegacy:
             self.z.zero()
             self.z.axpy(1.0, z)
 
-        if z_changed:
+        if z_changed and not FD_gradient_check:
             self.direction_computed = False
         objective = self.objective()
 
@@ -498,8 +490,8 @@ class TaylorMixtureLinearControlCostFunctional(ControlCostFunctional):
     def generate_vector(self, component="ALL"):
         return self._legacy.model.generate_vector(component)
 
-    def cost(self, z, order=0):
-        value = self._legacy.costValue(z)
+    def cost(self, z, order=0, FD_gradient_check=False):
+        value = self._legacy.costValue(z, FD_gradient_check=FD_gradient_check)
         self._legacy.grad_cache = None
         if order >= 1:
             dz, _ = self._legacy.costGradient(z)

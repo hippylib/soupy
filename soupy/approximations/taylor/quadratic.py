@@ -57,6 +57,7 @@ class _TaylorQuadraticLegacy:
 
         self.N_tr = settings["N_tr"]
         self.beta = settings["beta"]
+        self.seed = settings["seed"]
         try:
             self.verbose = settings["verbose"]
         except (KeyError, ValueError):
@@ -82,10 +83,10 @@ class _TaylorQuadraticLegacy:
         self.mhatstar = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
-        self._omega_base = [model.generate_vector(PARAMETER) for _ in range(self.N_tr + 5)]
-        rand = Random()
-        for i in range(self.N_tr + 5):
-            rand.normal(1.0, self._omega_base[i])
+        self._omega_template = MultiVector(self.pde.generate_parameter(), self.N_tr)
+        rand = Random(seed=self.seed)
+        for i in range(self.N_tr):
+            rand.normal(1.0, self._omega_template[i])
 
         # MPI setup
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
@@ -157,7 +158,7 @@ class _TaylorQuadraticLegacy:
 
     def objectiveLinear(self):
         self.x_all[CONTROL] = self.z
-        self.pde.solveFwd(self.x, self.x_all)
+        self.pde.solveFwd(self.x, self.x_all) # Inside this action, self.x is updated
         Q0 = self.qoi.cost(self.x_all)
         self.Q_0 = Q0
         self.x_all[STATE] = self.x
@@ -167,7 +168,7 @@ class _TaylorQuadraticLegacy:
         self.pde.solveAdj(self.y, self.x_all, rhs)
         self.x_all[ADJOINT] = self.y
 
-        self.pde.setLinearizationPoint(self.x_all, False)
+        self.pde.setLinearizationPoint(self.x_all, False) # False means we do not use Gauss-newton approximation
         self.qoi.setLinearizationPoint(self.x_all)
 
         self.lin_mean = Q0
@@ -206,12 +207,12 @@ class _TaylorQuadraticLegacy:
     def objective(self):
         Q0 = self.objectiveLinear()
 
-        omega = MultiVector(self.pde.generate_parameter(), self.N_tr + 5)
-        for i in range(self.N_tr + 5):
+        omega = MultiVector(self.pde.generate_parameter(), self.N_tr)
+        for i in range(self.N_tr):
             omega[i].zero()
-            omega[i].axpy(1.0, self._omega_base[i])
+            omega[i].axpy(1.0, self._omega_template[i])
 
-        self.d, self.U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=1)
+        self.d, self.U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=2)
         mean_quad_diff = self._mean_quad_diff()
 
         for i in range(self.N_tr):
@@ -227,6 +228,7 @@ class _TaylorQuadraticLegacy:
         self.quad_mean = Q0 + 0.5 * np.sum(self.d)
         self.quad_var = self.lin_var + 0.25 * (np.sum(self.d) ** 2) + 0.5 * np.sum(self.d ** 2) + Q0 * np.sum(self.d)
 
+        # Currently, MC correction is never used. 
         if self.correction and self.N_mc > 0:
             for i in range(self.N_mc):
                 dmmr_i, xhat_i, yhat_i = self.HessianInner(self.m_mc[i], self.m_mc[i])
@@ -255,8 +257,8 @@ class _TaylorQuadraticLegacy:
                 coeff -= self.beta * mean_quad_diff
             self.mhatstar[i].axpy(coeff, self.U[i])
 
-        self.mean_diff = mean_quad_diff
-        self.var_diff = self._mean_quad_var_diff()
+        self.mean_diff = mean_quad_diff # This is zero is there's no correction
+        self.var_diff = self._mean_quad_var_diff() # This is zero if there's no correction
         corrected_mean = self.quad_mean + self.mean_diff
         corrected_var = self.quad_var + self.var_diff
         return corrected_mean + self.beta * (corrected_var - corrected_mean ** 2)
@@ -856,7 +858,7 @@ class TaylorQuadraticControlCostFunctional(ControlCostFunctional):
     def generate_vector(self, component="ALL"):
         return self._legacy.model.generate_vector(component)
 
-    def cost(self, z, order=0):
+    def cost(self, z, order=0, FD_gradient_check=False):
         value = self._legacy.costValue(z)
         if order >= 1:
             self._legacy.costGradient(z)

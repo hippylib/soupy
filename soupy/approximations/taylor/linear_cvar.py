@@ -546,7 +546,7 @@ class TaylorLinearCVaRControlCostFunctional(ControlCostFunctional):
     def generate_vector(self, component="ALL"):
         return self.model.generate_vector(component)
 
-    def cost(self, z, order=0):
+    def cost(self, z, order=0, FD_gradient_check=False):
         value = self._legacy.costValue(z)
         self._grad_cache = None
         if order >= 1:

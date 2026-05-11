@@ -30,6 +30,7 @@ import scipy.optimize
 from hippylib import MultiVector, Random, vector2Function
 from hippylib.algorithms.randomizedEigensolver import doublePassG
 
+from ...modeling.augmentedVector import AugmentedVector
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.smoothPlusApproximation import SmoothPlusApproximationQuartic
@@ -65,8 +66,12 @@ class _TaylorQuadraticCVaRLegacy:
         self.tol = tol
 
         self.z = model.generate_vector(CONTROL)
+        self.zt = AugmentedVector(self.z, copy_vector=False)
         self.z_at_objective = model.generate_vector(CONTROL)
         self.z_diff = model.generate_vector(CONTROL)
+        self.t = 0.0
+        self.t_at_objective = 0.0
+        self.t_diff = 0.0
         self.objective_is_current = False
 
         self.m = prior.mean
@@ -98,6 +103,7 @@ class _TaylorQuadraticCVaRLegacy:
         self.beta = settings["beta"]
         self.N_tr = settings["N_tr"]
         self.N_mc = settings["N_mc"]
+        self.seed = settings["seed"]
         self.epsilon = settings["epsilon"]
 
         try:
@@ -118,10 +124,10 @@ class _TaylorQuadraticCVaRLegacy:
         self.mhatstar = [model.generate_vector(PARAMETER) for _ in range(self.N_tr)]
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
-        self._omega_base = [model.generate_vector(PARAMETER) for _ in range(self.N_tr + 5)]
-        rand = Random()
-        for i in range(self.N_tr + 5):
-            rand.normal(1.0, self._omega_base[i])
+        self._omega_template = MultiVector(self.pde.generate_parameter(), self.N_tr)
+        rand = Random(seed=self.seed)
+        for i in range(self.N_tr):
+            rand.normal(1.0, self._omega_template[i])
 
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
         self.mpi_size = dl.MPI.size(self.pde.Vh[STATE].mesh().mpi_comm())
@@ -130,23 +136,7 @@ class _TaylorQuadraticCVaRLegacy:
 
         self.m_mc = []
         self.Rm_mc = []
-        random_gen = Random(myid=0, nproc=self.mpi_size)
-        for _ in range(self.N_mc):
-            noise = dl.Vector()
-            prior.init_vector(noise, "noise")
-            random_gen.normal(1.0, noise)
-
-            # Sample parameters m^(k) from the prior and store m^(k) - bar m
-            sample = dl.Vector()
-            prior.init_vector(sample, 1)
-            prior.sample(noise, sample, add_mean=False)
-            self.m_mc.append(sample)
-
-            # Compute C^{-1} (m^(k) - bar m) for the sample
-            rsample = dl.Vector()
-            prior.init_vector(rsample, 1)
-            prior.R.mult(sample, rsample)
-            self.Rm_mc.append(rsample)
+        self._mc_samples_initialized = False
 
         self.d = np.zeros(self.N_tr)
         self.U = None
@@ -164,28 +154,71 @@ class _TaylorQuadraticCVaRLegacy:
         self.tobj = 0.0
         self.tgrad = 0.0
 
-    def _copy_z(self, z):
+    def _initialize_mc_samples(self):
+        if self._mc_samples_initialized:
+            return
+
+        self.m_mc = []
+        self.Rm_mc = []
+        random_gen = Random(myid=0, nproc=self.mpi_size)
+        for _ in range(self.N_mc):
+            noise = dl.Vector()
+            self.prior.init_vector(noise, "noise")
+            random_gen.normal(1.0, noise)
+
+            # Sample parameters m^(k) from the prior and store m^(k) - bar m
+            sample = dl.Vector()
+            self.prior.init_vector(sample, 1)
+            self.prior.sample(noise, sample, add_mean=False)
+            self.m_mc.append(sample)
+
+            # Compute C^{-1} (m^(k) - bar m) for the sample
+            rsample = dl.Vector()
+            self.prior.init_vector(rsample, 1)
+            self.prior.R.mult(sample, rsample)
+            self.Rm_mc.append(rsample)
+
+        self._mc_samples_initialized = True
+
+    def _copy_zt(self, zt):
         self.z.zero()
-        if isinstance(z, np.ndarray):
-            idx = self.z.local_range()
-            self.z.set_local(z[idx[0]:idx[1]])
-            self.z.apply("")
+        if isinstance(zt, AugmentedVector):
+            self.z.axpy(1.0, zt.get_vector())
+            self.t = float(zt.get_scalar())
+        elif isinstance(zt, np.ndarray):
+            z_dim = self.z.local_range()[1] - self.z.local_range()[0]
+            if zt.shape[0] == z_dim + 1:
+                self.z.set_local(zt[:z_dim])
+                self.z.apply("")
+                self.t = float(zt[-1])
+            else:
+                idx = self.z.local_range()
+                self.z.set_local(zt[idx[0]:idx[1]])
+                self.z.apply("")
+                self.t = 0.0
+        elif hasattr(zt, "get_vector") and hasattr(zt, "get_scalar"):
+            self.z.axpy(1.0, zt.get_vector())
+            self.t = float(zt.get_scalar())
         else:
-            self.z.axpy(1.0, z)
+            self.z.axpy(1.0, zt)
+            self.t = 0.0
+        self.zt.set_scalar(self.t)
         self.objective_is_current = False
 
-    def _cache_objective_z(self):
+    def _cache_objective_zt(self):
         self.z_at_objective.zero()
         self.z_at_objective.axpy(1.0, self.z)
+        self.t_at_objective = float(self.t)
         self.objective_is_current = True
 
-    def _objective_matches_current_z(self):
+    def _objective_matches_current_zt(self):
         if not self.objective_is_current:
             return False
         self.z_diff.zero()
         self.z_diff.axpy(1.0, self.z_at_objective)
         self.z_diff.axpy(-1.0, self.z)
-        return self.z_diff.inner(self.z_diff) <= 1e-20
+        self.t_diff = self.t_at_objective - self.t
+        return self.z_diff.inner(self.z_diff) <= 1e-20 and abs(self.t_diff) <= 1e-20
 
     def _linearize_at_mean(self):
         # Solve state equation for the state. 
@@ -217,12 +250,12 @@ class _TaylorQuadraticCVaRLegacy:
 
     # Estimate the dominant eigenvalues and dominant eigenvectors (incremental states and adjoints are solved in the Hessian action)
     def _compute_eigendecomposition(self):
-        omega = MultiVector(self.pde.generate_parameter(), self.N_tr + 5)
-        for i in range(self.N_tr + 5):
+        omega = MultiVector(self.pde.generate_parameter(), self.N_tr)
+        for i in range(self.N_tr):
             omega[i].zero()
-            omega[i].axpy(1.0, self._omega_base[i])
+            omega[i].axpy(1.0, self._omega_template[i])
         self.d, self.U = doublePassG(
-            self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=1
+            self.H, self.prior.R, self.prior.Rsolver, omega, self.N_tr, s=2
         )
 
     def _hessian_inner(self, mhat1, mhat2):
@@ -268,6 +301,7 @@ class _TaylorQuadraticCVaRLegacy:
             self.yhat[i].axpy(1.0, yhat_i)
 
     def _compute_surrogate_samples(self):
+        self._initialize_mc_samples()
         self.Q_surrogate.fill(self.Q_0) # \bar Q
         for k in range(self.N_mc):
             lin_k = self.dmq.inner(self.m_mc[k]) # <Q_m(bar m), m^(k) - bar m>_M
@@ -279,10 +313,11 @@ class _TaylorQuadraticCVaRLegacy:
                 self.projections[j, k] = self.U[j].inner(self.Rm_mc[k]) # <C^{-1} psi_j, m^(k) - bar m>_M
             self.Q_surrogate += 0.5 * self.d[j] * self.projections[j, :] ** 2 # 0.5 sum_j lambda_j <C^{-1} psi_j, m^(k) - bar m>_M^2
 
-        self.t_opt, self.cvar = surrogate_cvar_from_samples(
-            self.Q_surrogate, self.beta, self.epsilon
+        self.t_opt = float(self.t)
+        self.cvar = float(
+            self.t + np.mean(self.smoothplus(self.Q_surrogate - self.t)) / (1.0 - self.beta)
         )
-        self.plus_grad = self.smoothplus.grad(self.Q_surrogate - self.t_opt) # The gradient of smooth approx (E_1, ..., E_k)
+        self.plus_grad = self.smoothplus.grad(self.Q_surrogate - self.t) # The gradient of smooth approx (E_1, ..., E_k)
         scale = 1.0 / ((1.0 - self.beta) * self.N_mc)
         self.sample_weights = scale * self.plus_grad
         self.sample_weight_sum = float(np.sum(self.sample_weights))
@@ -366,8 +401,8 @@ class _TaylorQuadraticCVaRLegacy:
 
         if self.verbose and self.mpi_rank == 0:
             print(
-                "  [Quadratic Taylor CVaR] Q0={:.3e}, CVaR={:.3e}, t_opt={:.3e}".format(
-                    self.Q_0, self.cvar, self.t_opt
+                "  [Quadratic Taylor CVaR] Q0={:.3e}, CVaR={:.3e}, t={:.3e}".format(
+                    self.Q_0, self.cvar, self.t
                 )
             )
             print(
@@ -619,27 +654,27 @@ class _TaylorQuadraticCVaRLegacy:
         self.ystar.zero()
         self.pde.solveIncremental(self.ystar, -ystarrhs, True)
 
-    def costValue(self, z):
+    def costValue(self, zt):
         self.func_ncalls += 1
-        self._copy_z(z)
+        self._copy_zt(zt)
 
         tobj = time.time()
         objective = self.objective()
         self.tobj = time.time() - tobj
 
-        self._cache_objective_z()
+        self._cache_objective_zt()
         self.grad_cache = None
 
         penalization = 0.0 if self.penalization is None else self.penalization.cost(self.z)
         return objective + penalization
 
-    def costGradient(self, z):
+    def costGradient(self, zt):
         self.grad_ncalls += 1
-        self._copy_z(z)
+        self._copy_zt(zt)
 
-        if not self._objective_matches_current_z():
+        if not self._objective_matches_current_zt():
             self.objective()
-            self._cache_objective_z()
+            self._cache_objective_zt()
 
         tgrad = time.time()
         self.solveAdjIncrementalAdj()
@@ -719,18 +754,20 @@ class _TaylorQuadraticCVaRLegacy:
             dzq.axpy(1.0, dxxzq)
             dzq.axpy(1.0, dxmzq)
 
-        dz = self.model.generate_vector(CONTROL)
-        dz.axpy(1.0, dzq)
+        dz = AugmentedVector(self.model.generate_vector(CONTROL), copy_vector=False)
+        dz.get_vector().axpy(1.0, dzq)
         if self.penalization is not None:
             pen = self.model.generate_vector(CONTROL)
             self.penalization.grad(self.z, pen)
-            dz.axpy(1.0, pen)
+            dz.get_vector().axpy(1.0, pen)
+
+        dz.set_scalar(1.0 - self.sample_weight_sum)
 
         self.tgrad = time.time() - tgrad
         self.grad_cache = dz.copy()
         return dz, np.sqrt(dz.inner(dz))
 
-    def costHessian(self, z, z_dir):
+    def costHessian(self, zt, zt_dir):
         """Fallback Hessian-vector product around the current linearization point.
 
         The user request focused on correcting the quadratic CVaR objective and
@@ -738,13 +775,16 @@ class _TaylorQuadraticCVaRLegacy:
         retain the same local second-variation fallback used in the previous port.
         """
         self.hess_ncalls += 1
-        self._copy_z(z)
+        self._copy_zt(zt)
         self.z_dir.zero()
-        self.z_dir.axpy(1.0, z_dir)
+        if isinstance(zt_dir, AugmentedVector):
+            self.z_dir.axpy(1.0, zt_dir.get_vector())
+        else:
+            self.z_dir.axpy(1.0, zt_dir)
 
-        if not self._objective_matches_current_z():
+        if not self._objective_matches_current_zt():
             self.objective()
-            self._cache_objective_z()
+            self._cache_objective_zt()
 
         Vh = self.pde.Vh
         z_fun = vector2Function(self.z, Vh[CONTROL])
@@ -803,6 +843,11 @@ class _TaylorQuadraticCVaRLegacy:
             self.penalization.hessian(self.z, self.z_dir, dzzp)
             Hz.axpy(1.0, dzzp)
 
+        if isinstance(zt_dir, AugmentedVector):
+            Hz_aug = AugmentedVector(Hz, copy_vector=False)
+            Hz_aug.set_scalar(0.0)
+            return Hz_aug
+
         return Hz
 
 
@@ -847,17 +892,19 @@ class TaylorQuadraticCVaRControlCostFunctional(ControlCostFunctional):
         return None
 
     def generate_vector(self, component="ALL"):
+        if component == CONTROL:
+            return AugmentedVector(self._legacy.model.generate_vector(CONTROL), copy_vector=False)
         return self._legacy.model.generate_vector(component)
 
-    def cost(self, z, order=0):
-        value = self._legacy.costValue(z)
+    def cost(self, zt, order=0, FD_gradient_check=False):
+        value = self._legacy.costValue(zt)
         if order >= 1:
-            self._legacy.costGradient(z)
+            self._legacy.costGradient(zt)
         return value
 
     def grad(self, g):
         if self._legacy.grad_cache is None:
-            dz, _ = self._legacy.costGradient(self._legacy.z)
+            dz, _ = self._legacy.costGradient(self._legacy.zt)
         else:
             dz = self._legacy.grad_cache
         g.zero()
@@ -866,7 +913,7 @@ class TaylorQuadraticCVaRControlCostFunctional(ControlCostFunctional):
         return np.sqrt(g.inner(g))
 
     def hessian(self, zhat, Hzhat):
-        Hz = self._legacy.costHessian(self._legacy.z, zhat)
+        Hz = self._legacy.costHessian(self._legacy.zt, zhat)
         Hzhat.zero()
         Hzhat.axpy(1.0, Hz)
 

@@ -3,293 +3,2501 @@ Poisson Model Comparison:
   linear / quadratic / mixture_linear_kle / mixture_linear_hep
   mixture_quadratic_kle / mixture_quadratic_hep / saa_10 / saa_100 / saa_1000 / saa_10000
 ==============================================================================
-Ground-truth SAA samples: 10000
+Ground-truth SAA samples: 100000
 beta=10.0, n_tr=10, n_mix=39
 terminal log file: results_compare_taylor_models/terminal_output.txt
 ==============================================================================
 
 Optimizing linear with L-BFGS-B ...
-  [linear              ] initial: J_model(z0)=5.574845e+01, J_true(z0)=5.546025e+01, mean_true(z0)=5.240667e+01, var_true(z0)=3.053577e-01, rel_err(z0)=5.196e-03
-/work/Wenbo/soupy/examples/poisson/driver_poisson_compare_taylor_models.py:458: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
+  [linear              ] initial: J_model(z0)=3.138319e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=5.791e-03
+/work2/wenbo/soupy/examples/poisson/driver_poisson_compare_taylor_models.py:458: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
   result = scipy.optimize.minimize(
-  [linear              ] iter    1: J_model=5.557692e+01, ||g||=4.065e-01, RSS=570.2 MB, PeakRSS=565.0 MB, cost_mem=570.2->570.2 MB, grad_mem=570.2->570.2 MB
-  [linear              ] iter    2: J_model=5.437845e+01, ||g||=2.964e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    3: J_model=5.278447e+01, ||g||=3.064e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    4: J_model=5.273094e+01, ||g||=5.034e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    5: J_model=5.268070e+01, ||g||=2.630e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    6: J_model=5.261642e+01, ||g||=4.376e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    7: J_model=5.250304e+01, ||g||=5.136e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    8: J_model=5.241910e+01, ||g||=3.239e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter    9: J_model=5.239393e+01, ||g||=9.079e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   10: J_model=5.239023e+01, ||g||=2.555e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   11: J_model=5.238958e+01, ||g||=3.909e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   12: J_model=5.238838e+01, ||g||=5.166e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   13: J_model=5.238313e+01, ||g||=8.629e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   14: J_model=5.237405e+01, ||g||=1.148e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   15: J_model=5.236048e+01, ||g||=1.148e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   16: J_model=5.235922e+01, ||g||=9.416e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   17: J_model=5.235057e+01, ||g||=6.194e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   18: J_model=5.234740e+01, ||g||=1.837e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   19: J_model=5.234508e+01, ||g||=4.141e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   20: J_model=5.234315e+01, ||g||=7.336e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   21: J_model=5.233768e+01, ||g||=1.181e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   22: J_model=5.232973e+01, ||g||=1.152e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   23: J_model=5.232883e+01, ||g||=1.545e-01, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   24: J_model=5.232080e+01, ||g||=9.982e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   25: J_model=5.231499e+01, ||g||=3.459e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   26: J_model=5.231253e+01, ||g||=3.736e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   27: J_model=5.231063e+01, ||g||=4.843e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   28: J_model=5.230645e+01, ||g||=4.048e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   29: J_model=5.230398e+01, ||g||=5.893e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   30: J_model=5.230129e+01, ||g||=1.377e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   31: J_model=5.230009e+01, ||g||=1.256e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   32: J_model=5.229957e+01, ||g||=1.688e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   33: J_model=5.229754e+01, ||g||=2.027e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   34: J_model=5.229715e+01, ||g||=4.175e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   35: J_model=5.229563e+01, ||g||=2.223e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   36: J_model=5.229452e+01, ||g||=1.718e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   37: J_model=5.229357e+01, ||g||=3.017e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   38: J_model=5.229156e+01, ||g||=4.429e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   39: J_model=5.228774e+01, ||g||=4.636e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   40: J_model=5.228731e+01, ||g||=6.815e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   41: J_model=5.228402e+01, ||g||=3.163e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   42: J_model=5.228212e+01, ||g||=1.006e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   43: J_model=5.228119e+01, ||g||=1.730e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   44: J_model=5.228074e+01, ||g||=1.426e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   45: J_model=5.228058e+01, ||g||=2.686e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   46: J_model=5.228001e+01, ||g||=7.404e-03, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   47: J_model=5.227978e+01, ||g||=9.588e-03, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   48: J_model=5.227955e+01, ||g||=1.645e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   49: J_model=5.227917e+01, ||g||=1.928e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   50: J_model=5.227864e+01, ||g||=2.397e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   51: J_model=5.227831e+01, ||g||=1.018e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   52: J_model=5.227751e+01, ||g||=1.031e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   53: J_model=5.227340e+01, ||g||=2.202e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   54: J_model=5.227037e+01, ||g||=7.383e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   55: J_model=5.226479e+01, ||g||=5.067e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   56: J_model=5.225825e+01, ||g||=2.135e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   57: J_model=5.225743e+01, ||g||=5.998e-02, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   58: J_model=5.225598e+01, ||g||=8.947e-03, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   59: J_model=5.225575e+01, ||g||=5.412e-03, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] iter   60: J_model=5.225538e+01, ||g||=7.967e-03, RSS=570.3 MB, PeakRSS=565.0 MB, cost_mem=570.3->570.3 MB, grad_mem=570.3->570.3 MB
-  [linear              ] done [root-only serial]: success=False, nit=60, avg_iter_time=0.08s
-  [linear              ] optimal: J_model(z*)=5.225538e+01, J_true(z*)=5.376619e+01, mean_true(z*)=5.203667e+01, var_true(z*)=1.695107e-01, rel_err(z*)=2.810e-02
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_97ea432aff57d3b2bf990480009dc15ed3625eaf
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_2800525, f_2800531, f_2800534]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00434899 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00789666 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000105619 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00176787 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000174999 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.014466 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_3c7f8e04312ff15d34968715382d826d72d176bb
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_2800556, f_2800559, f_2800562]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00548005 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00966644 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000104666 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00203443 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.00017786 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0176539 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_2481a2d4e2fcf39986bc3cea254debbd57388218
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00231934 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000437975 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000143051 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000649929 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000197649 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00400329 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_9de2959e144f8586e2a72f2783afc3902f976505
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00186491 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000363588 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 9.89437e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000602484 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000166655 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00326085 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_576b1057a29dad2eca01acd6dc90b8c207339e5d
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    1
+  Coefficients:              '[f_2800611]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00316286 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  1	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00611901 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.86917e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00140476 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 1.19209e-06 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000203371 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0112252 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_9f88745ceb3fd0f04b4e125311cd9c07e993ad23
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00215268 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00033617 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.13007e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000509262 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000153542 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00388265 seconds.[0m
+  [linear              ] iter    1: J_model=2.716190e-01, ||g||=3.344e-02, RSS=2775.1 MB, PeakRSS=2810.8 MB, cost_mem=2775.1->2775.1 MB, grad_mem=2775.1->2775.1 MB
+  [linear              ] iter    2: J_model=2.327715e-01, ||g||=1.164e-02, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    3: J_model=2.260112e-01, ||g||=1.647e-02, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    4: J_model=1.925971e-01, ||g||=7.446e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    5: J_model=1.115155e-01, ||g||=2.799e-02, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    6: J_model=8.649915e-02, ||g||=1.453e-02, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    7: J_model=7.899709e-02, ||g||=3.232e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    8: J_model=7.784529e-02, ||g||=4.968e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter    9: J_model=7.603955e-02, ||g||=3.242e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   10: J_model=7.548950e-02, ||g||=2.259e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   11: J_model=7.523606e-02, ||g||=3.709e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   12: J_model=7.517316e-02, ||g||=7.697e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   13: J_model=7.506621e-02, ||g||=1.016e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   14: J_model=7.495505e-02, ||g||=6.860e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   15: J_model=7.474721e-02, ||g||=6.423e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   16: J_model=7.460857e-02, ||g||=1.082e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   17: J_model=7.447701e-02, ||g||=8.841e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   18: J_model=7.439864e-02, ||g||=2.075e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   19: J_model=7.436048e-02, ||g||=6.085e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   20: J_model=7.433417e-02, ||g||=5.817e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   21: J_model=7.432489e-02, ||g||=1.139e-03, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   22: J_model=7.426941e-02, ||g||=7.265e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   23: J_model=7.422471e-02, ||g||=4.860e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   24: J_model=7.421743e-02, ||g||=1.414e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   25: J_model=7.420557e-02, ||g||=1.161e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   26: J_model=7.419093e-02, ||g||=1.233e-04, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   27: J_model=7.417660e-02, ||g||=8.866e-05, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   28: J_model=7.415663e-02, ||g||=6.942e-05, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   29: J_model=7.413840e-02, ||g||=6.628e-05, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   30: J_model=7.413471e-02, ||g||=6.202e-05, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] iter   31: J_model=7.413151e-02, ||g||=2.820e-05, RSS=2775.2 MB, PeakRSS=2810.8 MB, cost_mem=2775.2->2775.2 MB, grad_mem=2775.2->2775.2 MB
+  [linear              ] done [root-only serial]: success=True, nit=31, avg_iter_time=0.17s
+  [linear              ] optimal: J_model(z*)=7.413151e-02, J_true(z*)=1.477215e+00, mean_true(z*)=1.527029e-01, var_true(z*)=1.267198e-01, rel_err(z*)=9.498e-01
 
 Optimizing quadratic with L-BFGS-B ...
-  [quadratic           ] initial: J_model(z0)=5.580335e+01, J_true(z0)=5.546025e+01, mean_true(z0)=5.240667e+01, var_true(z0)=3.053577e-01, rel_err(z0)=6.186e-03
-  [quadratic           ] iter    1: J_model=5.563237e+01, ||g||=4.052e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    2: J_model=5.449760e+01, ||g||=2.634e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    3: J_model=5.327055e+01, ||g||=2.895e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    4: J_model=5.321490e+01, ||g||=4.973e-02, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    5: J_model=5.315922e+01, ||g||=2.662e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    6: J_model=5.310517e+01, ||g||=3.528e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    7: J_model=5.302809e+01, ||g||=3.001e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    8: J_model=5.294408e+01, ||g||=2.054e-01, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter    9: J_model=5.292506e+01, ||g||=6.773e-02, RSS=611.9 MB, PeakRSS=604.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->611.9 MB
-  [quadratic           ] iter   10: J_model=5.291887e+01, ||g||=4.620e-02, RSS=622.2 MB, PeakRSS=614.4 MB, cost_mem=611.9->611.9 MB, grad_mem=611.9->622.2 MB
-  [quadratic           ] iter   11: J_model=5.291685e+01, ||g||=6.587e-02, RSS=645.8 MB, PeakRSS=637.4 MB, cost_mem=622.2->633.6 MB, grad_mem=633.6->645.8 MB
-  [quadratic           ] iter   12: J_model=5.290908e+01, ||g||=1.117e-01, RSS=669.5 MB, PeakRSS=661.4 MB, cost_mem=645.8->657.2 MB, grad_mem=657.2->669.5 MB
-  [quadratic           ] iter   13: J_model=5.289971e+01, ||g||=1.188e-01, RSS=693.1 MB, PeakRSS=685.4 MB, cost_mem=669.5->680.9 MB, grad_mem=680.9->693.1 MB
-  [quadratic           ] iter   14: J_model=5.288969e+01, ||g||=2.770e-02, RSS=716.8 MB, PeakRSS=708.4 MB, cost_mem=693.1->704.6 MB, grad_mem=704.6->716.8 MB
-  [quadratic           ] iter   15: J_model=5.288574e+01, ||g||=2.572e-02, RSS=740.4 MB, PeakRSS=732.4 MB, cost_mem=716.8->728.2 MB, grad_mem=728.2->740.4 MB
-  [quadratic           ] iter   16: J_model=5.288381e+01, ||g||=2.189e-02, RSS=764.1 MB, PeakRSS=756.4 MB, cost_mem=740.4->751.9 MB, grad_mem=751.9->764.1 MB
-  [quadratic           ] iter   17: J_model=5.287691e+01, ||g||=2.110e-02, RSS=787.8 MB, PeakRSS=779.4 MB, cost_mem=764.1->775.5 MB, grad_mem=775.5->787.8 MB
-  [quadratic           ] iter   18: J_model=5.286788e+01, ||g||=2.815e-02, RSS=811.4 MB, PeakRSS=803.4 MB, cost_mem=787.8->799.2 MB, grad_mem=799.2->811.4 MB
-  [quadratic           ] iter   19: J_model=5.286577e+01, ||g||=1.560e-01, RSS=835.1 MB, PeakRSS=827.4 MB, cost_mem=811.4->822.8 MB, grad_mem=822.8->835.1 MB
-  [quadratic           ] iter   20: J_model=5.285882e+01, ||g||=4.688e-02, RSS=859.0 MB, PeakRSS=851.4 MB, cost_mem=835.1->846.8 MB, grad_mem=846.8->859.0 MB
-  [quadratic           ] iter   21: J_model=5.285605e+01, ||g||=9.760e-03, RSS=882.6 MB, PeakRSS=874.4 MB, cost_mem=859.0->870.4 MB, grad_mem=870.4->882.6 MB
-  [quadratic           ] iter   22: J_model=5.285550e+01, ||g||=9.349e-03, RSS=906.3 MB, PeakRSS=898.4 MB, cost_mem=882.6->894.1 MB, grad_mem=894.1->906.3 MB
-  [quadratic           ] iter   23: J_model=5.285504e+01, ||g||=2.811e-02, RSS=929.9 MB, PeakRSS=922.4 MB, cost_mem=906.3->917.7 MB, grad_mem=917.7->929.9 MB
-  [quadratic           ] iter   24: J_model=5.285227e+01, ||g||=9.883e-03, RSS=953.6 MB, PeakRSS=945.4 MB, cost_mem=929.9->941.4 MB, grad_mem=941.4->953.6 MB
-  [quadratic           ] iter   25: J_model=5.285071e+01, ||g||=1.070e-02, RSS=977.2 MB, PeakRSS=969.4 MB, cost_mem=953.6->965.1 MB, grad_mem=965.1->977.2 MB
-  [quadratic           ] iter   26: J_model=5.284732e+01, ||g||=2.273e-02, RSS=1000.9 MB, PeakRSS=993.4 MB, cost_mem=977.2->988.7 MB, grad_mem=988.7->1000.9 MB
-  [quadratic           ] iter   27: J_model=5.284086e+01, ||g||=1.685e-02, RSS=1048.2 MB, PeakRSS=1040.4 MB, cost_mem=1024.6->1036.0 MB, grad_mem=1036.0->1048.2 MB
-  [quadratic           ] iter   28: J_model=5.283743e+01, ||g||=1.944e-02, RSS=1071.9 MB, PeakRSS=1064.4 MB, cost_mem=1048.2->1059.7 MB, grad_mem=1059.7->1071.9 MB
-  [quadratic           ] iter   29: J_model=5.283678e+01, ||g||=8.050e-03, RSS=1095.5 MB, PeakRSS=1087.4 MB, cost_mem=1071.9->1083.3 MB, grad_mem=1083.3->1095.5 MB
-  [quadratic           ] iter   30: J_model=5.283674e+01, ||g||=7.268e-03, RSS=1119.2 MB, PeakRSS=1111.4 MB, cost_mem=1095.5->1107.0 MB, grad_mem=1107.0->1119.2 MB
-  [quadratic           ] iter   31: J_model=5.283674e+01, ||g||=7.268e-03, RSS=1498.2 MB, PeakRSS=1490.4 MB, cost_mem=1474.6->1486.0 MB, grad_mem=1486.0->1498.2 MB
-  [quadratic           ] done [root-only serial]: success=True, nit=31, avg_iter_time=0.67s
-  [quadratic           ] optimal: J_model(z*)=5.283674e+01, J_true(z*)=5.326006e+01, mean_true(z*)=5.199272e+01, var_true(z*)=1.250222e-01, rel_err(z*)=7.948e-03
+  [quadratic           ] initial: J_model(z0)=3.167796e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=3.547e-03
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_0eaa10fac7b783b76d3a1da818c740985bdb459f
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_9818675, f_9818681, f_9818690]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00499463 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00795341 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000105619 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00189781 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000179529 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0153024 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_0ebddd3a24394f8d0651e0bcead1a7ea3c67201a
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00211358 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000496626 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000132799 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000672102 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 1.43051e-06 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000207901 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0037868 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_f016de53fa3d9364f90cfb1d12e47dcb9abb51cc
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_9818702, f_9818711, f_9818714]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00536513 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00796413 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000114918 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00182986 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000177622 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0156314 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_f513a84335202cfd1b1d9685b50921d51cffca74
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    4
+  Coefficients:              '[f_9818696, f_9818702, f_9818714, f_9818717]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00507402 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00768828 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000106573 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00210977 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000163794 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0153103 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_ae56cd734ce435fb747cc6b350d563715004f1df
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_9818702, f_9818708, f_9818717]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00524759 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00780797 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 9.91821e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00192571 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.00020957 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0155122 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_7699dcb38e1560ad34b3ce2141cdfaa3ea6532a1
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_9819105, f_9819108, f_9819114]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00454974 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.0103374 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000692129 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00268745 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 1.19209e-06 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000982285 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0200231 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_756058fd6dca6272bba6bfd142c71f0b836f7ba1
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.0029397 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000568867 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.89301e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000819445 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.00017786 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.004812 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_9ef09167b8f3bea10a72a6eb601acb7741967c20
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_9819126, f_9819138, f_9819147]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00511837 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00794268 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000144243 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00184894 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000198126 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0155323 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_788b1a7776412ca9b0669399b50a19b6bfabc3ea
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00192404 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000317812 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.67844e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000486851 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000148773 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00310183 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_9f9f8249fe61abc85b380fc6daea1ca0ec12be4a
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00223494 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000422716 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 7.84397e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000588655 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000207424 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00373936 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_7991741fa4bc084d772b8dd8946434d395959269
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00562668 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000980139 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000290632 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00138283 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 1.66893e-06 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000901461 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00979733 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_1f118e63de73194841a7c51581ebae10c073dc19
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    4
+  Coefficients:              '[f_9819123, f_9819126, f_9819138, f_9819141]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00494242 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00786257 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000102997 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00214434 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000166655 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0154123 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_d9bd72dd39faec4d909620d71026ac66d29c372b
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    3
+  Coefficients:              '[f_9819126, f_9819141, f_9819144]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00496006 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  2	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.0080483 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000167847 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00204682 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000235081 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0157456 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_b64be777d841f659464eb750d41471fbd7d5eab0
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00219941 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000291824 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 7.36713e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000486851 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000146627 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00332475 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_4a650374f76030219fd7033d5a2866b4ded34bdf
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00175548 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000317097 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.79765e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000557661 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000155926 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.003021 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_78ef7f85bc89153f60d66a1e9282ba5ea153d0ee
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    1
+  Coefficients:              '[f_9819835]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00327539 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  1	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00577998 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 9.41753e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00154972 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000186682 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0110459 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_7ffdc16f53ea8f23aa6686ac13edc5fcdb74d215
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00304174 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000557899 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.00014472 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000865936 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000285625 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00513816 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_cf6518fbddd746741327e0afa7dcef0f069daea9
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    1
+  Coefficients:              '[f_9819862]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00326729 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  1	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00600576 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000103474 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00151515 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000171185 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0112441 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_5a1c69493e2592c49a804e621330db812cf62d1c
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00183821 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000306129 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 7.4625e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000631571 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000225782 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0032661 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_f5d916b8e9da61ef8a1749f854e418adf205a672
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.0021708 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00047183 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000148773 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000650644 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000209093 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00390792 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_b2ed7d317ba3a2868d8f6533001cd0ff4ac4ab82
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.0023706 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000296116 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 7.58171e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.0005126 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000148058 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00353217 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_e33c182b604accf1d760b1890964159afcfffb03
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00213432 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000350475 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 9.53674e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000566721 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000170231 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.003474 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_e5ccdf2e6de991387d13a707cd398b5f380406e5
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00204873 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000479937 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000174046 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00057745 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000175714 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00365233 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_5f8c23eb2f311adfcac9a7dc959144b80f2d744a
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00262976 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000547886 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000168562 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000710964 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000257254 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00458121 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_7a2e598ce7fb5dbc392f5db8ea98a5c14cb9b686
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00212312 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000344515 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.79765e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000560522 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 9.53674e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000324011 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00358748 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_410ec995c0cd06eddd3dcb42ee5a55e8b5081fc2
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00245309 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000470161 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000169992 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000623941 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000208616 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.0041852 seconds.[0m
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_0293b03b3d08792599fc751dc4c6f74634f8140e
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00239539 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000443935 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 0.000155926 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000635862 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000208855 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00412107 seconds.[0m
+  [quadratic           ] iter    1: J_model=2.736656e-01, ||g||=3.061e-02, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    2: J_model=2.497855e-01, ||g||=1.002e-02, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    3: J_model=2.450993e-01, ||g||=1.124e-02, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    4: J_model=2.037753e-01, ||g||=2.708e-02, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    5: J_model=1.709698e-01, ||g||=2.272e-02, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    6: J_model=1.524578e-01, ||g||=3.024e-03, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    7: J_model=1.499223e-01, ||g||=4.400e-03, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    8: J_model=1.494372e-01, ||g||=4.878e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter    9: J_model=1.493963e-01, ||g||=7.622e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   10: J_model=1.493753e-01, ||g||=1.086e-03, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   11: J_model=1.493042e-01, ||g||=1.584e-03, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   12: J_model=1.491985e-01, ||g||=1.575e-03, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   13: J_model=1.490083e-01, ||g||=5.177e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   14: J_model=1.489136e-01, ||g||=7.250e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   15: J_model=1.488744e-01, ||g||=4.901e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   16: J_model=1.488635e-01, ||g||=4.178e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   17: J_model=1.488317e-01, ||g||=2.481e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   18: J_model=1.487586e-01, ||g||=3.464e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   19: J_model=1.487315e-01, ||g||=3.796e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   20: J_model=1.487127e-01, ||g||=1.866e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   21: J_model=1.486947e-01, ||g||=8.956e-05, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   22: J_model=1.486830e-01, ||g||=1.015e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   23: J_model=1.486394e-01, ||g||=9.659e-05, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   24: J_model=1.486286e-01, ||g||=5.098e-04, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   25: J_model=1.486199e-01, ||g||=5.437e-05, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   26: J_model=1.486190e-01, ||g||=4.563e-05, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] iter   27: J_model=1.486188e-01, ||g||=3.821e-05, RSS=2808.9 MB, PeakRSS=2832.4 MB, cost_mem=2808.9->2808.9 MB, grad_mem=2808.9->2808.9 MB
+  [quadratic           ] done [root-only serial]: success=True, nit=27, avg_iter_time=0.81s
+  [quadratic           ] optimal: J_model(z*)=1.486188e-01, J_true(z*)=2.909984e-01, mean_true(z*)=1.054124e-01, var_true(z*)=1.619852e-02, rel_err(z*)=4.893e-01
 
 Optimizing mixture_linear_kle with L-BFGS-B ...
-  [mixture_linear_kle  ] initial: J_model(z0)=5.574885e+01, J_true(z0)=5.546025e+01, mean_true(z0)=5.240667e+01, var_true(z0)=3.053577e-01, rel_err(z0)=5.204e-03
-  [mixture_linear_kle  ] iter    1: J_model=5.559076e+01, ||g||=4.578e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    2: J_model=5.452778e+01, ||g||=3.082e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    3: J_model=5.345357e+01, ||g||=3.214e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    4: J_model=5.340825e+01, ||g||=5.878e-02, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    5: J_model=5.336061e+01, ||g||=2.948e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    6: J_model=5.330403e+01, ||g||=4.674e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    7: J_model=5.321576e+01, ||g||=4.894e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    8: J_model=5.317619e+01, ||g||=2.906e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter    9: J_model=5.313832e+01, ||g||=1.848e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter   10: J_model=5.312420e+01, ||g||=2.967e-02, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter   11: J_model=5.312011e+01, ||g||=8.375e-02, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter   12: J_model=5.311689e+01, ||g||=1.350e-01, RSS=1838.8 MB, PeakRSS=1830.4 MB, cost_mem=1838.8->1838.8 MB, grad_mem=1838.8->1838.8 MB
-  [mixture_linear_kle  ] iter   13: J_model=5.311071e+01, ||g||=1.740e-01, RSS=1855.6 MB, PeakRSS=1847.4 MB, cost_mem=1838.8->1842.5 MB, grad_mem=1842.5->1855.6 MB
-  [mixture_linear_kle  ] iter   14: J_model=5.310349e+01, ||g||=1.332e-01, RSS=1875.5 MB, PeakRSS=1867.4 MB, cost_mem=1855.6->1862.4 MB, grad_mem=1862.4->1875.5 MB
-  [mixture_linear_kle  ] iter   15: J_model=5.309988e+01, ||g||=3.508e-02, RSS=1895.3 MB, PeakRSS=1887.4 MB, cost_mem=1875.5->1882.1 MB, grad_mem=1882.1->1895.3 MB
-  [mixture_linear_kle  ] iter   16: J_model=5.309932e+01, ||g||=1.942e-02, RSS=1915.3 MB, PeakRSS=1907.4 MB, cost_mem=1895.3->1902.1 MB, grad_mem=1902.1->1915.3 MB
-  [mixture_linear_kle  ] iter   17: J_model=5.309912e+01, ||g||=3.202e-02, RSS=1935.2 MB, PeakRSS=1927.4 MB, cost_mem=1915.3->1922.0 MB, grad_mem=1922.0->1935.2 MB
-  [mixture_linear_kle  ] iter   18: J_model=5.309862e+01, ||g||=5.368e-02, RSS=1955.2 MB, PeakRSS=1947.4 MB, cost_mem=1935.2->1942.0 MB, grad_mem=1942.0->1955.2 MB
-  [mixture_linear_kle  ] iter   19: J_model=5.309741e+01, ||g||=8.596e-02, RSS=1975.1 MB, PeakRSS=1967.4 MB, cost_mem=1955.2->1961.9 MB, grad_mem=1961.9->1975.1 MB
-  [mixture_linear_kle  ] iter   20: J_model=5.309450e+01, ||g||=1.300e-01, RSS=1995.1 MB, PeakRSS=1987.4 MB, cost_mem=1975.1->1981.9 MB, grad_mem=1981.9->1995.1 MB
-  [mixture_linear_kle  ] iter   21: J_model=5.308862e+01, ||g||=1.708e-01, RSS=2015.0 MB, PeakRSS=2007.4 MB, cost_mem=1995.1->2001.8 MB, grad_mem=2001.8->2015.0 MB
-  [mixture_linear_kle  ] iter   22: J_model=5.307974e+01, ||g||=1.764e-01, RSS=2034.8 MB, PeakRSS=2026.4 MB, cost_mem=2015.0->2021.8 MB, grad_mem=2021.8->2034.8 MB
-  [mixture_linear_kle  ] iter   23: J_model=5.307238e+01, ||g||=1.294e-01, RSS=2074.7 MB, PeakRSS=2066.4 MB, cost_mem=2054.7->2061.5 MB, grad_mem=2061.5->2074.7 MB
-  [mixture_linear_kle  ] iter   24: J_model=5.306304e+01, ||g||=1.814e-01, RSS=2114.6 MB, PeakRSS=2106.4 MB, cost_mem=2094.6->2101.4 MB, grad_mem=2101.4->2114.6 MB
-  [mixture_linear_kle  ] iter   25: J_model=5.305671e+01, ||g||=1.040e-01, RSS=2134.5 MB, PeakRSS=2126.4 MB, cost_mem=2114.6->2121.3 MB, grad_mem=2121.3->2134.5 MB
-  [mixture_linear_kle  ] iter   26: J_model=5.305313e+01, ||g||=1.410e-02, RSS=2154.5 MB, PeakRSS=2146.4 MB, cost_mem=2134.5->2141.3 MB, grad_mem=2141.3->2154.5 MB
-  [mixture_linear_kle  ] iter   27: J_model=5.305275e+01, ||g||=1.961e-02, RSS=2174.4 MB, PeakRSS=2166.4 MB, cost_mem=2154.5->2161.2 MB, grad_mem=2161.2->2174.4 MB
-  [mixture_linear_kle  ] iter   28: J_model=5.305028e+01, ||g||=5.954e-02, RSS=2195.2 MB, PeakRSS=2187.4 MB, cost_mem=2174.4->2181.2 MB, grad_mem=2181.2->2195.2 MB
-  [mixture_linear_kle  ] iter   29: J_model=5.304887e+01, ||g||=4.595e-02, RSS=2215.1 MB, PeakRSS=2207.4 MB, cost_mem=2195.2->2201.9 MB, grad_mem=2201.9->2215.1 MB
-  [mixture_linear_kle  ] iter   30: J_model=5.304773e+01, ||g||=1.376e-02, RSS=2235.1 MB, PeakRSS=2227.4 MB, cost_mem=2215.1->2221.9 MB, grad_mem=2221.9->2235.1 MB
-  [mixture_linear_kle  ] iter   31: J_model=5.304703e+01, ||g||=2.677e-02, RSS=2255.0 MB, PeakRSS=2247.4 MB, cost_mem=2235.1->2241.9 MB, grad_mem=2241.9->2255.0 MB
-  [mixture_linear_kle  ] iter   32: J_model=5.304617e+01, ||g||=5.285e-02, RSS=2275.0 MB, PeakRSS=2267.4 MB, cost_mem=2255.0->2261.8 MB, grad_mem=2261.8->2275.0 MB
-  [mixture_linear_kle  ] iter   33: J_model=5.304382e+01, ||g||=9.438e-02, RSS=2294.9 MB, PeakRSS=2287.4 MB, cost_mem=2275.0->2281.8 MB, grad_mem=2281.8->2294.9 MB
-  [mixture_linear_kle  ] iter   34: J_model=5.303990e+01, ||g||=1.206e-01, RSS=2314.9 MB, PeakRSS=2307.4 MB, cost_mem=2294.9->2301.7 MB, grad_mem=2301.7->2314.9 MB
-  [mixture_linear_kle  ] iter   35: J_model=5.303483e+01, ||g||=1.011e-01, RSS=2334.9 MB, PeakRSS=2327.4 MB, cost_mem=2314.9->2321.7 MB, grad_mem=2321.7->2334.9 MB
-  [mixture_linear_kle  ] iter   36: J_model=5.303058e+01, ||g||=5.664e-02, RSS=2354.6 MB, PeakRSS=2346.4 MB, cost_mem=2334.9->2341.6 MB, grad_mem=2341.6->2354.6 MB
-  [mixture_linear_kle  ] iter   37: J_model=5.302901e+01, ||g||=1.607e-02, RSS=2374.5 MB, PeakRSS=2366.4 MB, cost_mem=2354.6->2361.4 MB, grad_mem=2361.4->2374.5 MB
-  [mixture_linear_kle  ] iter   38: J_model=5.302866e+01, ||g||=1.801e-02, RSS=2394.5 MB, PeakRSS=2386.4 MB, cost_mem=2374.5->2381.3 MB, grad_mem=2381.3->2394.5 MB
-  [mixture_linear_kle  ] iter   39: J_model=5.302844e+01, ||g||=3.528e-02, RSS=2434.4 MB, PeakRSS=2426.4 MB, cost_mem=2414.4->2421.2 MB, grad_mem=2421.2->2434.4 MB
-  [mixture_linear_kle  ] iter   40: J_model=5.302795e+01, ||g||=1.990e-02, RSS=2454.3 MB, PeakRSS=2446.4 MB, cost_mem=2434.4->2441.2 MB, grad_mem=2441.2->2454.3 MB
-  [mixture_linear_kle  ] iter   41: J_model=5.302703e+01, ||g||=3.082e-02, RSS=2474.3 MB, PeakRSS=2466.4 MB, cost_mem=2454.3->2461.1 MB, grad_mem=2461.1->2474.3 MB
-  [mixture_linear_kle  ] iter   42: J_model=5.302671e+01, ||g||=3.956e-02, RSS=2494.2 MB, PeakRSS=2486.4 MB, cost_mem=2474.3->2481.0 MB, grad_mem=2481.0->2494.2 MB
-  [mixture_linear_kle  ] iter   43: J_model=5.302509e+01, ||g||=6.108e-02, RSS=2514.2 MB, PeakRSS=2506.4 MB, cost_mem=2494.2->2501.0 MB, grad_mem=2501.0->2514.2 MB
-  [mixture_linear_kle  ] iter   44: J_model=5.302300e+01, ||g||=6.233e-02, RSS=2533.9 MB, PeakRSS=2526.4 MB, cost_mem=2514.2->2520.8 MB, grad_mem=2520.8->2533.9 MB
-  [mixture_linear_kle  ] iter   45: J_model=5.302248e+01, ||g||=5.124e-02, RSS=2573.8 MB, PeakRSS=2566.4 MB, cost_mem=2553.9->2560.6 MB, grad_mem=2560.6->2573.8 MB
-  [mixture_linear_kle  ] iter   46: J_model=5.301914e+01, ||g||=2.263e-02, RSS=2593.8 MB, PeakRSS=2586.4 MB, cost_mem=2573.8->2580.6 MB, grad_mem=2580.6->2593.8 MB
-  [mixture_linear_kle  ] iter   47: J_model=5.301444e+01, ||g||=6.194e-02, RSS=2613.7 MB, PeakRSS=2606.4 MB, cost_mem=2593.8->2600.6 MB, grad_mem=2600.6->2613.7 MB
-  [mixture_linear_kle  ] iter   48: J_model=5.301134e+01, ||g||=8.845e-02, RSS=2633.7 MB, PeakRSS=2626.4 MB, cost_mem=2613.7->2620.5 MB, grad_mem=2620.5->2633.7 MB
-  [mixture_linear_kle  ] iter   49: J_model=5.300695e+01, ||g||=8.624e-02, RSS=2653.6 MB, PeakRSS=2646.4 MB, cost_mem=2633.7->2640.5 MB, grad_mem=2640.5->2653.6 MB
-  [mixture_linear_kle  ] iter   50: J_model=5.300659e+01, ||g||=1.151e-01, RSS=2693.3 MB, PeakRSS=2685.4 MB, cost_mem=2673.6->2680.1 MB, grad_mem=2680.1->2693.3 MB
-  [mixture_linear_kle  ] iter   51: J_model=5.300386e+01, ||g||=6.108e-02, RSS=2713.3 MB, PeakRSS=2705.4 MB, cost_mem=2693.3->2700.1 MB, grad_mem=2700.1->2713.3 MB
-  [mixture_linear_kle  ] iter   52: J_model=5.300286e+01, ||g||=9.724e-03, RSS=2733.2 MB, PeakRSS=2725.4 MB, cost_mem=2713.3->2720.0 MB, grad_mem=2720.0->2733.2 MB
-  [mixture_linear_kle  ] iter   53: J_model=5.300279e+01, ||g||=7.291e-03, RSS=2753.2 MB, PeakRSS=2745.4 MB, cost_mem=2733.2->2740.0 MB, grad_mem=2740.0->2753.2 MB
-  [mixture_linear_kle  ] iter   54: J_model=5.300272e+01, ||g||=9.220e-03, RSS=2773.2 MB, PeakRSS=2765.4 MB, cost_mem=2753.2->2759.9 MB, grad_mem=2759.9->2773.2 MB
-  [mixture_linear_kle  ] iter   55: J_model=5.300251e+01, ||g||=1.247e-02, RSS=2793.1 MB, PeakRSS=2785.4 MB, cost_mem=2773.2->2779.9 MB, grad_mem=2779.9->2793.1 MB
-  [mixture_linear_kle  ] iter   56: J_model=5.300221e+01, ||g||=9.949e-03, RSS=2813.0 MB, PeakRSS=2805.4 MB, cost_mem=2793.1->2799.8 MB, grad_mem=2799.8->2813.0 MB
-  [mixture_linear_kle  ] iter   57: J_model=5.300205e+01, ||g||=1.050e-02, RSS=2852.7 MB, PeakRSS=2844.4 MB, cost_mem=2832.9->2839.7 MB, grad_mem=2839.7->2852.7 MB
-  [mixture_linear_kle  ] iter   58: J_model=5.300172e+01, ||g||=6.678e-03, RSS=2892.6 MB, PeakRSS=2884.4 MB, cost_mem=2872.7->2879.4 MB, grad_mem=2879.4->2892.6 MB
-  [mixture_linear_kle  ] iter   59: J_model=5.300120e+01, ||g||=6.754e-03, RSS=2912.6 MB, PeakRSS=2904.4 MB, cost_mem=2892.6->2899.4 MB, grad_mem=2899.4->2912.6 MB
-  [mixture_linear_kle  ] iter   60: J_model=5.299763e+01, ||g||=2.104e-02, RSS=2932.5 MB, PeakRSS=2924.4 MB, cost_mem=2912.6->2919.3 MB, grad_mem=2919.3->2932.5 MB
-  [mixture_linear_kle  ] done [root-only serial]: success=False, nit=60, avg_iter_time=2.77s
-  [mixture_linear_kle  ] optimal: J_model(z*)=5.299763e+01, J_true(z*)=5.309512e+01, mean_true(z*)=5.202403e+01, var_true(z*)=1.049992e-01, rel_err(z*)=1.836e-03
+  [mixture_linear_kle  ] initial: J_model(z0)=3.138688e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=5.674e-03
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_9ce3adbad2e20cccd3f579957ce749e887f34de2
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:    2
+  Rank:                   1
+  Arguments:              '(v_0)'
+  Number of coefficients: 0
+  Coefficients:           '[]'
+  Unique elements:        'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:    'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  Quadrature rule must be equal within each sub domain, using canonical rule.
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00168276 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.000365973 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Skipping optimizations, add -O or attach {'optimize': True} metadata to integrals
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 9.32217e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.000539303 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.00016427 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00299907 seconds.[0m
+  [mixture_linear_kle  ] iter    1: J_model=2.702302e-01, ||g||=3.058e-02, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    2: J_model=2.557422e-01, ||g||=2.079e-02, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    3: J_model=2.521804e-01, ||g||=1.015e-02, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    4: J_model=2.349421e-01, ||g||=1.769e-02, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    5: J_model=1.981025e-01, ||g||=2.219e-02, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    6: J_model=1.650864e-01, ||g||=2.476e-02, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    7: J_model=1.626679e-01, ||g||=3.046e-03, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    8: J_model=1.609523e-01, ||g||=3.282e-03, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter    9: J_model=1.600129e-01, ||g||=4.093e-03, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter   10: J_model=1.576083e-01, ||g||=1.763e-03, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter   11: J_model=1.568481e-01, ||g||=8.431e-04, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter   12: J_model=1.565172e-01, ||g||=7.225e-04, RSS=3319.8 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3319.8 MB
+  [mixture_linear_kle  ] iter   13: J_model=1.561491e-01, ||g||=1.294e-03, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3319.8->3319.8 MB, grad_mem=3319.8->3316.9 MB
+  [mixture_linear_kle  ] iter   14: J_model=1.558476e-01, ||g||=7.137e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   15: J_model=1.555917e-01, ||g||=1.090e-03, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   16: J_model=1.555206e-01, ||g||=1.191e-03, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   17: J_model=1.554974e-01, ||g||=5.172e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   18: J_model=1.554886e-01, ||g||=2.729e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   19: J_model=1.554794e-01, ||g||=2.860e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   20: J_model=1.554575e-01, ||g||=5.558e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   21: J_model=1.554175e-01, ||g||=8.684e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   22: J_model=1.553353e-01, ||g||=1.159e-03, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   23: J_model=1.552421e-01, ||g||=1.067e-03, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   24: J_model=1.552257e-01, ||g||=7.473e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   25: J_model=1.551869e-01, ||g||=2.993e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   26: J_model=1.551774e-01, ||g||=1.639e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   27: J_model=1.551744e-01, ||g||=2.814e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   28: J_model=1.551700e-01, ||g||=2.069e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   29: J_model=1.551669e-01, ||g||=5.772e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   30: J_model=1.551597e-01, ||g||=3.870e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   31: J_model=1.551471e-01, ||g||=1.625e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   32: J_model=1.551423e-01, ||g||=2.343e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   33: J_model=1.551306e-01, ||g||=3.372e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   34: J_model=1.551073e-01, ||g||=3.770e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   35: J_model=1.550692e-01, ||g||=6.275e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   36: J_model=1.550589e-01, ||g||=2.127e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   37: J_model=1.550547e-01, ||g||=1.638e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   38: J_model=1.550520e-01, ||g||=1.137e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   39: J_model=1.550482e-01, ||g||=5.520e-05, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   40: J_model=1.550400e-01, ||g||=1.695e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   41: J_model=1.550382e-01, ||g||=6.050e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   42: J_model=1.550331e-01, ||g||=1.995e-04, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   43: J_model=1.550314e-01, ||g||=3.278e-05, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] iter   44: J_model=1.550312e-01, ||g||=4.715e-05, RSS=3316.9 MB, PeakRSS=3333.4 MB, cost_mem=3316.9->3316.9 MB, grad_mem=3316.9->3316.9 MB
+  [mixture_linear_kle  ] done [root-only serial]: success=True, nit=44, avg_iter_time=2.02s
+  [mixture_linear_kle  ] optimal: J_model(z*)=1.550312e-01, J_true(z*)=1.803488e-01, mean_true(z*)=1.037391e-01, var_true(z*)=5.713134e-03, rel_err(z*)=1.404e-01
 
 Optimizing mixture_linear_hep with L-BFGS-B ...
-  [mixture_linear_hep  ] initial: J_model(z0)=5.570611e+01, J_true(z0)=5.546025e+01, mean_true(z0)=5.240667e+01, var_true(z0)=3.053577e-01, rel_err(z0)=4.433e-03
-  [mixture_linear_hep  ] iter    1: J_model=5.553547e+01, ||g||=4.119e-01, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    2: J_model=5.444364e+01, ||g||=7.776e-01, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    3: J_model=5.332744e+01, ||g||=1.158e+00, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    4: J_model=5.309009e+01, ||g||=1.320e-01, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    5: J_model=5.307987e+01, ||g||=8.422e-02, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    6: J_model=5.307643e+01, ||g||=1.146e-01, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    7: J_model=5.305110e+01, ||g||=2.681e-01, RSS=3276.3 MB, PeakRSS=3268.4 MB, cost_mem=3276.3->3276.3 MB, grad_mem=3276.3->3276.3 MB
-  [mixture_linear_hep  ] iter    8: J_model=5.301101e+01, ||g||=3.862e-01, RSS=3289.5 MB, PeakRSS=3282.4 MB, cost_mem=3276.3->3276.8 MB, grad_mem=3276.8->3289.5 MB
-  [mixture_linear_hep  ] iter    9: J_model=5.293936e+01, ||g||=4.192e-01, RSS=3318.1 MB, PeakRSS=3310.4 MB, cost_mem=3289.5->3305.0 MB, grad_mem=3305.0->3318.1 MB
-  [mixture_linear_hep  ] iter   10: J_model=5.284176e+01, ||g||=4.271e-01, RSS=3346.9 MB, PeakRSS=3339.4 MB, cost_mem=3318.1->3333.6 MB, grad_mem=3333.6->3346.9 MB
-  [mixture_linear_hep  ] iter   11: J_model=5.278253e+01, ||g||=4.899e-02, RSS=3375.5 MB, PeakRSS=3368.4 MB, cost_mem=3346.9->3362.3 MB, grad_mem=3362.3->3375.5 MB
-  [mixture_linear_hep  ] iter   12: J_model=5.276566e+01, ||g||=3.737e-02, RSS=3404.2 MB, PeakRSS=3396.4 MB, cost_mem=3375.5->3391.0 MB, grad_mem=3391.0->3404.2 MB
-  [mixture_linear_hep  ] iter   13: J_model=5.275541e+01, ||g||=8.179e-02, RSS=3432.6 MB, PeakRSS=3425.4 MB, cost_mem=3404.2->3419.6 MB, grad_mem=3419.6->3432.6 MB
-  [mixture_linear_hep  ] iter   14: J_model=5.274715e+01, ||g||=1.112e-01, RSS=3461.3 MB, PeakRSS=3454.4 MB, cost_mem=3432.6->3448.1 MB, grad_mem=3448.1->3461.3 MB
-  [mixture_linear_hep  ] iter   15: J_model=5.274378e+01, ||g||=5.180e-02, RSS=3518.7 MB, PeakRSS=3511.4 MB, cost_mem=3490.0->3505.5 MB, grad_mem=3505.5->3518.7 MB
-  [mixture_linear_hep  ] iter   16: J_model=5.273877e+01, ||g||=3.922e-02, RSS=3547.4 MB, PeakRSS=3540.4 MB, cost_mem=3518.7->3534.2 MB, grad_mem=3534.2->3547.4 MB
-  [mixture_linear_hep  ] iter   17: J_model=5.273498e+01, ||g||=2.135e-02, RSS=3576.0 MB, PeakRSS=3568.4 MB, cost_mem=3547.4->3562.8 MB, grad_mem=3562.8->3576.0 MB
-  [mixture_linear_hep  ] iter   18: J_model=5.273339e+01, ||g||=3.067e-02, RSS=3604.7 MB, PeakRSS=3596.4 MB, cost_mem=3576.0->3591.5 MB, grad_mem=3591.5->3604.7 MB
-  [mixture_linear_hep  ] iter   19: J_model=5.273000e+01, ||g||=1.871e-02, RSS=3633.4 MB, PeakRSS=3625.4 MB, cost_mem=3604.7->3620.2 MB, grad_mem=3620.2->3633.4 MB
-  [mixture_linear_hep  ] iter   20: J_model=5.272034e+01, ||g||=2.496e-02, RSS=3661.9 MB, PeakRSS=3653.4 MB, cost_mem=3633.4->3648.9 MB, grad_mem=3648.9->3661.9 MB
-  [mixture_linear_hep  ] iter   21: J_model=5.270816e+01, ||g||=6.137e-02, RSS=3690.6 MB, PeakRSS=3682.4 MB, cost_mem=3661.9->3677.4 MB, grad_mem=3677.4->3690.6 MB
-  [mixture_linear_hep  ] iter   22: J_model=5.270438e+01, ||g||=3.579e-02, RSS=3749.9 MB, PeakRSS=3741.4 MB, cost_mem=3721.2->3736.7 MB, grad_mem=3736.7->3749.9 MB
-  [mixture_linear_hep  ] iter   23: J_model=5.270036e+01, ||g||=1.134e-02, RSS=3778.6 MB, PeakRSS=3770.4 MB, cost_mem=3749.9->3765.4 MB, grad_mem=3765.4->3778.6 MB
-  [mixture_linear_hep  ] iter   24: J_model=5.269925e+01, ||g||=9.261e-03, RSS=3807.3 MB, PeakRSS=3799.4 MB, cost_mem=3778.6->3794.1 MB, grad_mem=3794.1->3807.3 MB
-  [mixture_linear_hep  ] iter   25: J_model=5.269734e+01, ||g||=1.743e-02, RSS=3836.0 MB, PeakRSS=3827.4 MB, cost_mem=3807.3->3822.8 MB, grad_mem=3822.8->3836.0 MB
-  [mixture_linear_hep  ] iter   26: J_model=5.269665e+01, ||g||=2.795e-02, RSS=3893.3 MB, PeakRSS=3885.4 MB, cost_mem=3864.6->3880.1 MB, grad_mem=3880.1->3893.3 MB
-  [mixture_linear_hep  ] iter   27: J_model=5.269553e+01, ||g||=3.219e-02, RSS=3921.8 MB, PeakRSS=3913.4 MB, cost_mem=3893.3->3908.6 MB, grad_mem=3908.6->3921.8 MB
-  [mixture_linear_hep  ] iter   28: J_model=5.269073e+01, ||g||=2.123e-02, RSS=3950.4 MB, PeakRSS=3942.4 MB, cost_mem=3921.8->3937.3 MB, grad_mem=3937.3->3950.4 MB
-  [mixture_linear_hep  ] iter   29: J_model=5.268825e+01, ||g||=1.488e-02, RSS=3979.2 MB, PeakRSS=3971.4 MB, cost_mem=3950.4->3966.0 MB, grad_mem=3966.0->3979.2 MB
-  [mixture_linear_hep  ] iter   30: J_model=5.268547e+01, ||g||=2.221e-02, RSS=4007.8 MB, PeakRSS=3999.4 MB, cost_mem=3979.2->3994.6 MB, grad_mem=3994.6->4007.8 MB
-  [mixture_linear_hep  ] iter   31: J_model=5.268113e+01, ||g||=1.534e-02, RSS=4036.6 MB, PeakRSS=4028.4 MB, cost_mem=4007.8->4023.3 MB, grad_mem=4023.3->4036.6 MB
-  [mixture_linear_hep  ] iter   32: J_model=5.268018e+01, ||g||=4.376e-02, RSS=4093.8 MB, PeakRSS=4085.4 MB, cost_mem=4065.2->4080.7 MB, grad_mem=4080.7->4093.8 MB
-  [mixture_linear_hep  ] iter   33: J_model=5.267843e+01, ||g||=1.392e-02, RSS=4122.5 MB, PeakRSS=4114.4 MB, cost_mem=4093.8->4109.3 MB, grad_mem=4109.3->4122.5 MB
-  [mixture_linear_hep  ] iter   34: J_model=5.267798e+01, ||g||=7.066e-03, RSS=4151.0 MB, PeakRSS=4142.4 MB, cost_mem=4122.5->4137.8 MB, grad_mem=4137.8->4151.0 MB
-  [mixture_linear_hep  ] iter   35: J_model=5.267763e+01, ||g||=5.683e-03, RSS=4179.7 MB, PeakRSS=4171.4 MB, cost_mem=4151.0->4166.5 MB, grad_mem=4166.5->4179.7 MB
-  [mixture_linear_hep  ] iter   36: J_model=5.267697e+01, ||g||=7.105e-03, RSS=4208.4 MB, PeakRSS=4200.4 MB, cost_mem=4179.7->4195.2 MB, grad_mem=4195.2->4208.4 MB
-  [mixture_linear_hep  ] iter   37: J_model=5.267440e+01, ||g||=1.688e-02, RSS=4237.1 MB, PeakRSS=4229.4 MB, cost_mem=4208.4->4223.9 MB, grad_mem=4223.9->4237.1 MB
-  [mixture_linear_hep  ] iter   38: J_model=5.267316e+01, ||g||=3.544e-02, RSS=4294.4 MB, PeakRSS=4286.4 MB, cost_mem=4265.7->4281.2 MB, grad_mem=4281.2->4294.4 MB
-  [mixture_linear_hep  ] iter   39: J_model=5.267003e+01, ||g||=2.134e-02, RSS=4323.1 MB, PeakRSS=4315.4 MB, cost_mem=4294.4->4309.9 MB, grad_mem=4309.9->4323.1 MB
-  [mixture_linear_hep  ] iter   40: J_model=5.266523e+01, ||g||=1.961e-02, RSS=4351.7 MB, PeakRSS=4343.4 MB, cost_mem=4323.1->4338.6 MB, grad_mem=4338.6->4351.7 MB
-  [mixture_linear_hep  ] iter   41: J_model=5.266403e+01, ||g||=9.883e-03, RSS=4380.2 MB, PeakRSS=4372.4 MB, cost_mem=4351.7->4367.0 MB, grad_mem=4367.0->4380.2 MB
-  [mixture_linear_hep  ] iter   42: J_model=5.266344e+01, ||g||=4.396e-03, RSS=4408.9 MB, PeakRSS=4400.4 MB, cost_mem=4380.2->4395.7 MB, grad_mem=4395.7->4408.9 MB
-  [mixture_linear_hep  ] iter   43: J_model=5.266343e+01, ||g||=5.584e-03, RSS=4466.2 MB, PeakRSS=4458.4 MB, cost_mem=4437.6->4453.1 MB, grad_mem=4453.1->4466.2 MB
-  [mixture_linear_hep  ] iter   44: J_model=5.266327e+01, ||g||=5.334e-03, RSS=4494.9 MB, PeakRSS=4487.4 MB, cost_mem=4466.2->4481.7 MB, grad_mem=4481.7->4494.9 MB
-  [mixture_linear_hep  ] iter   45: J_model=5.266327e+01, ||g||=5.334e-03, RSS=5435.6 MB, PeakRSS=5427.4 MB, cost_mem=5415.9->5422.3 MB, grad_mem=5422.3->5435.6 MB
-  [mixture_linear_hep  ] done [root-only serial]: success=True, nit=45, avg_iter_time=4.65s
-  [mixture_linear_hep  ] optimal: J_model(z*)=5.266327e+01, J_true(z*)=5.330875e+01, mean_true(z*)=5.187718e+01, var_true(z*)=1.412077e-01, rel_err(z*)=1.211e-02
+  [mixture_linear_hep  ] initial: J_model(z0)=3.155328e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=4.028e-04
+  [mixture_linear_hep  ] iter    1: J_model=2.751260e-01, ||g||=3.089e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    2: J_model=2.560762e-01, ||g||=1.599e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    3: J_model=2.520481e-01, ||g||=1.047e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    4: J_model=2.486450e-01, ||g||=2.223e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    5: J_model=2.398344e-01, ||g||=3.724e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    6: J_model=2.161644e-01, ||g||=6.991e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    7: J_model=1.843735e-01, ||g||=2.873e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    8: J_model=1.710512e-01, ||g||=1.642e-02, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter    9: J_model=1.637537e-01, ||g||=5.235e-03, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   10: J_model=1.614217e-01, ||g||=3.893e-03, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   11: J_model=1.575788e-01, ||g||=5.947e-03, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   12: J_model=1.544724e-01, ||g||=3.184e-03, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   13: J_model=1.516563e-01, ||g||=4.759e-03, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   14: J_model=1.508772e-01, ||g||=7.206e-04, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   15: J_model=1.508766e-01, ||g||=6.488e-04, RSS=4084.8 MB, PeakRSS=4092.4 MB, cost_mem=4084.8->4084.8 MB, grad_mem=4084.8->4084.8 MB
+  [mixture_linear_hep  ] iter   16: J_model=1.508025e-01, ||g||=6.269e-04, RSS=4082.8 MB, PeakRSS=4092.4 MB, cost_mem=4082.8->4082.8 MB, grad_mem=4082.8->4082.8 MB
+  [mixture_linear_hep  ] iter   17: J_model=1.504045e-01, ||g||=1.772e-03, RSS=4082.8 MB, PeakRSS=4092.4 MB, cost_mem=4082.8->4082.8 MB, grad_mem=4082.8->4082.8 MB
+  [mixture_linear_hep  ] iter   18: J_model=1.501742e-01, ||g||=2.832e-03, RSS=4082.8 MB, PeakRSS=4092.4 MB, cost_mem=4082.8->4082.8 MB, grad_mem=4082.8->4082.8 MB
+  [mixture_linear_hep  ] iter   19: J_model=1.501742e-01, ||g||=2.832e-03, RSS=4082.8 MB, PeakRSS=4092.4 MB, cost_mem=4082.8->4082.8 MB, grad_mem=4082.8->4082.8 MB
+  [mixture_linear_hep  ] done [root-only serial]: success=True, nit=19, avg_iter_time=5.82s
+  [mixture_linear_hep  ] optimal: J_model(z*)=1.501742e-01, J_true(z*)=2.017602e-01, mean_true(z*)=1.003410e-01, var_true(z*)=8.073226e-03, rel_err(z*)=2.557e-01
 
 Optimizing mixture_quadratic_kle with L-BFGS-B ...
-  [mixture_quadratic_kle] initial: J_model(z0)=5.579425e+01, J_true(z0)=5.546025e+01, mean_true(z0)=5.240667e+01, var_true(z0)=3.053577e-01, rel_err(z0)=6.022e-03
-  [mixture_quadratic_kle] iter    1: J_model=5.563915e+01, ||g||=4.564e-01, RSS=11919.7 MB, PeakRSS=11912.0 MB, cost_mem=10070.5->10995.2 MB, grad_mem=10995.2->11919.7 MB
-  [mixture_quadratic_kle] iter    2: J_model=5.455731e+01, ||g||=3.296e-01, RSS=17475.3 MB, PeakRSS=17468.0 MB, cost_mem=15618.0->16542.7 MB, grad_mem=16542.7->17475.3 MB
-  [mixture_quadratic_kle] iter    3: J_model=5.348357e+01, ||g||=3.903e-01, RSS=19324.5 MB, PeakRSS=19316.0 MB, cost_mem=17475.3->18400.0 MB, grad_mem=18400.0->19324.5 MB
-  [mixture_quadratic_kle] iter    4: J_model=5.344044e+01, ||g||=5.706e-02, RSS=21173.6 MB, PeakRSS=21165.0 MB, cost_mem=19324.5->20249.1 MB, grad_mem=20249.1->21173.6 MB
-  [mixture_quadratic_kle] iter    5: J_model=5.342030e+01, ||g||=1.916e-01, RSS=23022.8 MB, PeakRSS=23015.0 MB, cost_mem=21173.6->22098.3 MB, grad_mem=22098.3->23022.8 MB
-  [mixture_quadratic_kle] iter    6: J_model=5.338458e+01, ||g||=3.722e-01, RSS=24872.0 MB, PeakRSS=24864.0 MB, cost_mem=23022.8->23947.5 MB, grad_mem=23947.5->24872.0 MB
-  [mixture_quadratic_kle] iter    7: J_model=5.331407e+01, ||g||=5.193e-01, RSS=26721.1 MB, PeakRSS=26713.0 MB, cost_mem=24872.0->25796.6 MB, grad_mem=25796.6->26721.1 MB
-  [mixture_quadratic_kle] iter    8: J_model=5.324046e+01, ||g||=4.467e-01, RSS=28570.3 MB, PeakRSS=28562.0 MB, cost_mem=26721.1->27645.8 MB, grad_mem=27645.8->28570.3 MB
-  [mixture_quadratic_kle] iter    9: J_model=5.319410e+01, ||g||=2.417e-01, RSS=30419.5 MB, PeakRSS=30412.0 MB, cost_mem=28570.3->29495.0 MB, grad_mem=29495.0->30419.5 MB
-  [mixture_quadratic_kle] iter   10: J_model=5.318319e+01, ||g||=7.868e-02, RSS=32268.6 MB, PeakRSS=32261.0 MB, cost_mem=30419.5->31344.1 MB, grad_mem=31344.1->32268.6 MB
-  [mixture_quadratic_kle] iter   11: J_model=5.318085e+01, ||g||=3.003e-02, RSS=34117.8 MB, PeakRSS=34110.0 MB, cost_mem=32268.6->33193.3 MB, grad_mem=33193.3->34117.8 MB
-  [mixture_quadratic_kle] iter   12: J_model=5.317999e+01, ||g||=3.713e-02, RSS=35966.9 MB, PeakRSS=35959.0 MB, cost_mem=34117.8->35042.5 MB, grad_mem=35042.5->35966.9 MB
-  [mixture_quadratic_kle] iter   13: J_model=5.317781e+01, ||g||=7.194e-02, RSS=37832.3 MB, PeakRSS=37825.0 MB, cost_mem=35966.9->36907.9 MB, grad_mem=36907.9->37832.3 MB
-  [mixture_quadratic_kle] iter   14: J_model=5.317494e+01, ||g||=1.092e-01, RSS=39681.5 MB, PeakRSS=39673.0 MB, cost_mem=37832.3->38757.0 MB, grad_mem=38757.0->39681.5 MB
-  [mixture_quadratic_kle] iter   15: J_model=5.316977e+01, ||g||=1.444e-01, RSS=41530.7 MB, PeakRSS=41522.0 MB, cost_mem=39681.5->40606.2 MB, grad_mem=40606.2->41530.7 MB
-  [mixture_quadratic_kle] iter   16: J_model=5.316003e+01, ||g||=1.765e-01, RSS=43379.8 MB, PeakRSS=43372.0 MB, cost_mem=41530.7->42455.4 MB, grad_mem=42455.4->43379.8 MB
-  [mixture_quadratic_kle] iter   17: J_model=5.315234e+01, ||g||=6.739e-02, RSS=45229.0 MB, PeakRSS=45221.0 MB, cost_mem=43379.8->44304.5 MB, grad_mem=44304.5->45229.0 MB
-  [mixture_quadratic_kle] iter   18: J_model=5.314853e+01, ||g||=3.344e-02, RSS=47078.2 MB, PeakRSS=47070.0 MB, cost_mem=45229.0->46153.7 MB, grad_mem=46153.7->47078.2 MB
-  [mixture_quadratic_kle] iter   19: J_model=5.314691e+01, ||g||=2.070e-02, RSS=48927.4 MB, PeakRSS=48919.0 MB, cost_mem=47078.2->48002.9 MB, grad_mem=48002.9->48927.4 MB
-  [mixture_quadratic_kle] iter   20: J_model=5.314535e+01, ||g||=5.775e-02, RSS=50776.5 MB, PeakRSS=50768.0 MB, cost_mem=48927.4->49852.0 MB, grad_mem=49852.0->50776.5 MB
-  [mixture_quadratic_kle] iter   21: J_model=5.314378e+01, ||g||=7.919e-02, RSS=52625.7 MB, PeakRSS=52618.0 MB, cost_mem=50776.5->51701.2 MB, grad_mem=51701.2->52625.7 MB
-  [mixture_quadratic_kle] iter   22: J_model=5.313951e+01, ||g||=1.012e-01, RSS=54474.8 MB, PeakRSS=54467.0 MB, cost_mem=52625.7->53550.3 MB, grad_mem=53550.3->54474.8 MB
-  [mixture_quadratic_kle] iter   23: J_model=5.313425e+01, ||g||=9.601e-02, RSS=56324.0 MB, PeakRSS=56315.0 MB, cost_mem=54474.8->55399.5 MB, grad_mem=55399.5->56324.0 MB
-  [mixture_quadratic_kle] iter   24: J_model=5.312906e+01, ||g||=4.290e-02, RSS=60022.3 MB, PeakRSS=60013.0 MB, cost_mem=58173.2->59097.8 MB, grad_mem=59097.8->60022.3 MB
-  [mixture_quadratic_kle] iter   25: J_model=5.312003e+01, ||g||=3.554e-02, RSS=61871.5 MB, PeakRSS=61862.0 MB, cost_mem=60022.3->60947.0 MB, grad_mem=60947.0->61871.5 MB
-  [mixture_quadratic_kle] iter   26: J_model=5.311246e+01, ||g||=4.422e-02, RSS=63720.7 MB, PeakRSS=63711.0 MB, cost_mem=61871.5->62796.2 MB, grad_mem=62796.2->63720.7 MB
-  [mixture_quadratic_kle] iter   27: J_model=5.310495e+01, ||g||=3.955e-02, RSS=65569.8 MB, PeakRSS=65561.0 MB, cost_mem=63720.7->64645.3 MB, grad_mem=64645.3->65569.8 MB
-  [mixture_quadratic_kle] iter   28: J_model=5.310443e+01, ||g||=7.843e-02, RSS=69268.2 MB, PeakRSS=69259.0 MB, cost_mem=67419.0->68343.7 MB, grad_mem=68343.7->69268.2 MB
-  [mixture_quadratic_kle] iter   29: J_model=5.310194e+01, ||g||=3.824e-02, RSS=71117.3 MB, PeakRSS=71108.0 MB, cost_mem=69268.2->70192.8 MB, grad_mem=70192.8->71117.3 MB
-  [mixture_quadratic_kle] iter   30: J_model=5.310124e+01, ||g||=9.715e-03, RSS=72966.5 MB, PeakRSS=72957.0 MB, cost_mem=71117.3->72042.0 MB, grad_mem=72042.0->72966.5 MB
-  [mixture_quadratic_kle] iter   31: J_model=5.310108e+01, ||g||=1.263e-02, RSS=74815.7 MB, PeakRSS=74807.0 MB, cost_mem=72966.5->73891.2 MB, grad_mem=73891.2->74815.7 MB
-  [mixture_quadratic_kle] iter   32: J_model=5.310090e+01, ||g||=1.549e-02, RSS=76697.3 MB, PeakRSS=76688.0 MB, cost_mem=74815.7->75772.8 MB, grad_mem=75772.8->76697.3 MB
-  [mixture_quadratic_kle] iter   33: J_model=5.310026e+01, ||g||=1.728e-02, RSS=78546.5 MB, PeakRSS=78537.0 MB, cost_mem=76697.3->77622.0 MB, grad_mem=77622.0->78546.5 MB
-  [mixture_quadratic_kle] iter   34: J_model=5.309977e+01, ||g||=9.634e-03, RSS=82244.8 MB, PeakRSS=82235.0 MB, cost_mem=80395.6->81320.3 MB, grad_mem=81320.3->82244.8 MB
-  [mixture_quadratic_kle] iter   35: J_model=5.309879e+01, ||g||=2.422e-02, RSS=84094.0 MB, PeakRSS=84085.0 MB, cost_mem=82244.8->83169.5 MB, grad_mem=83169.5->84094.0 MB
-  [mixture_quadratic_kle] iter   36: J_model=5.309780e+01, ||g||=2.349e-02, RSS=85943.1 MB, PeakRSS=85934.0 MB, cost_mem=84094.0->85018.6 MB, grad_mem=85018.6->85943.1 MB
-  [mixture_quadratic_kle] iter   37: J_model=5.309668e+01, ||g||=2.673e-02, RSS=87792.3 MB, PeakRSS=87782.0 MB, cost_mem=85943.1->86867.8 MB, grad_mem=86867.8->87792.3 MB
-  [mixture_quadratic_kle] iter   38: J_model=5.309119e+01, ||g||=4.479e-02, RSS=89641.4 MB, PeakRSS=89632.0 MB, cost_mem=87792.3->88716.9 MB, grad_mem=88716.9->89641.4 MB
-  [mixture_quadratic_kle] iter   39: J_model=5.308597e+01, ||g||=4.607e-02, RSS=91490.6 MB, PeakRSS=91480.0 MB, cost_mem=89641.4->90566.1 MB, grad_mem=90566.1->91490.6 MB
-  [mixture_quadratic_kle] iter   40: J_model=5.308577e+01, ||g||=2.273e-02, RSS=95188.9 MB, PeakRSS=95178.0 MB, cost_mem=93339.8->94264.4 MB, grad_mem=94264.4->95188.9 MB
-  [mixture_quadratic_kle] iter   41: J_model=5.308352e+01, ||g||=1.513e-02, RSS=97038.1 MB, PeakRSS=97027.0 MB, cost_mem=95188.9->96113.6 MB, grad_mem=96113.6->97038.1 MB
-  [mixture_quadratic_kle] iter   42: J_model=5.308138e+01, ||g||=1.117e-02, RSS=98887.3 MB, PeakRSS=98876.0 MB, cost_mem=97038.1->97962.8 MB, grad_mem=97962.8->98887.3 MB
-  [mixture_quadratic_kle] iter   43: J_model=5.307735e+01, ||g||=2.188e-02, RSS=100736.4 MB, PeakRSS=100725.0 MB, cost_mem=98887.3->99811.9 MB, grad_mem=99811.9->100736.4 MB
-  [mixture_quadratic_kle] iter   44: J_model=5.307283e+01, ||g||=3.486e-02, RSS=102585.6 MB, PeakRSS=102574.0 MB, cost_mem=100736.4->101661.1 MB, grad_mem=101661.1->102585.6 MB
-  [mixture_quadratic_kle] iter   45: J_model=5.307099e+01, ||g||=5.941e-02, RSS=104434.7 MB, PeakRSS=104424.0 MB, cost_mem=102585.6->103510.3 MB, grad_mem=103510.3->104434.7 MB
-  [mixture_quadratic_kle] iter   46: J_model=5.306570e+01, ||g||=2.313e-02, RSS=106283.9 MB, PeakRSS=106273.0 MB, cost_mem=104434.7->105359.4 MB, grad_mem=105359.4->106283.9 MB
-  [mixture_quadratic_kle] iter   47: J_model=5.306491e+01, ||g||=1.394e-02, RSS=108133.1 MB, PeakRSS=108122.0 MB, cost_mem=106283.9->107208.6 MB, grad_mem=107208.6->108133.1 MB
-  [mixture_quadratic_kle] iter   48: J_model=5.306409e+01, ||g||=1.194e-02, RSS=109982.2 MB, PeakRSS=109971.0 MB, cost_mem=108133.1->109057.7 MB, grad_mem=109057.7->109982.2 MB
-  [mixture_quadratic_kle] iter   49: J_model=5.306376e+01, ||g||=1.343e-02, RSS=113680.6 MB, PeakRSS=113669.0 MB, cost_mem=111831.4->112756.1 MB, grad_mem=112756.1->113680.6 MB
-  [mixture_quadratic_kle] iter   50: J_model=5.306345e+01, ||g||=1.040e-02, RSS=115529.7 MB, PeakRSS=115518.0 MB, cost_mem=113680.6->114605.2 MB, grad_mem=114605.2->115529.7 MB
-  [mixture_quadratic_kle] iter   51: J_model=5.306317e+01, ||g||=2.637e-02, RSS=117378.9 MB, PeakRSS=117367.0 MB, cost_mem=115529.7->116454.4 MB, grad_mem=116454.4->117378.9 MB
-  [mixture_quadratic_kle] iter   52: J_model=5.306292e+01, ||g||=1.182e-02, RSS=119228.1 MB, PeakRSS=119216.0 MB, cost_mem=117378.9->118303.6 MB, grad_mem=118303.6->119228.1 MB
-  [mixture_quadratic_kle] iter   53: J_model=5.306269e+01, ||g||=7.838e-03, RSS=121077.2 MB, PeakRSS=121065.0 MB, cost_mem=119228.1->120152.7 MB, grad_mem=120152.7->121077.2 MB
-  [mixture_quadratic_kle] iter   54: J_model=5.306159e+01, ||g||=1.677e-02, RSS=122926.4 MB, PeakRSS=122914.0 MB, cost_mem=121077.2->122001.9 MB, grad_mem=122001.9->122926.4 MB
-  [mixture_quadratic_kle] iter   55: J_model=5.305973e+01, ||g||=3.237e-02, RSS=124775.5 MB, PeakRSS=124763.0 MB, cost_mem=122926.4->123851.1 MB, grad_mem=123851.1->124775.5 MB
-  [mixture_quadratic_kle] iter   56: J_model=5.305600e+01, ||g||=4.737e-02, RSS=126624.7 MB, PeakRSS=126613.0 MB, cost_mem=124775.5->125700.2 MB, grad_mem=125700.2->126624.7 MB
-  [mixture_quadratic_kle] iter   57: J_model=5.305400e+01, ||g||=1.831e-02, RSS=128473.9 MB, PeakRSS=128462.0 MB, cost_mem=126624.7->127549.4 MB, grad_mem=127549.4->128473.9 MB
-  [mixture_quadratic_kle] iter   58: J_model=5.305096e+01, ||g||=3.741e-02, RSS=130323.0 MB, PeakRSS=130311.0 MB, cost_mem=128473.9->129398.5 MB, grad_mem=129398.5->130323.0 MB
-  [mixture_quadratic_kle] iter   59: J_model=5.304952e+01, ||g||=9.026e-03, RSS=132172.2 MB, PeakRSS=132160.0 MB, cost_mem=130323.0->131247.7 MB, grad_mem=131247.7->132172.2 MB
-  [mixture_quadratic_kle] iter   60: J_model=5.304909e+01, ||g||=1.062e-02, RSS=134021.4 MB, PeakRSS=134009.0 MB, cost_mem=132172.2->133096.9 MB, grad_mem=133096.9->134021.4 MB
-  [mixture_quadratic_kle] done [root-only serial]: success=False, nit=60, avg_iter_time=56.85s
-  [mixture_quadratic_kle] optimal: J_model(z*)=5.304909e+01, J_true(z*)=5.306702e+01, mean_true(z*)=5.196888e+01, var_true(z*)=1.073704e-01, rel_err(z*)=3.379e-04
+  [mixture_quadratic_kle] initial: J_model(z0)=3.167788e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=3.544e-03
+  [mixture_quadratic_kle] iter    1: J_model=2.736031e-01, ||g||=3.010e-02, RSS=6108.4 MB, PeakRSS=6097.7 MB, cost_mem=5999.6->5999.6 MB, grad_mem=5999.6->6108.4 MB
+  [mixture_quadratic_kle] iter    2: J_model=2.593637e-01, ||g||=2.173e-02, RSS=7423.9 MB, PeakRSS=7413.2 MB, cost_mem=6108.4->6768.2 MB, grad_mem=6768.2->7423.9 MB
+  [mixture_quadratic_kle] iter    3: J_model=2.554648e-01, ||g||=1.063e-02, RSS=8735.2 MB, PeakRSS=8724.2 MB, cost_mem=7423.9->8079.6 MB, grad_mem=8079.6->8735.2 MB
+  [mixture_quadratic_kle] iter    4: J_model=2.504858e-01, ||g||=1.104e-02, RSS=10046.6 MB, PeakRSS=10035.7 MB, cost_mem=8735.2->9391.0 MB, grad_mem=9391.0->10046.6 MB
+  [mixture_quadratic_kle] iter    5: J_model=2.074252e-01, ||g||=1.878e-02, RSS=11358.0 MB, PeakRSS=11347.2 MB, cost_mem=10046.6->10702.4 MB, grad_mem=10702.4->11358.0 MB
+  [mixture_quadratic_kle] iter    6: J_model=1.733141e-01, ||g||=5.775e-03, RSS=12669.4 MB, PeakRSS=12658.2 MB, cost_mem=11358.0->12013.8 MB, grad_mem=12013.8->12669.4 MB
+  [mixture_quadratic_kle] iter    7: J_model=1.716576e-01, ||g||=1.133e-02, RSS=13988.9 MB, PeakRSS=13977.7 MB, cost_mem=12669.4->13333.3 MB, grad_mem=13333.3->13988.9 MB
+  [mixture_quadratic_kle] iter    8: J_model=1.698134e-01, ||g||=4.614e-03, RSS=15300.3 MB, PeakRSS=15289.2 MB, cost_mem=13988.9->14644.7 MB, grad_mem=14644.7->15300.3 MB
+  [mixture_quadratic_kle] iter    9: J_model=1.686534e-01, ||g||=2.633e-03, RSS=16611.7 MB, PeakRSS=16600.7 MB, cost_mem=15300.3->15956.1 MB, grad_mem=15956.1->16611.7 MB
+  [mixture_quadratic_kle] iter   10: J_model=1.683649e-01, ||g||=3.934e-03, RSS=17923.1 MB, PeakRSS=17911.7 MB, cost_mem=16611.7->17267.5 MB, grad_mem=17267.5->17923.1 MB
+  [mixture_quadratic_kle] iter   11: J_model=1.680003e-01, ||g||=4.183e-03, RSS=19234.5 MB, PeakRSS=19223.2 MB, cost_mem=17923.1->18578.9 MB, grad_mem=18578.9->19234.5 MB
+  [mixture_quadratic_kle] iter   12: J_model=1.674412e-01, ||g||=1.788e-03, RSS=20545.9 MB, PeakRSS=20534.7 MB, cost_mem=19234.5->19890.3 MB, grad_mem=19890.3->20545.9 MB
+  [mixture_quadratic_kle] iter   13: J_model=1.672540e-01, ||g||=1.017e-03, RSS=21857.3 MB, PeakRSS=21846.2 MB, cost_mem=20545.9->21201.6 MB, grad_mem=21201.6->21857.3 MB
+  [mixture_quadratic_kle] iter   14: J_model=1.672129e-01, ||g||=1.327e-03, RSS=23168.7 MB, PeakRSS=23157.7 MB, cost_mem=21857.3->22513.0 MB, grad_mem=22513.0->23168.7 MB
+  [mixture_quadratic_kle] iter   15: J_model=1.670584e-01, ||g||=1.901e-03, RSS=24480.0 MB, PeakRSS=24468.2 MB, cost_mem=23168.7->23824.4 MB, grad_mem=23824.4->24480.0 MB
+  [mixture_quadratic_kle] iter   16: J_model=1.668488e-01, ||g||=1.680e-03, RSS=25791.4 MB, PeakRSS=25779.7 MB, cost_mem=24480.0->25135.8 MB, grad_mem=25135.8->25791.4 MB
+  [mixture_quadratic_kle] iter   17: J_model=1.667556e-01, ||g||=3.706e-03, RSS=27119.1 MB, PeakRSS=27106.7 MB, cost_mem=25791.4->26447.2 MB, grad_mem=26447.2->27119.1 MB
+  [mixture_quadratic_kle] iter   18: J_model=1.665457e-01, ||g||=5.782e-04, RSS=28430.5 MB, PeakRSS=28418.2 MB, cost_mem=27119.1->27774.8 MB, grad_mem=27774.8->28430.5 MB
+  [mixture_quadratic_kle] iter   19: J_model=1.665075e-01, ||g||=3.126e-04, RSS=29741.8 MB, PeakRSS=29729.7 MB, cost_mem=28430.5->29086.2 MB, grad_mem=29086.2->29741.8 MB
+  [mixture_quadratic_kle] iter   20: J_model=1.664877e-01, ||g||=2.673e-04, RSS=31053.2 MB, PeakRSS=31041.2 MB, cost_mem=29741.8->30397.6 MB, grad_mem=30397.6->31053.2 MB
+  [mixture_quadratic_kle] iter   21: J_model=1.664519e-01, ||g||=2.512e-04, RSS=32364.6 MB, PeakRSS=32352.2 MB, cost_mem=31053.2->31709.0 MB, grad_mem=31709.0->32364.6 MB
+  [mixture_quadratic_kle] iter   22: J_model=1.663928e-01, ||g||=4.926e-04, RSS=34987.4 MB, PeakRSS=34975.2 MB, cost_mem=33676.0->34331.8 MB, grad_mem=34331.8->34987.4 MB
+  [mixture_quadratic_kle] iter   23: J_model=1.663479e-01, ||g||=6.310e-04, RSS=36298.8 MB, PeakRSS=36286.7 MB, cost_mem=34987.4->35643.2 MB, grad_mem=35643.2->36298.8 MB
+  [mixture_quadratic_kle] iter   24: J_model=1.663349e-01, ||g||=4.626e-04, RSS=38921.6 MB, PeakRSS=38909.2 MB, cost_mem=37610.2->38265.9 MB, grad_mem=38265.9->38921.6 MB
+  [mixture_quadratic_kle] iter   25: J_model=1.662804e-01, ||g||=2.445e-04, RSS=40233.0 MB, PeakRSS=40220.7 MB, cost_mem=38921.6->39577.3 MB, grad_mem=39577.3->40233.0 MB
+  [mixture_quadratic_kle] iter   26: J_model=1.662579e-01, ||g||=9.872e-05, RSS=41544.4 MB, PeakRSS=41532.2 MB, cost_mem=40233.0->40888.7 MB, grad_mem=40888.7->41544.4 MB
+  [mixture_quadratic_kle] iter   27: J_model=1.662399e-01, ||g||=2.251e-04, RSS=42855.8 MB, PeakRSS=42843.7 MB, cost_mem=41544.4->42200.1 MB, grad_mem=42200.1->42855.8 MB
+  [mixture_quadratic_kle] iter   28: J_model=1.662224e-01, ||g||=3.115e-04, RSS=44167.1 MB, PeakRSS=44154.7 MB, cost_mem=42855.8->43511.5 MB, grad_mem=43511.5->44167.1 MB
+  [mixture_quadratic_kle] iter   29: J_model=1.661855e-01, ||g||=2.319e-04, RSS=45478.5 MB, PeakRSS=45466.2 MB, cost_mem=44167.1->44822.9 MB, grad_mem=44822.9->45478.5 MB
+  [mixture_quadratic_kle] iter   30: J_model=1.661733e-01, ||g||=6.883e-04, RSS=48101.3 MB, PeakRSS=48089.2 MB, cost_mem=46789.9->47445.7 MB, grad_mem=47445.7->48101.3 MB
+  [mixture_quadratic_kle] iter   31: J_model=1.661505e-01, ||g||=3.606e-04, RSS=49412.7 MB, PeakRSS=49400.2 MB, cost_mem=48101.3->48757.1 MB, grad_mem=48757.1->49412.7 MB
+  [mixture_quadratic_kle] iter   32: J_model=1.661438e-01, ||g||=1.027e-04, RSS=50724.1 MB, PeakRSS=50711.7 MB, cost_mem=49412.7->50068.4 MB, grad_mem=50068.4->50724.1 MB
+  [mixture_quadratic_kle] iter   33: J_model=1.661438e-01, ||g||=1.027e-04, RSS=76983.6 MB, PeakRSS=76971.7 MB, cost_mem=75672.3->76328.0 MB, grad_mem=76328.0->76983.6 MB
+  [mixture_quadratic_kle] done [root-only serial]: success=True, nit=33, avg_iter_time=65.18s
+  [mixture_quadratic_kle] optimal: J_model(z*)=1.661438e-01, J_true(z*)=1.688858e-01, mean_true(z*)=1.129638e-01, var_true(z*)=4.176129e-03, rel_err(z*)=1.624e-02
 
 Optimizing mixture_quadratic_hep with L-BFGS-B ...
-  [mixture_quadratic_hep] initial: J_model(z0)=5.572711e+01, J_true(z0)=5.546025e+01, mean_true(z0)=5.240667e+01, var_true(z0)=3.053577e-01, rel_err(z0)=4.812e-03
+  [mixture_quadratic_hep] initial: J_model(z0)=3.156380e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=6.954e-05
+  [mixture_quadratic_hep] iter    1: J_model=2.725728e-01, ||g||=3.100e-02, RSS=80933.4 MB, PeakRSS=80921.5 MB, cost_mem=80821.9->80821.0 MB, grad_mem=80821.0->80933.4 MB
+  [mixture_quadratic_hep] iter    2: J_model=2.562544e-01, ||g||=1.421e-02, RSS=83565.2 MB, PeakRSS=83553.5 MB, cost_mem=82249.3->82909.6 MB, grad_mem=82909.6->83565.2 MB
+  [mixture_quadratic_hep] iter    3: J_model=2.539651e-01, ||g||=2.716e-02, RSS=84881.2 MB, PeakRSS=84869.5 MB, cost_mem=83565.2->84225.5 MB, grad_mem=84225.5->84881.2 MB
+  [mixture_quadratic_hep] iter    4: J_model=2.474216e-01, ||g||=1.560e-02, RSS=86197.1 MB, PeakRSS=86185.5 MB, cost_mem=84881.2->85541.5 MB, grad_mem=85541.5->86197.1 MB
+  [mixture_quadratic_hep] iter    5: J_model=2.227898e-01, ||g||=1.129e-02, RSS=87513.0 MB, PeakRSS=87501.0 MB, cost_mem=86197.1->86857.4 MB, grad_mem=86857.4->87513.0 MB
+  [mixture_quadratic_hep] iter    6: J_model=1.854028e-01, ||g||=1.404e-02, RSS=88828.9 MB, PeakRSS=88817.0 MB, cost_mem=87513.0->88173.3 MB, grad_mem=88173.3->88828.9 MB
+  [mixture_quadratic_hep] iter    7: J_model=1.689129e-01, ||g||=3.451e-03, RSS=91460.8 MB, PeakRSS=91449.0 MB, cost_mem=90144.9->90805.2 MB, grad_mem=90805.2->91460.8 MB
+  [mixture_quadratic_hep] iter    8: J_model=1.673835e-01, ||g||=7.433e-03, RSS=94092.6 MB, PeakRSS=94080.5 MB, cost_mem=92776.7->93437.0 MB, grad_mem=93437.0->94092.6 MB
+  [mixture_quadratic_hep] iter    9: J_model=1.650080e-01, ||g||=1.063e-02, RSS=95408.6 MB, PeakRSS=95396.5 MB, cost_mem=94092.6->94752.9 MB, grad_mem=94752.9->95408.6 MB
+  [mixture_quadratic_hep] iter   10: J_model=1.596554e-01, ||g||=2.139e-03, RSS=96724.5 MB, PeakRSS=96712.5 MB, cost_mem=95408.6->96068.9 MB, grad_mem=96068.9->96724.5 MB
+  [mixture_quadratic_hep] iter   11: J_model=1.575966e-01, ||g||=1.187e-03, RSS=98040.4 MB, PeakRSS=98028.5 MB, cost_mem=96724.5->97384.8 MB, grad_mem=97384.8->98040.4 MB
+  [mixture_quadratic_hep] iter   12: J_model=1.564361e-01, ||g||=2.523e-03, RSS=99356.4 MB, PeakRSS=99344.5 MB, cost_mem=98040.4->98700.7 MB, grad_mem=98700.7->99356.4 MB
+  [mixture_quadratic_hep] iter   13: J_model=1.559161e-01, ||g||=2.409e-03, RSS=100672.3 MB, PeakRSS=100660.5 MB, cost_mem=99356.4->100016.6 MB, grad_mem=100016.6->100672.3 MB
+  [mixture_quadratic_hep] iter   14: J_model=1.559161e-01, ||g||=2.409e-03, RSS=124405.3 MB, PeakRSS=124394.0 MB, cost_mem=123094.0->123749.6 MB, grad_mem=123749.6->124405.3 MB
+  [mixture_quadratic_hep] done [root-only serial]: success=True, nit=14, avg_iter_time=97.00s
+  [mixture_quadratic_hep] optimal: J_model(z*)=1.559161e-01, J_true(z*)=1.802254e-01, mean_true(z*)=1.052266e-01, var_true(z*)=5.808006e-03, rel_err(z*)=1.349e-01
+
+Optimizing saa_10 with L-BFGS-B ...
+  [saa_10              ] initial: J_model(z0)=3.205597e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=1.552e-02
+Level 25:FFC:Calling FFC just-in-time (JIT) compiler, this may take some time.
+INFO:FFC:Compiling form ffc_form_0fff14547f593ad9c0e305ef32b9ad53c6e08bd2
+
+INFO:FFC:Compiler stage 1: Analyzing form(s)
+INFO:FFC:-----------------------------------
+DEBUG:FFC:  Preprocessing form using 'uflacs' representation family.
+INFO:FFC:  
+INFO:FFC:  Geometric dimension:       2
+  Number of cell subdomains: 0
+  Rank:                      1
+  Arguments:                 '(v_0)'
+  Number of coefficients:    1
+  Coefficients:              '[f_101730411]'
+  Unique elements:           'CG1(?,?), Vector<2 x CG1(?,?)>'
+  Unique sub elements:       'CG1(?,?), Vector<2 x CG1(?,?)>'
+  
+INFO:FFC:  representation:    auto --> uflacs
+INFO:FFC:  quadrature_rule:   auto --> default
+INFO:FFC:  quadrature_degree: 4
+INFO:FFC:  
+INFO:FFC:Compiler stage 1 finished in 0.00271964 seconds.
+
+INFO:FFC:Compiler stage 2: Computing intermediate representation
+INFO:FFC:-------------------------------------------------------
+INFO:FFC:  Computing representation of 0 elements
+INFO:FFC:  Computing representation of 0 dofmaps
+INFO:FFC:  Computing representation of 0 coordinate mappings
+INFO:FFC:  Computing representation of integrals
+INFO:FFC:  Computing uflacs representation
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:FFC:  Reusing element from cache
+DEBUG:UFL:Blocks of each mode: 
+  1	full
+INFO:FFC:  Computing representation of forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 2 finished in 0.00535417 seconds.
+
+INFO:FFC:Compiler stage 3: Optimizing intermediate representation
+INFO:FFC:--------------------------------------------------------
+INFO:FFC:  Optimizing uflacs representation
+INFO:FFC:  
+INFO:FFC:Compiler stage 3 finished in 8.60691e-05 seconds.
+
+INFO:FFC:Compiler stage 4: Generating code
+INFO:FFC:---------------------------------
+INFO:FFC:  Generating code for 0 finite_element(s)
+INFO:FFC:  Generating code for 0 dofmap(s)
+INFO:FFC:  Generating code for 0 coordinate_mapping(s)
+INFO:FFC:  Generating code for integrals
+INFO:FFC:  Generating code from ffc.uflacs representation
+INFO:FFC:  Generating code for forms
+INFO:FFC:  
+INFO:FFC:Compiler stage 4 finished in 0.00149155 seconds.
+
+INFO:FFC:Compiler stage 4.1 finished in 7.15256e-07 seconds.
+
+INFO:FFC:Compiler stage 5: Formatting code
+INFO:FFC:---------------------------------
+INFO:FFC:  
+INFO:FFC:Compiler stage 5 finished in 0.000174999 seconds.
+
+INFO:FFC:[1;37;32mFFC finished in 0.00997114 seconds.[0m
+  [saa_10              ] iter    1: J_model=2.779029e-01, ||g||=3.140e-02, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    2: J_model=2.509479e-01, ||g||=1.196e-02, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    3: J_model=2.440418e-01, ||g||=1.492e-02, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    4: J_model=2.123447e-01, ||g||=2.333e-02, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    5: J_model=1.550827e-01, ||g||=2.470e-02, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    6: J_model=1.383954e-01, ||g||=1.516e-02, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    7: J_model=1.295034e-01, ||g||=1.946e-03, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    8: J_model=1.266273e-01, ||g||=4.633e-03, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter    9: J_model=1.259803e-01, ||g||=2.574e-03, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   10: J_model=1.257404e-01, ||g||=4.381e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   11: J_model=1.257175e-01, ||g||=4.519e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   12: J_model=1.256912e-01, ||g||=7.308e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   13: J_model=1.256495e-01, ||g||=9.646e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   14: J_model=1.255163e-01, ||g||=1.279e-03, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   15: J_model=1.253149e-01, ||g||=1.162e-03, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   16: J_model=1.250555e-01, ||g||=8.414e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   17: J_model=1.249503e-01, ||g||=3.835e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   18: J_model=1.249293e-01, ||g||=4.180e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   19: J_model=1.249182e-01, ||g||=4.460e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   20: J_model=1.248525e-01, ||g||=5.107e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   21: J_model=1.248039e-01, ||g||=2.114e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   22: J_model=1.247808e-01, ||g||=5.075e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   23: J_model=1.247703e-01, ||g||=1.289e-04, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   24: J_model=1.247672e-01, ||g||=9.867e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   25: J_model=1.247580e-01, ||g||=8.100e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   26: J_model=1.247178e-01, ||g||=8.095e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   27: J_model=1.247107e-01, ||g||=7.028e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   28: J_model=1.247094e-01, ||g||=9.626e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   29: J_model=1.247071e-01, ||g||=7.371e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] iter   30: J_model=1.247030e-01, ||g||=2.054e-05, RSS=127578.4 MB, PeakRSS=127572.6 MB, cost_mem=127578.4->127578.4 MB, grad_mem=127578.4->127578.4 MB
+  [saa_10              ] done [root-only serial]: success=True, nit=30, avg_iter_time=0.11s
+  [saa_10              ] optimal: J_model(z*)=1.247030e-01, J_true(z*)=4.767624e-01, mean_true(z*)=1.064450e-01, var_true(z*)=3.347978e-02, rel_err(z*)=7.384e-01
+
+Optimizing saa_100 with L-BFGS-B ...
+  [saa_100             ] initial: J_model(z0)=3.144040e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=3.979e-03
+  [saa_100             ] iter    1: J_model=2.741519e-01, ||g||=2.879e-02, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    2: J_model=2.581177e-01, ||g||=1.819e-02, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    3: J_model=2.542073e-01, ||g||=1.062e-02, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    4: J_model=2.438921e-01, ||g||=1.233e-02, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    5: J_model=2.047399e-01, ||g||=2.125e-02, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    6: J_model=1.566313e-01, ||g||=8.321e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    7: J_model=1.499550e-01, ||g||=6.347e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    8: J_model=1.490278e-01, ||g||=6.396e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter    9: J_model=1.464136e-01, ||g||=4.649e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   10: J_model=1.458730e-01, ||g||=1.456e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   11: J_model=1.456456e-01, ||g||=1.424e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   12: J_model=1.455638e-01, ||g||=2.104e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   13: J_model=1.454036e-01, ||g||=2.492e-03, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   14: J_model=1.451778e-01, ||g||=8.745e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   15: J_model=1.450800e-01, ||g||=2.632e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   16: J_model=1.450587e-01, ||g||=3.811e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   17: J_model=1.450399e-01, ||g||=4.197e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   18: J_model=1.449912e-01, ||g||=2.805e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   19: J_model=1.448596e-01, ||g||=6.638e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   20: J_model=1.448403e-01, ||g||=5.075e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   21: J_model=1.448228e-01, ||g||=2.633e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   22: J_model=1.448139e-01, ||g||=1.193e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   23: J_model=1.448103e-01, ||g||=1.148e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   24: J_model=1.447985e-01, ||g||=2.115e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   25: J_model=1.447727e-01, ||g||=2.506e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   26: J_model=1.447441e-01, ||g||=4.229e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   27: J_model=1.447244e-01, ||g||=1.321e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   28: J_model=1.447220e-01, ||g||=8.613e-05, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   29: J_model=1.447179e-01, ||g||=9.897e-05, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   30: J_model=1.447138e-01, ||g||=1.289e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   31: J_model=1.447050e-01, ||g||=6.321e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   32: J_model=1.446956e-01, ||g||=1.503e-04, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   33: J_model=1.446913e-01, ||g||=8.718e-05, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   34: J_model=1.446881e-01, ||g||=4.541e-05, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   35: J_model=1.446860e-01, ||g||=3.920e-05, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] iter   36: J_model=1.446779e-01, ||g||=4.547e-05, RSS=127583.0 MB, PeakRSS=127573.0 MB, cost_mem=127583.0->127583.0 MB, grad_mem=127583.0->127583.0 MB
+  [saa_100             ] done [root-only serial]: success=True, nit=36, avg_iter_time=0.78s
+  [saa_100             ] optimal: J_model(z*)=1.446779e-01, J_true(z*)=2.196603e-01, mean_true(z*)=1.017607e-01, var_true(z*)=9.693713e-03, rel_err(z*)=3.414e-01
+
+Optimizing saa_1000 with L-BFGS-B ...
+  [saa_1000            ] initial: J_model(z0)=3.158230e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=5.165e-04
+  [saa_1000            ] iter    1: J_model=2.736884e-01, ||g||=2.961e-02, RSS=127608.6 MB, PeakRSS=127595.8 MB, cost_mem=127608.6->127608.6 MB, grad_mem=127608.6->127608.6 MB
+  [saa_1000            ] iter    2: J_model=2.589456e-01, ||g||=2.096e-02, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127608.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    3: J_model=2.549162e-01, ||g||=1.088e-02, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    4: J_model=2.483056e-01, ||g||=1.157e-02, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    5: J_model=2.088169e-01, ||g||=2.013e-02, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    6: J_model=1.712236e-01, ||g||=5.067e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    7: J_model=1.692695e-01, ||g||=1.315e-02, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    8: J_model=1.670256e-01, ||g||=5.909e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter    9: J_model=1.652675e-01, ||g||=2.201e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   10: J_model=1.649419e-01, ||g||=3.313e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   11: J_model=1.645792e-01, ||g||=3.665e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   12: J_model=1.640314e-01, ||g||=2.292e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   13: J_model=1.638570e-01, ||g||=4.794e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   14: J_model=1.638353e-01, ||g||=4.782e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   15: J_model=1.638055e-01, ||g||=8.770e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   16: J_model=1.637340e-01, ||g||=1.578e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   17: J_model=1.636026e-01, ||g||=2.186e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   18: J_model=1.634175e-01, ||g||=1.792e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   19: J_model=1.634000e-01, ||g||=2.471e-03, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   20: J_model=1.633028e-01, ||g||=9.547e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   21: J_model=1.632834e-01, ||g||=2.204e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   22: J_model=1.632798e-01, ||g||=2.357e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   23: J_model=1.632761e-01, ||g||=3.110e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   24: J_model=1.632650e-01, ||g||=4.050e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   25: J_model=1.632453e-01, ||g||=3.780e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   26: J_model=1.632150e-01, ||g||=4.812e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   27: J_model=1.631842e-01, ||g||=6.113e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   28: J_model=1.631534e-01, ||g||=4.042e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   29: J_model=1.631422e-01, ||g||=2.317e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   30: J_model=1.631364e-01, ||g||=1.330e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   31: J_model=1.631349e-01, ||g||=2.034e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   32: J_model=1.631327e-01, ||g||=1.987e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   33: J_model=1.631145e-01, ||g||=2.087e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   34: J_model=1.631108e-01, ||g||=2.438e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   35: J_model=1.630897e-01, ||g||=1.602e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   36: J_model=1.630748e-01, ||g||=8.529e-05, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   37: J_model=1.630645e-01, ||g||=5.523e-05, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   38: J_model=1.630586e-01, ||g||=6.163e-05, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   39: J_model=1.630572e-01, ||g||=1.728e-04, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   40: J_model=1.630536e-01, ||g||=7.741e-05, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] iter   41: J_model=1.630520e-01, ||g||=4.083e-05, RSS=127605.6 MB, PeakRSS=127595.8 MB, cost_mem=127605.6->127605.6 MB, grad_mem=127605.6->127605.6 MB
+  [saa_1000            ] done [root-only serial]: success=True, nit=41, avg_iter_time=7.63s
+  [saa_1000            ] optimal: J_model(z*)=1.630520e-01, J_true(z*)=1.704204e-01, mean_true(z*)=1.118701e-01, var_true(z*)=4.440561e-03, rel_err(z*)=4.324e-02
+
+Optimizing saa_10000 with L-BFGS-B ...
+  [saa_10000           ] initial: J_model(z0)=3.159333e-01, J_true(z0)=3.156600e-01, mean_true(z0)=3.072525e-01, var_true(z0)=8.407496e-04, rel_err(z0)=8.660e-04
+  [saa_10000           ] iter    1: J_model=2.729958e-01, ||g||=2.967e-02, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127838.3->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    2: J_model=2.596158e-01, ||g||=2.258e-02, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    3: J_model=2.556143e-01, ||g||=1.092e-02, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    4: J_model=2.504231e-01, ||g||=1.125e-02, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    5: J_model=2.080896e-01, ||g||=1.908e-02, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    6: J_model=1.727903e-01, ||g||=6.051e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    7: J_model=1.710561e-01, ||g||=9.254e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    8: J_model=1.681795e-01, ||g||=2.762e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter    9: J_model=1.670166e-01, ||g||=2.595e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   10: J_model=1.667498e-01, ||g||=2.953e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   11: J_model=1.664566e-01, ||g||=1.890e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   12: J_model=1.662911e-01, ||g||=5.280e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   13: J_model=1.662487e-01, ||g||=1.049e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   14: J_model=1.661936e-01, ||g||=1.562e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   15: J_model=1.660753e-01, ||g||=1.523e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   16: J_model=1.660034e-01, ||g||=3.211e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   17: J_model=1.658472e-01, ||g||=1.802e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   18: J_model=1.657645e-01, ||g||=4.166e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   19: J_model=1.657522e-01, ||g||=2.882e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   20: J_model=1.657440e-01, ||g||=3.469e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   21: J_model=1.657114e-01, ||g||=4.895e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   22: J_model=1.656412e-01, ||g||=5.435e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   23: J_model=1.656004e-01, ||g||=1.006e-03, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   24: J_model=1.655335e-01, ||g||=5.733e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   25: J_model=1.655094e-01, ||g||=1.628e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   26: J_model=1.655046e-01, ||g||=1.195e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   27: J_model=1.655012e-01, ||g||=4.633e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   28: J_model=1.654940e-01, ||g||=1.822e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   29: J_model=1.654786e-01, ||g||=3.512e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   30: J_model=1.654583e-01, ||g||=6.921e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   31: J_model=1.654387e-01, ||g||=6.316e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   32: J_model=1.654351e-01, ||g||=3.291e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   33: J_model=1.654181e-01, ||g||=7.383e-05, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   34: J_model=1.654142e-01, ||g||=8.384e-05, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   35: J_model=1.654088e-01, ||g||=1.413e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   36: J_model=1.654076e-01, ||g||=3.011e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   37: J_model=1.654044e-01, ||g||=2.386e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   38: J_model=1.654025e-01, ||g||=1.835e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   39: J_model=1.654000e-01, ||g||=5.531e-05, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   40: J_model=1.653988e-01, ||g||=5.323e-05, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   41: J_model=1.653983e-01, ||g||=1.379e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   42: J_model=1.653969e-01, ||g||=1.027e-04, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] iter   43: J_model=1.653948e-01, ||g||=4.692e-05, RSS=127836.4 MB, PeakRSS=127825.5 MB, cost_mem=127836.4->127836.4 MB, grad_mem=127836.4->127836.4 MB
+  [saa_10000           ] done [root-only serial]: success=True, nit=43, avg_iter_time=70.75s
+  [saa_10000           ] optimal: J_model(z*)=1.653948e-01, J_true(z*)=1.687076e-01, mean_true(z*)=1.148774e-01, var_true(z*)=4.070532e-03, rel_err(z*)=1.964e-02
+
+------------------------------------------------------------------------------
+Summary (ground-truth SAA evaluated at z0 and z*)
+------------------------------------------------------------------------------
+linear               | nit= 31 | avg_iter_time=    0.17s | J_model(z*)=7.413151e-02 | init rel_err=5.791e-03 | opt rel_err=9.498e-01 | J_true(z*)=1.477215e+00
+quadratic            | nit= 27 | avg_iter_time=    0.81s | J_model(z*)=1.486188e-01 | init rel_err=3.547e-03 | opt rel_err=4.893e-01 | J_true(z*)=2.909984e-01
+mixture_linear_kle   | nit= 44 | avg_iter_time=    2.02s | J_model(z*)=1.550312e-01 | init rel_err=5.674e-03 | opt rel_err=1.404e-01 | J_true(z*)=1.803488e-01
+mixture_linear_hep   | nit= 19 | avg_iter_time=    5.82s | J_model(z*)=1.501742e-01 | init rel_err=4.028e-04 | opt rel_err=2.557e-01 | J_true(z*)=2.017602e-01
+mixture_quadratic_kle | nit= 33 | avg_iter_time=   65.18s | J_model(z*)=1.661438e-01 | init rel_err=3.544e-03 | opt rel_err=1.624e-02 | J_true(z*)=1.688858e-01
+mixture_quadratic_hep | nit= 14 | avg_iter_time=   97.00s | J_model(z*)=1.559161e-01 | init rel_err=6.954e-05 | opt rel_err=1.349e-01 | J_true(z*)=1.802254e-01
+saa_10               | nit= 30 | avg_iter_time=    0.11s | J_model(z*)=1.247030e-01 | init rel_err=1.552e-02 | opt rel_err=7.384e-01 | J_true(z*)=4.767624e-01
+saa_100              | nit= 36 | avg_iter_time=    0.78s | J_model(z*)=1.446779e-01 | init rel_err=3.979e-03 | opt rel_err=3.414e-01 | J_true(z*)=2.196603e-01
+saa_1000             | nit= 41 | avg_iter_time=    7.63s | J_model(z*)=1.630520e-01 | init rel_err=5.165e-04 | opt rel_err=4.324e-02 | J_true(z*)=1.704204e-01
+saa_10000            | nit= 43 | avg_iter_time=   70.75s | J_model(z*)=1.653948e-01 | init rel_err=8.660e-04 | opt rel_err=1.964e-02 | J_true(z*)=1.687076e-01
+------------------------------------------------------------------------------
+All outputs written to: results_compare_taylor_models
+Terminal outputs saved to: results_compare_taylor_models/terminal_output.txt

@@ -769,8 +769,8 @@ def main():
     parser.add_argument("--penalty", type=float, default=1e-2, help="Control penalty")
     parser.add_argument("--maxiter", type=int, default=60, help="Max iterations for each model")
     parser.add_argument("--maxiter-saa", type=int, default=60, help="Max iterations for optimized SAA models")
-    parser.add_argument("--nx", type=int, default=20, help="Mesh cells in x")
-    parser.add_argument("--ny", type=int, default=20, help="Mesh cells in y")
+    parser.add_argument("--nx", type=int, default=16, help="Mesh cells in x")
+    parser.add_argument("--ny", type=int, default=16, help="Mesh cells in y")
     parser.add_argument("--print-every", type=int, default=1, help="Print every N iterations")
     parser.add_argument("--save-dir", type=str, default="results_compare_taylor_models", help="Output directory")
     parser.add_argument(

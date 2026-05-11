@@ -24,7 +24,7 @@ from hippylib.algorithms.randomizedEigensolver import doublePassG
 from ...modeling.controlCostFunctional import ControlCostFunctional
 from ...modeling.reducedHessianSVD import ReducedHessianSVD
 from ...modeling.variables import ADJOINT, CONTROL, PARAMETER, STATE
-from .mixture_data import get_1d_mixture
+from .gmm_library import get_1d_gmm_library_mixture
 from .quadratic import _TaylorQuadraticLegacy
 from .settings import taylor_mixture_quadratic_settings, taylor_quadratic_settings
 
@@ -173,6 +173,7 @@ class _TaylorMixtureQuadraticLegacy:
         self.N_mix = settings["N_mix"]
         self.direction = settings["direction"]
         self.N_tr = settings["N_tr"]
+        self.seed = settings["seed"]
 
         try:
             self.verbose = settings["verbose"]
@@ -181,7 +182,9 @@ class _TaylorMixtureQuadraticLegacy:
 
         self.mpi_rank = dl.MPI.rank(self.pde.Vh[STATE].mesh().mpi_comm())
 
-        self.mix_1d = get_1d_mixture(self.N_mix)
+        self.mix_1d = get_1d_gmm_library_mixture(
+            self.N_mix, rule=1, warn=(self.mpi_rank == 0)
+        )
         self.component_weights = np.asarray(self.mix_1d["weights"])
 
         self.psi = None
@@ -190,6 +193,13 @@ class _TaylorMixtureQuadraticLegacy:
         self.direction_computed = False
 
         self.H = ReducedHessianSVD(self.pde, self.qoi, tol)
+        self._hep_omega_template = MultiVector(self.pde.generate_parameter(), 11)
+        hep_rand = Random(seed=self.seed)
+        for i in range(11):
+            hep_rand.normal(1.0, self._hep_omega_template[i])
+        self._kle_v_template = self.model.generate_vector(PARAMETER)
+        kle_rand = Random(seed=self.seed)
+        kle_rand.normal(1.0, self._kle_v_template)
 
         self.component_Q0 = []
         self.component_lin_var = []
@@ -242,38 +252,28 @@ class _TaylorMixtureQuadraticLegacy:
         self.qoi.setLinearizationPoint(self.x_all)
 
         if self.direction == "hep":
-            world_comm = MPI.COMM_WORLD
-            if world_comm.rank == 0:
-                omega = MultiVector(self.pde.generate_parameter(), 15)
-                rand = Random()
-                for i in range(15):
-                    rand.normal(1.0, omega[i])
+            omega = MultiVector(self.pde.generate_parameter(), 11)
+            for i in range(11):
+                omega[i].zero()
+                omega[i].axpy(1.0, self._hep_omega_template[i])
 
-                # Incremental state and incremental adjoint are solved whenever Hessian action is called in doulbePassG.
-                d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, 1, s=1)
-                psi_local = U[0].get_local()
-                lambda_psi = 1.0
-                dominant_eigenvalue = float(d[0])
-            else:
-                psi_local = None
-                lambda_psi = None
-                dominant_eigenvalue = None
-
-            psi_local = world_comm.bcast(psi_local, root=0)
-            lambda_psi = world_comm.bcast(lambda_psi, root=0)
-            dominant_eigenvalue = world_comm.bcast(dominant_eigenvalue, root=0)
+            # Incremental state and incremental adjoint are solved whenever
+            # Hessian action is called in doublePassG.
+            d, U = doublePassG(self.H, self.prior.R, self.prior.Rsolver, omega, omega.nvec(), s=1)
+            dominant_idx = int(np.argmax(np.abs(d)))
+            dominant_eigenvalue = float(d[dominant_idx])
 
             self.psi = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            self.psi.set_local(psi_local)
-            self.psi.apply("")
-            self.lambda_psi = lambda_psi
+            self.psi.zero()
+            self.psi.axpy(1.0, U[dominant_idx])
+            self.lambda_psi = 1.0
 
-            if self.verbose and world_comm.rank == 0:
+            if self.verbose and self.mpi_rank == 0:
                 print(f"  [Mixture Quad] Using HEP direction, dominant eigenvalue = {dominant_eigenvalue:.4e}")
         else:
             v = dl.Function(self.pde.Vh[PARAMETER]).vector()
-            rand = Random()
-            rand.normal(1.0, v)
+            v.zero()
+            v.axpy(1.0, self._kle_v_template)
 
             # Use power iteration to estimate dominant eigendirection of C (KLE mode)
             for _ in range(50):
@@ -314,8 +314,9 @@ class _TaylorMixtureQuadraticLegacy:
             {
                 "beta": beta_val,
                 "N_tr": self.N_tr,
+                "seed": self.seed,
                 "correction": False,
-                "N_mc": 0,
+                "N_mc": 0, # Currently we don't do MC correction. 
                 "verbose": False,
             }
         )
@@ -447,7 +448,7 @@ class _TaylorMixtureQuadraticLegacy:
 
         return self.mixture_mean + self.beta * self.mixture_var
 
-    def costValue(self, z):
+    def costValue(self, z, FD_gradient_check = False):
         """Evaluate cost at control z."""
         self.func_ncalls += 1
 
@@ -458,7 +459,7 @@ class _TaylorMixtureQuadraticLegacy:
         else:
             self._copy_z(z)
 
-        if not self._objective_matches_current_z():
+        if not self._objective_matches_current_z() and not FD_gradient_check:
             self.direction_computed = False
         objective = self.objective()
         self._cache_objective_z()
@@ -569,8 +570,8 @@ class TaylorMixtureQuadraticControlCostFunctional(ControlCostFunctional):
     def generate_vector(self, component="ALL"):
         return self._legacy.model.generate_vector(component)
 
-    def cost(self, z, order=0):
-        value = self._legacy.costValue(z)
+    def cost(self, z, order=0, FD_gradient_check=False):
+        value = self._legacy.costValue(z, FD_gradient_check=FD_gradient_check)
         self._legacy.grad_cache = None
         if order >= 1:
             dz, _ = self._legacy.costGradient(z)

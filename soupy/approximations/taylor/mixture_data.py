@@ -12,6 +12,7 @@ Reference:
     "Univariate Splitting for High-Performance Monte Carlo Methods"
     https://github.com/vittaldevuni/UnivariateApprox
 """
+# In practice, this file is not used except when the number of cluster is more than the scope of gmm_library_1D.txt!!!!
 
 import numpy as np
 
