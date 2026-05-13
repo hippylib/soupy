@@ -122,6 +122,8 @@ MODEL_COLORS = {
     "saa_10000": "#bcbd22",
 }
 
+EXPLICIT_CVAR_CONTINUATION_LEVELS = [1e-2, 3e-3, 1e-3, 3e-4, 1e-4]
+
 
 class TeeStream:
     def __init__(self, terminal_stream, file_stream):
@@ -142,6 +144,7 @@ class IterRecord:
     iteration: int
     model_cost: float
     residual: float
+    epsilon: float
     iter_time_sec: float
     rss_mb: float
     peak_rss_mb: float
@@ -198,6 +201,19 @@ class ScipyObjectiveWithHistory:
         self.latest_grad_rss_after_mb = np.nan
         self.n_func = 0
         self.n_grad = 0
+
+    def current_smoothing_epsilon(self):
+        if (
+            hasattr(self.cost_functional, "risk_measure")
+            and hasattr(self.cost_functional.risk_measure, "smoothplus")
+            and hasattr(self.cost_functional.risk_measure.smoothplus, "epsilon")
+        ):
+            return float(self.cost_functional.risk_measure.smoothplus.epsilon)
+        if hasattr(self.cost_functional, "_legacy") and hasattr(self.cost_functional._legacy, "epsilon"):
+            return float(self.cost_functional._legacy.epsilon)
+        if hasattr(self.cost_functional, "epsilon"):
+            return float(self.cost_functional.epsilon)
+        return float("nan")
 
     def function(self):
         def f(z_np):
@@ -315,8 +331,20 @@ def model_uses_world_parallel(model_name: str) -> bool:
     return False
 
 
-def make_cvar_cost(model_name, control_model, prior, penalty, args):
-    if model_name.startswith("saa_"):
+def is_saa_model(model_name: str) -> bool:
+    return model_name.startswith("saa_")
+
+
+def should_use_linear_warm_start(model_name: str) -> bool:
+    return model_name != "linear" and not is_saa_model(model_name)
+
+
+def is_explicit_continuation_model(model_name: str) -> bool:
+    return model_name in {"quadratic", "mixture_quadratic_kle", "mixture_quadratic_hep"}
+
+
+def make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_override=None):
+    if is_saa_model(model_name):
         sample_size = int(model_name.split("_", 1)[1])
         return make_cvar_saa_cost(
             control_model,
@@ -344,6 +372,7 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args):
                 "beta": args.cvar_beta,
                 "N_tr": args.n_tr,
                 "N_mc": args.quadratic_cvar_n_mc,
+                "epsilon": 1e-4 if epsilon_override is None else float(epsilon_override),
                 "verbose": args.verbose,
             },
         )
@@ -382,6 +411,7 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args):
                 "direction": "kle",
                 "N_tr": args.n_tr,
                 "N_mc": args.quadratic_cvar_n_mc,
+                "epsilon": 1e-4 if epsilon_override is None else float(epsilon_override),
                 "verbose": args.verbose,
             },
             comm_sampler=MPI.COMM_WORLD,
@@ -397,6 +427,7 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args):
                 "direction": "hep",
                 "N_tr": args.n_tr,
                 "N_mc": args.quadratic_cvar_n_mc,
+                "epsilon": 1e-4 if epsilon_override is None else float(epsilon_override),
                 "verbose": args.verbose,
             },
             comm_sampler=MPI.COMM_WORLD,
@@ -412,6 +443,7 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args):
                 "direction": "hep",
                 "N_tr": args.n_tr,
                 "N_mc": args.quadratic_cvar_n_mc,
+                "epsilon": 1e-4 if epsilon_override is None else float(epsilon_override),
                 "verbose": args.verbose,
             },
             comm_sampler=MPI.COMM_WORLD,
@@ -454,6 +486,7 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
                     iteration=len(iter_records) + 1,
                     model_cost=float(wrapper.latest_cost),
                     residual=float(wrapper.latest_grad_norm),
+                    epsilon=float(wrapper.current_smoothing_epsilon()),
                     iter_time_sec=iter_time,
                     rss_mb=get_current_rss_mb(),
                     peak_rss_mb=get_peak_rss_mb(),
@@ -463,7 +496,6 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
                     grad_rss_after_mb=float(wrapper.latest_grad_rss_after_mb),
                 )
             )
-
         t0 = time.perf_counter()
         result = scipy.optimize.minimize(
             wrapper.function(),
@@ -483,9 +515,7 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
                 print(
                     f"  [{model_name:20s}] iter {r.iteration:4d}: "
                     f"J_model={r.model_cost:.6e}, ||g||={r.residual:.3e}, "
-                    f"RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB, "
-                    f"cost_mem={r.cost_rss_before_mb:.1f}->{r.cost_rss_after_mb:.1f} MB, "
-                    f"grad_mem={r.grad_rss_before_mb:.1f}->{r.grad_rss_after_mb:.1f} MB"
+                    f"epsilon={r.epsilon:.3e}, RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB"
                 )
                 sys.stdout.flush()
 
@@ -527,6 +557,113 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
     if root_only:
         payload = MPI.COMM_WORLD.bcast(payload if rank == 0 else None, root=0)
     return payload
+
+
+def optimize_with_explicit_continuation(
+    model_name,
+    control_model,
+    prior,
+    penalty,
+    x0_np,
+    args,
+    rank,
+    maxiter,
+):
+    initial_x0_np = np.array(x0_np, copy=True)
+    current_x0_np = np.array(x0_np, copy=True)
+    total_iter_count = 0
+    total_time_sec = 0.0
+    total_nfev = 0
+    total_njev = 0
+    combined_iter_records: List[IterRecord] = []
+    stage_payloads = []
+    final_payload = None
+    root_only = not model_uses_world_parallel(model_name)
+
+    for stage_idx, epsilon in enumerate(EXPLICIT_CVAR_CONTINUATION_LEVELS, start=1):
+        if rank == 0:
+            print(
+                f"  [{model_name:20s}] continuation stage "
+                f"{stage_idx}/{len(EXPLICIT_CVAR_CONTINUATION_LEVELS)} with epsilon={epsilon:.3e}"
+            )
+            sys.stdout.flush()
+
+        approx_cost = make_cvar_cost(
+            model_name,
+            control_model,
+            prior,
+            penalty,
+            args,
+            epsilon_override=epsilon,
+        )
+        inner_bounds = make_bounds(current_x0_np, args)
+        inner_label = f"{model_name}[eps={epsilon:.0e}]"
+        inner_payload = optimize_with_tracking(
+            inner_label,
+            approx_cost,
+            current_x0_np,
+            inner_bounds,
+            args,
+            rank,
+            maxiter=maxiter,
+            root_only=root_only,
+        )
+
+        for record in inner_payload["iter_records"]:
+            combined_iter_records.append(
+                IterRecord(
+                    iteration=record.iteration + total_iter_count,
+                    model_cost=record.model_cost,
+                    residual=record.residual,
+                    epsilon=record.epsilon,
+                    iter_time_sec=record.iter_time_sec,
+                    rss_mb=record.rss_mb,
+                    peak_rss_mb=record.peak_rss_mb,
+                    cost_rss_before_mb=record.cost_rss_before_mb,
+                    cost_rss_after_mb=record.cost_rss_after_mb,
+                    grad_rss_before_mb=record.grad_rss_before_mb,
+                    grad_rss_after_mb=record.grad_rss_after_mb,
+                )
+            )
+
+        total_iter_count += int(inner_payload["iter_count"])
+        total_time_sec += float(inner_payload["total_time_sec"])
+        total_nfev += int(inner_payload["nfev"])
+        total_njev += int(inner_payload["njev"])
+        current_x0_np = np.array(inner_payload["z_opt_np"], copy=True)
+        stage_payloads.append(
+            {
+                "stage": stage_idx,
+                "epsilon": float(epsilon),
+                "success": bool(inner_payload["success"]),
+                "status": int(inner_payload["status"]),
+                "message": str(inner_payload["message"]),
+                "iter_count": int(inner_payload["iter_count"]),
+                "approx_opt": float(inner_payload["approx_opt"]),
+            }
+        )
+        final_payload = inner_payload
+        del approx_cost
+
+    if final_payload is None:
+        raise RuntimeError(f"Explicit continuation for {model_name} produced no payload.")
+
+    final_payload = dict(final_payload)
+    final_payload["success"] = all(payload["success"] for payload in stage_payloads)
+    final_payload["x0_np"] = np.array(initial_x0_np, copy=True)
+    final_payload["z_opt_np"] = np.array(current_x0_np, copy=True)
+    final_payload["iter_records"] = combined_iter_records
+    final_payload["iter_count"] = total_iter_count
+    final_payload["avg_iter_time_sec"] = total_time_sec / max(total_iter_count, 1)
+    final_payload["total_time_sec"] = total_time_sec
+    final_payload["nfev"] = total_nfev
+    final_payload["njev"] = total_njev
+    final_payload["continuation_stages"] = stage_payloads
+    if not final_payload["success"]:
+        final_payload["message"] = (
+            "One or more continuation stages failed; final stage: " + str(final_payload["message"])
+        )
+    return final_payload
 
 
 def is_alternating_hep_model(model_name: str) -> bool:
@@ -581,6 +718,7 @@ def optimize_alternating_hep_with_tracking(
                     iteration=record.iteration + total_iter_count,
                     model_cost=record.model_cost,
                     residual=record.residual,
+                    epsilon=record.epsilon,
                     iter_time_sec=record.iter_time_sec,
                     rss_mb=record.rss_mb,
                     peak_rss_mb=record.peak_rss_mb,
@@ -647,6 +785,7 @@ def save_iteration_csv(path, records: List[IterRecord]):
                 "iteration",
                 "model_cost",
                 "residual",
+                "epsilon",
                 "iter_time_sec",
                 "rss_mb",
                 "peak_rss_mb",
@@ -662,6 +801,7 @@ def save_iteration_csv(path, records: List[IterRecord]):
                     r.iteration,
                     r.model_cost,
                     r.residual,
+                    r.epsilon,
                     r.iter_time_sec,
                     r.rss_mb,
                     r.peak_rss_mb,
@@ -901,7 +1041,7 @@ def main():
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--qoi-type", type=str, default="virtual_work",
                         choices=["all", "stiffness", "point", "virtual_work"])
-    parser.add_argument("--penalty", type=float, default=1e-2)
+    parser.add_argument("--penalty", type=float, default=1e-1)
     parser.add_argument("--maxiter", type=int, default=120)
     parser.add_argument("--maxiter-saa", type=int, default=120)
     parser.add_argument("--nx", type=int, default= 128)
@@ -955,13 +1095,18 @@ def main():
             print(f"alternating_hep_steps={args.alternating_hep_steps}")
             print(f"penalty={args.penalty}")
             print(f"mesh={args.nx}x{args.ny}" + (f"x{args.nz}" if args.geometry_dim == 3 else ""))
+            print(
+                "Explicit continuation for quadratic models: "
+                + " -> ".join(f"{eps:.0e}" for eps in EXPLICIT_CVAR_CONTINUATION_LEVELS)
+            )
             print(f"terminal log file: {log_path}")
             print("=" * 78)
             sys.stdout.flush()
 
         _, Vh, control_model, prior, penalty = setup_problem(args, comm_mesh)
         control0_np = zero_control_np(control_model)
-        linear_control0_np = np.full_like(control0_np, 0.5)
+        base_control_np = np.full_like(control0_np, 0.5)
+        base_t = 0.5
         args.control_dim = len(control0_np)
         linear_init_control_np = np.array(control0_np, copy=True)
         linear_init_t = 0.0
@@ -972,23 +1117,32 @@ def main():
             x0_np = None
             approx_init = None
             init_t = None
-            use_linear_warm_start = model_name != "linear"
+            use_linear_warm_start = should_use_linear_warm_start(model_name)
             run_parallel_model = model_uses_world_parallel(model_name)
+            epsilon_override = (
+                EXPLICIT_CVAR_CONTINUATION_LEVELS[0]
+                if is_explicit_continuation_model(model_name)
+                else None
+            )
 
             if run_parallel_model:
-                approx_cost = make_cvar_cost(model_name, control_model, prior, penalty, args)
-                init_control_np = linear_init_control_np if use_linear_warm_start else linear_control0_np
+                approx_cost = make_cvar_cost(
+                    model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override
+                )
+                init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
                 init_control_np = MPI.COMM_WORLD.bcast(init_control_np if rank == 0 else None, root=0)
-                init_scalar = linear_init_t if use_linear_warm_start else 0.0
+                init_scalar = linear_init_t if use_linear_warm_start else base_t
                 x0_np, approx_init, init_t = initial_model_point_at_control(
                     approx_cost,
                     init_control_np,
                     scalar=init_scalar,
                 )
             elif rank == 0:
-                approx_cost = make_cvar_cost(model_name, control_model, prior, penalty, args)
-                init_control_np = linear_init_control_np if use_linear_warm_start else linear_control0_np
-                init_scalar = linear_init_t if use_linear_warm_start else 0.0
+                approx_cost = make_cvar_cost(
+                    model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override
+                )
+                init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
+                init_scalar = linear_init_t if use_linear_warm_start else base_t
                 x0_np, approx_init, init_t = initial_model_point_at_control(
                     approx_cost,
                     init_control_np,
@@ -1022,7 +1176,7 @@ def main():
                 if use_linear_warm_start:
                     print(f"  [{model_name:20s}] initial guess: linear optimum z* with t initialized from linear surrogate VaR")
                 else:
-                    print(f"  [{model_name:20s}] initial guess: 0.5 control")
+                    print(f"  [{model_name:20s}] initial guess: 0.5 control with t=0.5")
                 print(
                     f"  [{model_name:20s}] initial: "
                     f"J_model(init)={approx_init:.6e}, J_true(init)={true_init:.6e}, "
@@ -1043,6 +1197,17 @@ def main():
                     rank,
                     maxiter=args.maxiter,
                 )
+            elif is_explicit_continuation_model(model_name):
+                res = optimize_with_explicit_continuation(
+                    model_name,
+                    control_model,
+                    prior,
+                    penalty,
+                    x0_np,
+                    args,
+                    rank,
+                    maxiter=args.maxiter,
+                )
             else:
                 res = optimize_with_tracking(
                     model_name,
@@ -1051,7 +1216,7 @@ def main():
                     bounds,
                     args,
                     rank,
-                    maxiter=args.maxiter_saa if model_name.startswith("saa_") else args.maxiter,
+                    maxiter=args.maxiter_saa if is_saa_model(model_name) else args.maxiter,
                     root_only=not run_parallel_model,
                 )
             res["control_init_np"] = np.array(init_control_np, copy=True)

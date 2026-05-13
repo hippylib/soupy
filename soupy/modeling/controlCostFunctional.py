@@ -413,5 +413,3 @@ class PenalizationControlCostFunctional(ControlCostFunctional):
         """
         self.penalization.hessian(self.z, zhat, Hzhat)
 
-
-

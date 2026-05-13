@@ -371,4 +371,3 @@ class SuperquantileRiskMeasureSAA(RiskMeasure):
         q_all = self.gather_samples()
         value = sample_superquantile(q_all, self.beta)
         return value 
-
