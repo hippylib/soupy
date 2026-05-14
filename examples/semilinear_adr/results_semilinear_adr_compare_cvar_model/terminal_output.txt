@@ -7,83 +7,1441 @@ Semilinear ADR CVaR Model Comparison:
   parallel on all ranks: mixture_* / alternating_hep_* / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000
 ==========================================================================================
 Ground-truth exact-CVaR sample count: 100000
-cvar_beta=0.95, n_tr=10, n_mix=39, quadratic_cvar_n_mc=1000
+cvar_beta=0.95, n_tr=50, n_mix=11, quadratic_cvar_n_mc=5000
 alternating_hep_steps=5
 penalty=0.001
-box constraint on control: 0.0 <= z <= 10.0
+box constraint on control: -10.0 <= z <= 10.0
 control source term: f -> f + z
 initial control: zero everywhere
+Explicit continuation for quadratic models: 1e-02 -> 3e-03 -> 1e-03 -> 3e-04 -> 1e-04
 terminal log file: results_semilinear_adr_compare_cvar_model/terminal_output.txt
 ==========================================================================================
-/work/Wenbo/soupy/examples/semilinear_adr/semilinear_adr_problem.py:234: hIPPYlibExperimentalWarning: WARNING: VariationalQoi  is an experimental function in v3.0.0. Still need to work on handling Dirichlet boundary conditions for x[STATE]
+/work2/wenbo/soupy/examples/semilinear_adr/semilinear_adr_problem.py:234: hIPPYlibExperimentalWarning: WARNING: VariationalQoi  is an experimental function in v3.0.0. Still need to work on handling Dirichlet boundary conditions for x[STATE]
   qoi = hp.VariationalQoi(Vh, qoi_varf)
 
 Optimizing linear with L-BFGS-B ...
   [linear              ] initial guess: zero control with t=0
-  [linear              ] initial: J_model(init)=1.215118e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=7.638e-01
-/work/Wenbo/soupy/examples/semilinear_adr/driver_semilinear_adr_compare_cvar_models.py:539: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
+  [linear              ] initial: J_model(init)=1.214185e+00, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=7.633e-01
+/work2/wenbo/soupy/examples/semilinear_adr/driver_semilinear_adr_compare_cvar_models.py:572: DeprecationWarning: scipy.optimize: The `disp` and `iprint` options of the L-BFGS-B solver are deprecated and will be removed in SciPy 1.18.0.
   result = scipy.optimize.minimize(
-  [linear              ] done [root-only serial]: success=True, nit=0, avg_iter_time=0.37s
+  [linear              ] iter    1: J_model=1.211582e+00, ||g||=5.099e-02, epsilon=1.000e-04, RSS=815.4 MB, PeakRSS=808.5 MB
+  [linear              ] iter    2: J_model=4.709160e-02, ||g||=3.644e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    3: J_model=4.317952e-02, ||g||=1.829e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    4: J_model=4.204656e-02, ||g||=1.037e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    5: J_model=4.065504e-02, ||g||=1.204e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    6: J_model=3.530442e-02, ||g||=2.713e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    7: J_model=2.676884e-02, ||g||=3.846e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    8: J_model=1.712824e-02, ||g||=3.589e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter    9: J_model=1.056269e-02, ||g||=1.373e-03, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter   10: J_model=9.865955e-03, ||g||=1.854e-04, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter   11: J_model=9.835913e-03, ||g||=1.695e-04, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] iter   12: J_model=9.623552e-03, ||g||=1.551e-04, epsilon=1.000e-04, RSS=815.5 MB, PeakRSS=808.5 MB
+  [linear              ] done [root-only serial]: success=True, nit=12, avg_iter_time=0.21s
   [linear              ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
-  [linear              ] optimal: J_model(z*)=1.215118e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=7.638e-01
+  [linear              ] optimal: J_model(z*)=9.623552e-03, J_true(z*)=4.987679e-02, cvar_true(z*)=4.323269e-02, mean_qoi(z*)=4.337084e-03, var_qoi(z*)=2.458418e-04, rel_err(z*)=8.071e-01
 
 Optimizing quadratic with L-BFGS-B ...
   [quadratic           ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
-  [quadratic           ] initial: J_model(init)=4.146831e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.938e-01
-  [quadratic           ] iter    1: J_model=3.092627e+00, ||g||=7.685e-02, RSS=1652.1 MB, PeakRSS=1637.7 MB, cost_mem=1652.1->1652.1 MB, grad_mem=1652.1->1652.1 MB
-  [quadratic           ] iter    2: J_model=3.090638e+00, ||g||=6.615e-02, RSS=1652.2 MB, PeakRSS=1637.7 MB, cost_mem=1652.2->1652.2 MB, grad_mem=1652.2->1652.2 MB
-  [quadratic           ] iter    3: J_model=3.090445e+00, ||g||=6.385e-02, RSS=1652.2 MB, PeakRSS=1637.7 MB, cost_mem=1652.2->1652.2 MB, grad_mem=1652.2->1652.2 MB
-  [quadratic           ] done [root-only serial]: success=True, nit=3, avg_iter_time=35.63s
-  [quadratic           ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
-  [quadratic           ] optimal: J_model(z*)=3.090445e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=3.992e-01
+  [quadratic           ] initial: J_model(init)=1.067680e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=7.859e-01
+  [quadratic           ] continuation stage 1/5 with epsilon=1.000e-02
+  [quadratic[eps=1e-02]] iter    1: J_model=1.062451e-02, ||g||=1.963e-01, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    2: J_model=1.059262e-02, ||g||=2.979e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    3: J_model=1.059174e-02, ||g||=2.882e-03, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    4: J_model=1.059174e-02, ||g||=3.407e-04, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    5: J_model=1.059167e-02, ||g||=2.599e-03, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    6: J_model=1.059109e-02, ||g||=1.465e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    7: J_model=1.058974e-02, ||g||=3.174e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    8: J_model=1.058634e-02, ||g||=5.712e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter    9: J_model=1.057904e-02, ||g||=8.637e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter   10: J_model=1.056650e-02, ||g||=1.029e-01, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter   11: J_model=1.055376e-02, ||g||=7.902e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter   12: J_model=1.054829e-02, ||g||=3.020e-02, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter   13: J_model=1.054724e-02, ||g||=3.563e-03, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter   14: J_model=1.054717e-02, ||g||=5.148e-04, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] iter   15: J_model=1.054717e-02, ||g||=3.993e-04, epsilon=1.000e-02, RSS=935.3 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-02]] done [root-only serial]: success=True, nit=15, avg_iter_time=54.61s
+  [quadratic[eps=1e-02]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [quadratic           ] continuation stage 2/5 with epsilon=3.000e-03
+  [quadratic[eps=3e-03]] iter    1: J_model=1.313544e-02, ||g||=3.402e-01, epsilon=3.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-03]] iter    2: J_model=1.303157e-02, ||g||=1.906e-01, epsilon=3.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-03]] iter    3: J_model=1.299344e-02, ||g||=4.485e-02, epsilon=3.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-03]] iter    4: J_model=1.299154e-02, ||g||=4.035e-03, epsilon=3.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-03]] iter    5: J_model=1.299152e-02, ||g||=4.887e-04, epsilon=3.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-03]] iter    6: J_model=1.299152e-02, ||g||=7.584e-04, epsilon=3.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-03]] done [root-only serial]: success=True, nit=6, avg_iter_time=77.83s
+  [quadratic[eps=3e-03]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [quadratic           ] continuation stage 3/5 with epsilon=1.000e-03
+  [quadratic[eps=1e-03]] iter    1: J_model=1.388823e-02, ||g||=6.888e-02, epsilon=1.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-03]] iter    2: J_model=1.388408e-02, ||g||=1.332e-03, epsilon=1.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-03]] iter    3: J_model=1.388408e-02, ||g||=5.056e-04, epsilon=1.000e-03, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-03]] done [root-only serial]: success=True, nit=3, avg_iter_time=92.23s
+  [quadratic[eps=1e-03]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [quadratic           ] continuation stage 4/5 with epsilon=3.000e-04
+  [quadratic[eps=3e-04]] iter    1: J_model=1.423420e-02, ||g||=1.295e-01, epsilon=3.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-04]] iter    2: J_model=1.422002e-02, ||g||=6.296e-03, epsilon=3.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-04]] iter    3: J_model=1.421999e-02, ||g||=6.519e-04, epsilon=3.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-04]] iter    4: J_model=1.421999e-02, ||g||=5.190e-04, epsilon=3.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=3e-04]] done [root-only serial]: success=True, nit=4, avg_iter_time=69.08s
+  [quadratic[eps=3e-04]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [quadratic           ] continuation stage 5/5 with epsilon=1.000e-04
+  [quadratic[eps=1e-04]] iter    1: J_model=1.431850e-02, ||g||=6.806e-03, epsilon=1.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-04]] iter    2: J_model=1.431848e-02, ||g||=2.450e-03, epsilon=1.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-04]] iter    3: J_model=1.431847e-02, ||g||=5.242e-04, epsilon=1.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-04]] iter    4: J_model=1.431847e-02, ||g||=7.496e-04, epsilon=1.000e-04, RSS=935.5 MB, PeakRSS=927.6 MB
+  [quadratic[eps=1e-04]] done [root-only serial]: success=True, nit=4, avg_iter_time=78.79s
+  [quadratic[eps=1e-04]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [quadratic           ] optimal: J_model(z*)=1.431847e-02, J_true(z*)=4.983020e-02, cvar_true(z*)=4.315501e-02, mean_qoi(z*)=4.324517e-03, var_qoi(z*)=2.450062e-04, rel_err(z*)=7.127e-01
 
 Optimizing mixture_linear_kle with L-BFGS-B ...
   [mixture_linear_kle  ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
-  [mixture_linear_kle  ] initial: J_model(init)=4.510756e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.231e-01
-  [mixture_linear_kle  ] done: success=True, nit=0, avg_iter_time=1.43s
+  [mixture_linear_kle  ] initial: J_model(init)=2.529486e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=4.929e-01
+  [mixture_linear_kle  ] iter    1: J_model=2.528868e-02, ||g||=2.477e-03, epsilon=1.000e-04, RSS=943.6 MB, PeakRSS=935.4 MB
+  [mixture_linear_kle  ] iter    2: J_model=2.454564e-02, ||g||=9.796e-04, epsilon=1.000e-04, RSS=944.0 MB, PeakRSS=935.4 MB
+  [mixture_linear_kle  ] iter    3: J_model=2.435642e-02, ||g||=1.134e-03, epsilon=1.000e-04, RSS=944.0 MB, PeakRSS=935.9 MB
+  [mixture_linear_kle  ] iter    4: J_model=2.253691e-02, ||g||=2.561e-03, epsilon=1.000e-04, RSS=944.2 MB, PeakRSS=935.9 MB
+  [mixture_linear_kle  ] iter    5: J_model=2.083514e-02, ||g||=2.731e-03, epsilon=1.000e-04, RSS=944.2 MB, PeakRSS=935.9 MB
+  [mixture_linear_kle  ] iter    6: J_model=1.773393e-02, ||g||=2.663e-03, epsilon=1.000e-04, RSS=944.3 MB, PeakRSS=935.9 MB
+  [mixture_linear_kle  ] iter    7: J_model=1.329957e-02, ||g||=7.413e-04, epsilon=1.000e-04, RSS=944.4 MB, PeakRSS=935.9 MB
+  [mixture_linear_kle  ] iter    8: J_model=1.230087e-02, ||g||=1.460e-03, epsilon=1.000e-04, RSS=944.5 MB, PeakRSS=935.9 MB
+  [mixture_linear_kle  ] iter    9: J_model=1.193746e-02, ||g||=1.067e-03, epsilon=1.000e-04, RSS=944.5 MB, PeakRSS=936.4 MB
+  [mixture_linear_kle  ] iter   10: J_model=1.168969e-02, ||g||=4.167e-04, epsilon=1.000e-04, RSS=944.5 MB, PeakRSS=936.4 MB
+  [mixture_linear_kle  ] iter   11: J_model=1.156190e-02, ||g||=2.440e-04, epsilon=1.000e-04, RSS=944.6 MB, PeakRSS=936.4 MB
+  [mixture_linear_kle  ] iter   12: J_model=1.151678e-02, ||g||=2.872e-04, epsilon=1.000e-04, RSS=944.6 MB, PeakRSS=936.4 MB
+  [mixture_linear_kle  ] iter   13: J_model=1.143977e-02, ||g||=1.508e-04, epsilon=1.000e-04, RSS=944.6 MB, PeakRSS=936.4 MB
+  [mixture_linear_kle  ] done: success=True, nit=13, avg_iter_time=0.36s
   [mixture_linear_kle  ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
-  [mixture_linear_kle  ] optimal: J_model(z*)=4.510756e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=1.231e-01
+  [mixture_linear_kle  ] optimal: J_model(z*)=1.143977e-02, J_true(z*)=1.407230e-02, cvar_true(z*)=4.255275e-03, mean_qoi(z*)=4.530186e-04, var_qoi(z*)=2.371422e-06, rel_err(z*)=1.871e-01
 
 Optimizing mixture_linear_hep with L-BFGS-B ...
   [mixture_linear_hep  ] initial guess: linear optimum z* with t initialized from linear surrogate VaR
-  [mixture_linear_hep  ] initial: J_model(init)=5.415257e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=5.277e-02
-  [mixture_linear_hep  ] done: success=True, nit=0, avg_iter_time=1.42s
-  [mixture_linear_hep  ] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
-  [mixture_linear_hep  ] optimal: J_model(z*)=5.415257e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=5.277e-02
+  [mixture_linear_hep  ] initial: J_model(init)=2.900809e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=4.184e-01
+  [mixture_linear_hep  ] iter    1: J_model=2.900095e-02, ||g||=2.203e-03, epsilon=1.000e-04, RSS=944.7 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    2: J_model=2.845160e-02, ||g||=1.273e-03, epsilon=1.000e-04, RSS=944.8 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    3: J_model=2.780531e-02, ||g||=2.822e-03, epsilon=1.000e-04, RSS=944.8 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    4: J_model=2.606349e-02, ||g||=4.304e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    5: J_model=2.234218e-02, ||g||=5.018e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    6: J_model=1.917079e-02, ||g||=3.904e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    7: J_model=1.634277e-02, ||g||=1.841e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    8: J_model=1.601677e-02, ||g||=1.038e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter    9: J_model=1.594925e-02, ||g||=7.850e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   10: J_model=1.592984e-02, ||g||=5.478e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   11: J_model=1.565813e-02, ||g||=4.424e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   12: J_model=1.362148e-02, ||g||=1.188e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   13: J_model=1.193014e-02, ||g||=2.392e-03, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   14: J_model=1.169897e-02, ||g||=4.314e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   15: J_model=1.161354e-02, ||g||=2.689e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   16: J_model=1.156307e-02, ||g||=4.492e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   17: J_model=1.148621e-02, ||g||=1.462e-04, epsilon=1.000e-04, RSS=944.9 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] iter   18: J_model=1.148621e-02, ||g||=1.462e-04, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [mixture_linear_hep  ] done: success=True, nit=18, avg_iter_time=1.59s
+  [mixture_linear_hep  ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_linear_hep  ] optimal: J_model(z*)=1.148621e-02, J_true(z*)=1.275352e-02, cvar_true(z*)=2.261234e-03, mean_qoi(z*)=2.565854e-04, var_qoi(z*)=5.455383e-07, rel_err(z*)=9.937e-02
 
 Optimizing alternating_hep_linear_cvar with L-BFGS-B ...
   [alternating_hep_linear_cvar] initial guess: linear optimum z* with t initialized from linear surrogate VaR
-  [alternating_hep_linear_cvar] initial: J_model(init)=5.415257e+00, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=5.277e-02
+  [alternating_hep_linear_cvar] initial: J_model(init)=2.900809e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=4.184e-01
   [alternating_hep_linear_cvar] alternating outer step 1/5: rebuild fixed-HEP objective
-  [alternating_hep_linear_cvar[1/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[1/5]] iter    1: J_model=2.900315e-02, ||g||=2.212e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    2: J_model=2.834195e-02, ||g||=1.182e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    3: J_model=2.808236e-02, ||g||=1.474e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    4: J_model=2.588277e-02, ||g||=3.606e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    5: J_model=2.321173e-02, ||g||=4.711e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    6: J_model=2.002343e-02, ||g||=3.982e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    7: J_model=1.721127e-02, ||g||=1.651e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    8: J_model=1.610092e-02, ||g||=1.084e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter    9: J_model=1.578100e-02, ||g||=1.361e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter   10: J_model=1.510319e-02, ||g||=1.319e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter   11: J_model=1.298163e-02, ||g||=1.385e-03, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter   12: J_model=1.169663e-02, ||g||=9.857e-04, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter   13: J_model=1.143382e-02, ||g||=5.059e-04, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter   14: J_model=1.134823e-02, ||g||=1.645e-04, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] iter   15: J_model=1.133521e-02, ||g||=1.105e-04, epsilon=1.000e-04, RSS=945.0 MB, PeakRSS=936.4 MB
+  [alternating_hep_linear_cvar[1/5]] done: success=True, nit=15, avg_iter_time=0.18s
   [alternating_hep_linear_cvar[1/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
   [alternating_hep_linear_cvar] alternating outer step 2/5: rebuild fixed-HEP objective
-  [alternating_hep_linear_cvar[2/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[2/5]] done: success=True, nit=0, avg_iter_time=0.84s
   [alternating_hep_linear_cvar[2/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
   [alternating_hep_linear_cvar] alternating outer step 3/5: rebuild fixed-HEP objective
-  [alternating_hep_linear_cvar[3/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[3/5]] done: success=True, nit=0, avg_iter_time=0.84s
   [alternating_hep_linear_cvar[3/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
   [alternating_hep_linear_cvar] alternating outer step 4/5: rebuild fixed-HEP objective
-  [alternating_hep_linear_cvar[4/5]] done: success=True, nit=0, avg_iter_time=3.33s
+  [alternating_hep_linear_cvar[4/5]] done: success=True, nit=0, avg_iter_time=0.84s
   [alternating_hep_linear_cvar[4/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
   [alternating_hep_linear_cvar] alternating outer step 5/5: rebuild fixed-HEP objective
-  [alternating_hep_linear_cvar[5/5]] done: success=True, nit=0, avg_iter_time=3.32s
+  [alternating_hep_linear_cvar[5/5]] done: success=True, nit=0, avg_iter_time=0.84s
   [alternating_hep_linear_cvar[5/5]] termination: status=0, reason=CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL
-  [alternating_hep_linear_cvar] optimal: J_model(z*)=5.415257e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=5.277e-02
+  [alternating_hep_linear_cvar] optimal: J_model(z*)=1.133648e-02, J_true(z*)=1.229363e-02, cvar_true(z*)=1.842584e-03, mean_qoi(z*)=2.032230e-04, var_qoi(z*)=3.850284e-07, rel_err(z*)=7.786e-02
 
 Optimizing mixture_quadratic_kle with L-BFGS-B ...
   [mixture_quadratic_kle] initial guess: linear optimum z* with t initialized from linear surrogate VaR
-  [mixture_quadratic_kle] initial: J_model(init)=1.511553e+01, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.939e+00
-  [mixture_quadratic_kle] iter    1: J_model=5.643105e+00, ||g||=7.937e-01, RSS=1691.6 MB, PeakRSS=1676.3 MB, cost_mem=1691.6->1691.6 MB, grad_mem=1691.6->1691.6 MB
-  [mixture_quadratic_kle] iter    2: J_model=5.425077e+00, ||g||=4.282e-01, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.6->1691.6 MB, grad_mem=1691.6->1691.7 MB
-  [mixture_quadratic_kle] iter    3: J_model=5.316626e+00, ||g||=1.519e-01, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
-  [mixture_quadratic_kle] iter    4: J_model=5.304734e+00, ||g||=9.036e-02, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
-  [mixture_quadratic_kle] iter    5: J_model=5.304301e+00, ||g||=8.595e-02, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
-  [mixture_quadratic_kle] iter    6: J_model=5.304301e+00, ||g||=8.597e-02, RSS=1691.7 MB, PeakRSS=1676.3 MB, cost_mem=1691.7->1691.7 MB, grad_mem=1691.7->1691.7 MB
-  [mixture_quadratic_kle] done: success=True, nit=6, avg_iter_time=66.92s
-  [mixture_quadratic_kle] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
-  [mixture_quadratic_kle] optimal: J_model(z*)=5.304301e+00, J_true(z*)=5.143798e+00, cvar_true(z*)=5.143798e+00, mean_qoi(z*)=7.188199e-01, var_qoi(z*)=1.625124e+00, rel_err(z*)=3.120e-02
+  [mixture_quadratic_kle] initial: J_model(init)=4.524604e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=9.284e-02
+  [mixture_quadratic_kle] continuation stage 1/5 with epsilon=1.000e-02
+  [mixture_quadratic_kle[eps=1e-02]] iter    1: J_model=3.391914e-02, ||g||=1.962e-01, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    2: J_model=3.374302e-02, ||g||=1.104e-01, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    3: J_model=3.367433e-02, ||g||=2.221e-02, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    4: J_model=3.367184e-02, ||g||=3.793e-03, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    5: J_model=3.367172e-02, ||g||=3.285e-03, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    6: J_model=3.367088e-02, ||g||=7.350e-03, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    7: J_model=3.366923e-02, ||g||=1.529e-02, epsilon=1.000e-02, RSS=954.8 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    8: J_model=3.366435e-02, ||g||=3.061e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter    9: J_model=3.365163e-02, ||g||=5.459e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   10: J_model=3.361956e-02, ||g||=9.412e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   11: J_model=3.354002e-02, ||g||=1.541e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   12: J_model=3.335706e-02, ||g||=2.307e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   13: J_model=3.302218e-02, ||g||=2.707e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   14: J_model=3.266625e-02, ||g||=1.844e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   15: J_model=3.252893e-02, ||g||=6.242e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   16: J_model=3.251141e-02, ||g||=1.047e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   17: J_model=3.251107e-02, ||g||=1.935e-03, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   18: J_model=3.251103e-02, ||g||=2.048e-03, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   19: J_model=3.251078e-02, ||g||=3.227e-03, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   20: J_model=3.251009e-02, ||g||=6.123e-03, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   21: J_model=3.250815e-02, ||g||=1.159e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   22: J_model=3.250310e-02, ||g||=2.077e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   23: J_model=3.248977e-02, ||g||=3.579e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   24: J_model=3.245529e-02, ||g||=5.924e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   25: J_model=3.236638e-02, ||g||=9.522e-02, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   26: J_model=3.214360e-02, ||g||=1.478e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   27: J_model=3.161483e-02, ||g||=2.183e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   28: J_model=3.049003e-02, ||g||=2.919e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   29: J_model=2.858741e-02, ||g||=3.560e-01, epsilon=1.000e-02, RSS=954.9 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   30: J_model=2.825513e-02, ||g||=9.114e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   31: J_model=2.618980e-02, ||g||=1.916e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   32: J_model=2.487928e-02, ||g||=9.765e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   33: J_model=2.465482e-02, ||g||=1.469e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   34: J_model=2.464594e-02, ||g||=6.533e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   35: J_model=2.464497e-02, ||g||=2.421e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   36: J_model=2.464479e-02, ||g||=1.882e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   37: J_model=2.464406e-02, ||g||=2.522e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   38: J_model=2.463795e-02, ||g||=4.926e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   39: J_model=2.462525e-02, ||g||=8.129e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   40: J_model=2.458543e-02, ||g||=1.531e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   41: J_model=2.449626e-02, ||g||=2.305e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   42: J_model=2.428945e-02, ||g||=4.662e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   43: J_model=2.377373e-02, ||g||=4.177e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   44: J_model=2.376110e-02, ||g||=5.744e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   45: J_model=2.197359e-02, ||g||=1.273e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   46: J_model=1.926386e-02, ||g||=3.022e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   47: J_model=1.615936e-02, ||g||=6.663e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   48: J_model=1.507917e-02, ||g||=1.681e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   49: J_model=1.496288e-02, ||g||=2.593e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   50: J_model=1.485414e-02, ||g||=4.758e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   51: J_model=1.484596e-02, ||g||=4.205e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   52: J_model=1.484374e-02, ||g||=3.905e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   53: J_model=1.484324e-02, ||g||=3.194e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   54: J_model=1.484068e-02, ||g||=9.410e-04, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   55: J_model=1.483799e-02, ||g||=5.089e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   56: J_model=1.483365e-02, ||g||=2.631e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   57: J_model=1.482746e-02, ||g||=3.110e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   58: J_model=1.481046e-02, ||g||=2.423e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   59: J_model=1.466950e-02, ||g||=1.830e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   60: J_model=1.442522e-02, ||g||=6.242e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   61: J_model=1.384179e-02, ||g||=5.890e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   62: J_model=1.383431e-02, ||g||=9.090e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   63: J_model=1.305062e-02, ||g||=2.352e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   64: J_model=1.249407e-02, ||g||=7.291e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   65: J_model=1.235106e-02, ||g||=6.691e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   66: J_model=1.233153e-02, ||g||=4.050e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   67: J_model=1.233024e-02, ||g||=1.514e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   68: J_model=1.233000e-02, ||g||=6.533e-04, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   69: J_model=1.232999e-02, ||g||=6.665e-04, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   70: J_model=1.232996e-02, ||g||=8.021e-04, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   71: J_model=1.232781e-02, ||g||=9.403e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   72: J_model=1.229940e-02, ||g||=7.495e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   73: J_model=1.225802e-02, ||g||=1.209e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   74: J_model=1.219173e-02, ||g||=1.363e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   75: J_model=1.206546e-02, ||g||=1.457e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   76: J_model=1.148557e-02, ||g||=1.963e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   77: J_model=1.136626e-02, ||g||=7.033e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   78: J_model=1.052539e-02, ||g||=5.403e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   79: J_model=1.050408e-02, ||g||=1.683e-01, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   80: J_model=9.742583e-03, ||g||=6.498e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   81: J_model=9.547456e-03, ||g||=4.004e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   82: J_model=9.523810e-03, ||g||=5.660e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   83: J_model=9.519786e-03, ||g||=1.060e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   84: J_model=9.518742e-03, ||g||=3.441e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   85: J_model=9.518550e-03, ||g||=1.167e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   86: J_model=9.518537e-03, ||g||=7.995e-04, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   87: J_model=9.518434e-03, ||g||=2.837e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   88: J_model=9.518189e-03, ||g||=6.550e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   89: J_model=9.517744e-03, ||g||=9.752e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   90: J_model=9.517199e-03, ||g||=1.288e-02, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   91: J_model=9.516853e-03, ||g||=9.852e-04, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   92: J_model=9.516784e-03, ||g||=1.014e-03, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] iter   93: J_model=9.516783e-03, ||g||=4.457e-05, epsilon=1.000e-02, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-02]] done: success=True, nit=93, avg_iter_time=47.49s
+  [mixture_quadratic_kle[eps=1e-02]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] continuation stage 2/5 with epsilon=3.000e-03
+  [mixture_quadratic_kle[eps=3e-03]] iter    1: J_model=1.122226e-02, ||g||=7.271e-01, epsilon=3.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-03]] iter    2: J_model=1.072887e-02, ||g||=1.965e-03, epsilon=3.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-03]] iter    3: J_model=1.072887e-02, ||g||=1.679e-04, epsilon=3.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-03]] done: success=True, nit=3, avg_iter_time=155.93s
+  [mixture_quadratic_kle[eps=3e-03]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] continuation stage 3/5 with epsilon=1.000e-03
+  [mixture_quadratic_kle[eps=1e-03]] iter    1: J_model=1.146838e-02, ||g||=2.403e-01, epsilon=1.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-03]] iter    2: J_model=1.145461e-02, ||g||=1.693e-01, epsilon=1.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-03]] iter    3: J_model=1.144388e-02, ||g||=4.783e-02, epsilon=1.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-03]] iter    4: J_model=1.144318e-02, ||g||=7.025e-03, epsilon=1.000e-03, RSS=955.0 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-03]] iter    5: J_model=1.144316e-02, ||g||=3.382e-04, epsilon=1.000e-03, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-03]] iter    6: J_model=1.144316e-02, ||g||=2.223e-04, epsilon=1.000e-03, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-03]] done: success=True, nit=6, avg_iter_time=85.26s
+  [mixture_quadratic_kle[eps=1e-03]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] continuation stage 4/5 with epsilon=3.000e-04
+  [mixture_quadratic_kle[eps=3e-04]] iter    1: J_model=1.176039e-02, ||g||=2.337e-02, epsilon=3.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-04]] iter    2: J_model=1.176022e-02, ||g||=7.063e-03, epsilon=3.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-04]] iter    3: J_model=1.176021e-02, ||g||=2.533e-04, epsilon=3.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-04]] iter    4: J_model=1.176020e-02, ||g||=2.278e-04, epsilon=3.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=3e-04]] done: success=True, nit=4, avg_iter_time=96.56s
+  [mixture_quadratic_kle[eps=3e-04]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] continuation stage 5/5 with epsilon=1.000e-04
+  [mixture_quadratic_kle[eps=1e-04]] iter    1: J_model=1.185725e-02, ||g||=2.585e-03, epsilon=1.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-04]] iter    2: J_model=1.185724e-02, ||g||=3.412e-04, epsilon=1.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-04]] iter    3: J_model=1.185724e-02, ||g||=2.290e-04, epsilon=1.000e-04, RSS=955.1 MB, PeakRSS=946.9 MB
+  [mixture_quadratic_kle[eps=1e-04]] done: success=True, nit=3, avg_iter_time=100.22s
+  [mixture_quadratic_kle[eps=1e-04]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_kle] optimal: J_model(z*)=1.185724e-02, J_true(z*)=1.294137e-02, cvar_true(z*)=3.141930e-03, mean_qoi(z*)=3.134163e-04, var_qoi(z*)=1.397921e-06, rel_err(z*)=8.377e-02
 
 Optimizing mixture_quadratic_hep with L-BFGS-B ...
   [mixture_quadratic_hep] initial guess: linear optimum z* with t initialized from linear surrogate VaR
-  [mixture_quadratic_hep] initial: J_model(init)=1.500907e+01, J_true(init)=5.143798e+00, cvar_true(init)=5.143798e+00, mean_qoi(init)=7.188199e-01, var_qoi(init)=1.625124e+00, rel_err(init)=1.918e+00
+  [mixture_quadratic_hep] initial: J_model(init)=4.630059e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=7.170e-02
+  [mixture_quadratic_hep] continuation stage 1/5 with epsilon=1.000e-02
+  [mixture_quadratic_hep[eps=1e-02]] iter    1: J_model=3.522809e-02, ||g||=1.816e-01, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    2: J_model=3.507223e-02, ||g||=1.016e-01, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    3: J_model=3.501133e-02, ||g||=1.777e-02, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    4: J_model=3.500961e-02, ||g||=2.300e-03, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    5: J_model=3.500953e-02, ||g||=1.814e-03, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    6: J_model=3.500920e-02, ||g||=3.035e-03, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    7: J_model=3.500831e-02, ||g||=6.492e-03, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    8: J_model=3.500569e-02, ||g||=1.277e-02, epsilon=1.000e-02, RSS=973.1 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter    9: J_model=3.499865e-02, ||g||=2.296e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   10: J_model=3.497963e-02, ||g||=3.962e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   11: J_model=3.492928e-02, ||g||=6.648e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   12: J_model=3.479800e-02, ||g||=1.089e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   13: J_model=3.446956e-02, ||g||=1.714e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   14: J_model=3.373457e-02, ||g||=2.422e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   15: J_model=3.250405e-02, ||g||=2.573e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   16: J_model=3.143054e-02, ||g||=1.456e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   17: J_model=3.105482e-02, ||g||=3.945e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   18: J_model=3.098188e-02, ||g||=4.436e-03, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   19: J_model=3.097289e-02, ||g||=7.906e-03, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   20: J_model=3.096679e-02, ||g||=1.398e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   21: J_model=3.095511e-02, ||g||=2.607e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   22: J_model=3.093540e-02, ||g||=4.407e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   23: J_model=3.089478e-02, ||g||=7.343e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   24: J_model=3.081195e-02, ||g||=1.174e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   25: J_model=3.064192e-02, ||g||=1.826e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   26: J_model=3.028843e-02, ||g||=2.730e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   27: J_model=2.958688e-02, ||g||=3.831e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   28: J_model=2.831963e-02, ||g||=4.839e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   29: J_model=2.665542e-02, ||g||=4.798e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   30: J_model=2.665535e-02, ||g||=4.815e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   31: J_model=2.553347e-02, ||g||=3.535e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   32: J_model=2.454088e-02, ||g||=1.258e-01, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   33: J_model=2.448595e-02, ||g||=3.639e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] iter   34: J_model=2.448595e-02, ||g||=3.639e-02, epsilon=1.000e-02, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-02]] done: success=True, nit=34, avg_iter_time=85.19s
+  [mixture_quadratic_hep[eps=1e-02]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_hep] continuation stage 2/5 with epsilon=3.000e-03
+  [mixture_quadratic_hep[eps=3e-03]] iter    1: J_model=2.766938e-02, ||g||=3.698e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    2: J_model=2.766488e-02, ||g||=1.336e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    3: J_model=2.766421e-02, ||g||=1.667e-03, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    4: J_model=2.766389e-02, ||g||=3.583e-03, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    5: J_model=2.766196e-02, ||g||=1.500e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    6: J_model=2.765677e-02, ||g||=3.467e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    7: J_model=2.764376e-02, ||g||=6.487e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    8: J_model=2.761047e-02, ||g||=1.108e-01, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter    9: J_model=2.752470e-02, ||g||=1.770e-01, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter   10: J_model=2.730666e-02, ||g||=2.591e-01, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter   11: J_model=2.676821e-02, ||g||=3.419e-01, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter   12: J_model=2.579619e-02, ||g||=3.644e-01, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter   13: J_model=2.479874e-02, ||g||=2.194e-01, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter   14: J_model=2.460417e-02, ||g||=4.174e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] iter   15: J_model=2.460417e-02, ||g||=4.174e-02, epsilon=3.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-03]] done: success=True, nit=15, avg_iter_time=107.89s
+  [mixture_quadratic_hep[eps=3e-03]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_hep] continuation stage 3/5 with epsilon=1.000e-03
+  [mixture_quadratic_hep[eps=1e-03]] iter    1: J_model=2.556503e-02, ||g||=6.180e-03, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    2: J_model=2.556490e-02, ||g||=4.307e-03, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    3: J_model=2.556470e-02, ||g||=5.979e-03, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    4: J_model=2.556422e-02, ||g||=1.285e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    5: J_model=2.556308e-02, ||g||=2.509e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    6: J_model=2.556020e-02, ||g||=4.564e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    7: J_model=2.555301e-02, ||g||=7.905e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    8: J_model=2.553570e-02, ||g||=1.357e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter    9: J_model=2.549722e-02, ||g||=2.246e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   10: J_model=2.541531e-02, ||g||=3.501e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   11: J_model=2.533792e-02, ||g||=4.789e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   12: J_model=2.525429e-02, ||g||=3.714e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   13: J_model=2.516300e-02, ||g||=1.197e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   14: J_model=2.512491e-02, ||g||=2.999e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   15: J_model=2.510806e-02, ||g||=2.576e-03, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   16: J_model=2.510417e-02, ||g||=9.528e-04, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   17: J_model=2.510332e-02, ||g||=9.639e-04, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   18: J_model=2.507637e-02, ||g||=9.490e-03, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   19: J_model=2.499107e-02, ||g||=3.347e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   20: J_model=2.481811e-02, ||g||=7.104e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   21: J_model=2.446504e-02, ||g||=1.220e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   22: J_model=2.376160e-02, ||g||=1.871e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   23: J_model=2.255371e-02, ||g||=2.465e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   24: J_model=2.079614e-02, ||g||=2.072e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   25: J_model=2.016064e-02, ||g||=4.772e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   26: J_model=1.958298e-02, ||g||=1.966e-01, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   27: J_model=1.933886e-02, ||g||=4.869e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] iter   28: J_model=1.933886e-02, ||g||=4.869e-02, epsilon=1.000e-03, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-03]] done: success=True, nit=28, avg_iter_time=78.79s
+  [mixture_quadratic_hep[eps=1e-03]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_hep] continuation stage 4/5 with epsilon=3.000e-04
+  [mixture_quadratic_hep[eps=3e-04]] iter    1: J_model=1.967990e-02, ||g||=2.374e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    2: J_model=1.967882e-02, ||g||=4.167e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    3: J_model=1.967879e-02, ||g||=1.903e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    4: J_model=1.967879e-02, ||g||=2.186e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    5: J_model=1.967878e-02, ||g||=2.888e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    6: J_model=1.967877e-02, ||g||=4.584e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    7: J_model=1.967876e-02, ||g||=7.150e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    8: J_model=1.967876e-02, ||g||=8.580e-03, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter    9: J_model=1.967875e-02, ||g||=1.198e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   10: J_model=1.967875e-02, ||g||=1.324e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   11: J_model=1.967874e-02, ||g||=1.562e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   12: J_model=1.967872e-02, ||g||=1.833e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   13: J_model=1.967871e-02, ||g||=2.142e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   14: J_model=1.967870e-02, ||g||=2.370e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   15: J_model=1.967868e-02, ||g||=2.685e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   16: J_model=1.967865e-02, ||g||=3.039e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   17: J_model=1.967861e-02, ||g||=3.545e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   18: J_model=1.967858e-02, ||g||=3.916e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   19: J_model=1.967850e-02, ||g||=4.573e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   20: J_model=1.967842e-02, ||g||=5.140e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   21: J_model=1.967828e-02, ||g||=5.935e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   22: J_model=1.967815e-02, ||g||=6.562e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   23: J_model=1.967795e-02, ||g||=7.225e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   24: J_model=1.967772e-02, ||g||=7.741e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   25: J_model=1.967757e-02, ||g||=8.270e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   26: J_model=1.967718e-02, ||g||=8.607e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   27: J_model=1.967624e-02, ||g||=8.542e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   28: J_model=1.967506e-02, ||g||=7.355e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] iter   29: J_model=1.967506e-02, ||g||=7.355e-02, epsilon=3.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=3e-04]] done: success=True, nit=29, avg_iter_time=364.02s
+  [mixture_quadratic_hep[eps=3e-04]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_hep] continuation stage 5/5 with epsilon=1.000e-04
+  [mixture_quadratic_hep[eps=1e-04]] iter    1: J_model=1.976684e-02, ||g||=3.842e-02, epsilon=1.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-04]] iter    2: J_model=1.976393e-02, ||g||=5.137e-03, epsilon=1.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-04]] iter    3: J_model=1.976389e-02, ||g||=1.811e-03, epsilon=1.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-04]] iter    4: J_model=1.976389e-02, ||g||=3.797e-03, epsilon=1.000e-04, RSS=973.2 MB, PeakRSS=964.9 MB
+  [mixture_quadratic_hep[eps=1e-04]] done: success=True, nit=4, avg_iter_time=98.57s
+  [mixture_quadratic_hep[eps=1e-04]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [mixture_quadratic_hep] optimal: J_model(z*)=1.976389e-02, J_true(z*)=2.488319e-02, cvar_true(z*)=1.609929e-02, mean_qoi(z*)=1.814254e-03, var_qoi(z*)=3.835083e-05, rel_err(z*)=2.057e-01
+
+Optimizing alternating_hep_quadratic_cvar with L-BFGS-B ...
+  [alternating_hep_quadratic_cvar] initial guess: linear optimum z* with t initialized from linear surrogate VaR
+  [alternating_hep_quadratic_cvar] initial: J_model(init)=8.086841e-02, J_true(init)=4.987679e-02, cvar_true(init)=4.323269e-02, mean_qoi(init)=4.337084e-03, var_qoi(init)=2.458418e-04, rel_err(init)=6.214e-01
+  [alternating_hep_quadratic_cvar] alternating outer step 1/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[1/5]] iter    1: J_model=4.310621e-02, ||g||=5.423e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    2: J_model=4.197238e-02, ||g||=4.715e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    3: J_model=3.975795e-02, ||g||=6.418e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    4: J_model=3.974272e-02, ||g||=4.279e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    5: J_model=3.973365e-02, ||g||=5.093e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    6: J_model=3.973351e-02, ||g||=1.819e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    7: J_model=3.973347e-02, ||g||=1.949e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    8: J_model=3.973298e-02, ||g||=6.355e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter    9: J_model=3.973200e-02, ||g||=1.161e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   10: J_model=3.972933e-02, ||g||=2.876e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   11: J_model=3.972478e-02, ||g||=3.672e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   12: J_model=3.967743e-02, ||g||=8.792e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   13: J_model=3.960433e-02, ||g||=1.504e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   14: J_model=3.942318e-02, ||g||=2.319e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   15: J_model=3.899090e-02, ||g||=3.525e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   16: J_model=3.833727e-02, ||g||=3.606e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   17: J_model=3.757928e-02, ||g||=1.934e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   18: J_model=3.735770e-02, ||g||=3.441e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   19: J_model=3.733170e-02, ||g||=2.112e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   20: J_model=3.732224e-02, ||g||=4.600e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   21: J_model=3.729900e-02, ||g||=6.996e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   22: J_model=3.720869e-02, ||g||=1.323e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   23: J_model=3.705975e-02, ||g||=2.059e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   24: J_model=3.671883e-02, ||g||=2.912e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   25: J_model=3.580904e-02, ||g||=4.202e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   26: J_model=3.421307e-02, ||g||=5.425e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   27: J_model=3.155680e-02, ||g||=5.821e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   28: J_model=2.943725e-02, ||g||=2.956e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   29: J_model=2.890516e-02, ||g||=2.609e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   30: J_model=2.847522e-02, ||g||=1.714e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   31: J_model=2.835966e-02, ||g||=3.545e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   32: J_model=2.834269e-02, ||g||=1.110e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   33: J_model=2.833639e-02, ||g||=4.080e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   34: J_model=2.833624e-02, ||g||=1.685e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   35: J_model=2.833595e-02, ||g||=4.849e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   36: J_model=2.833565e-02, ||g||=8.278e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   37: J_model=2.833425e-02, ||g||=1.697e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   38: J_model=2.833084e-02, ||g||=3.308e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   39: J_model=2.832258e-02, ||g||=5.146e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   40: J_model=2.829183e-02, ||g||=9.859e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   41: J_model=2.823225e-02, ||g||=1.467e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   42: J_model=2.805194e-02, ||g||=2.420e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   43: J_model=2.769044e-02, ||g||=3.512e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   44: J_model=2.685765e-02, ||g||=4.899e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   45: J_model=2.523918e-02, ||g||=6.143e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   46: J_model=2.234569e-02, ||g||=6.541e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   47: J_model=2.169895e-02, ||g||=6.920e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   48: J_model=2.021514e-02, ||g||=3.699e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   49: J_model=1.981317e-02, ||g||=1.174e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   50: J_model=1.961247e-02, ||g||=7.396e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   51: J_model=1.959578e-02, ||g||=1.016e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   52: J_model=1.957964e-02, ||g||=1.472e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   53: J_model=1.955537e-02, ||g||=3.187e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   54: J_model=1.954548e-02, ||g||=1.315e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   55: J_model=1.954429e-02, ||g||=2.760e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   56: J_model=1.954422e-02, ||g||=1.075e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   57: J_model=1.954420e-02, ||g||=1.323e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   58: J_model=1.954413e-02, ||g||=1.919e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   59: J_model=1.954367e-02, ||g||=5.287e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   60: J_model=1.954282e-02, ||g||=7.017e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   61: J_model=1.954257e-02, ||g||=1.772e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   62: J_model=1.953981e-02, ||g||=1.838e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   63: J_model=1.953908e-02, ||g||=1.386e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   64: J_model=1.952867e-02, ||g||=2.383e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   65: J_model=1.950278e-02, ||g||=3.786e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   66: J_model=1.942681e-02, ||g||=6.818e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   67: J_model=1.925352e-02, ||g||=5.896e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   68: J_model=1.923124e-02, ||g||=8.653e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   69: J_model=1.876135e-02, ||g||=1.670e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   70: J_model=1.757186e-02, ||g||=2.771e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   71: J_model=1.568795e-02, ||g||=3.164e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   72: J_model=1.567178e-02, ||g||=3.567e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   73: J_model=1.336199e-02, ||g||=1.142e+00, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   74: J_model=1.262240e-02, ||g||=4.918e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   75: J_model=1.239363e-02, ||g||=1.038e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   76: J_model=1.237939e-02, ||g||=9.508e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   77: J_model=1.237527e-02, ||g||=2.313e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   78: J_model=1.237515e-02, ||g||=1.044e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   79: J_model=1.237489e-02, ||g||=2.128e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   80: J_model=1.237450e-02, ||g||=2.793e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   81: J_model=1.237388e-02, ||g||=2.705e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   82: J_model=1.237365e-02, ||g||=4.842e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   83: J_model=1.237264e-02, ||g||=3.508e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   84: J_model=1.237083e-02, ||g||=1.099e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   85: J_model=1.237001e-02, ||g||=4.492e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   86: J_model=1.236994e-02, ||g||=8.301e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   87: J_model=1.236983e-02, ||g||=3.322e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   88: J_model=1.236982e-02, ||g||=1.265e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] iter   89: J_model=1.236982e-02, ||g||=3.515e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[1/5]] done: success=True, nit=89, avg_iter_time=47.96s
+  [alternating_hep_quadratic_cvar[1/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 2/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[2/5]] iter    1: J_model=1.246256e-02, ||g||=5.796e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[2/5]] iter    2: J_model=1.246131e-02, ||g||=6.792e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[2/5]] iter    3: J_model=1.246129e-02, ||g||=5.695e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[2/5]] iter    4: J_model=1.246129e-02, ||g||=3.748e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[2/5]] done: success=True, nit=4, avg_iter_time=74.19s
+  [alternating_hep_quadratic_cvar[2/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 3/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[3/5]] iter    1: J_model=1.246127e-02, ||g||=7.592e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    2: J_model=1.244841e-02, ||g||=9.211e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    3: J_model=1.240234e-02, ||g||=5.509e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    4: J_model=1.240144e-02, ||g||=4.410e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    5: J_model=1.240142e-02, ||g||=9.291e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    6: J_model=1.240142e-02, ||g||=7.289e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    7: J_model=1.240139e-02, ||g||=3.391e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    8: J_model=1.240132e-02, ||g||=8.256e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter    9: J_model=1.240114e-02, ||g||=1.622e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   10: J_model=1.240070e-02, ||g||=2.908e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   11: J_model=1.239958e-02, ||g||=4.979e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   12: J_model=1.239668e-02, ||g||=8.271e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   13: J_model=1.238942e-02, ||g||=1.384e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   14: J_model=1.237256e-02, ||g||=2.379e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   15: J_model=1.233173e-02, ||g||=3.500e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   16: J_model=1.222398e-02, ||g||=5.612e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   17: J_model=1.206991e-02, ||g||=4.841e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   18: J_model=1.205657e-02, ||g||=5.680e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   19: J_model=1.191081e-02, ||g||=2.788e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   20: J_model=1.188958e-02, ||g||=8.666e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   21: J_model=1.188707e-02, ||g||=1.556e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   22: J_model=1.188700e-02, ||g||=1.086e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] iter   23: J_model=1.188700e-02, ||g||=8.180e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[3/5]] done: success=True, nit=23, avg_iter_time=57.98s
+  [alternating_hep_quadratic_cvar[3/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 4/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[4/5]] iter    1: J_model=1.209838e-02, ||g||=9.280e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[4/5]] iter    2: J_model=1.209566e-02, ||g||=7.878e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[4/5]] iter    3: J_model=1.209564e-02, ||g||=7.699e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[4/5]] iter    4: J_model=1.209564e-02, ||g||=4.570e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[4/5]] done: success=True, nit=4, avg_iter_time=74.32s
+  [alternating_hep_quadratic_cvar[4/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] alternating outer step 5/5: rebuild fixed-HEP objective
+  [alternating_hep_quadratic_cvar[5/5]] iter    1: J_model=1.209562e-02, ||g||=8.799e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    2: J_model=1.208118e-02, ||g||=3.420e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    3: J_model=1.201593e-02, ||g||=6.432e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    4: J_model=1.201569e-02, ||g||=4.521e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    5: J_model=1.201562e-02, ||g||=9.019e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    6: J_model=1.201529e-02, ||g||=1.763e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    7: J_model=1.201476e-02, ||g||=3.384e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    8: J_model=1.201308e-02, ||g||=6.581e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter    9: J_model=1.200922e-02, ||g||=1.107e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   10: J_model=1.199944e-02, ||g||=1.730e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   11: J_model=1.197587e-02, ||g||=2.564e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   12: J_model=1.193142e-02, ||g||=3.434e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   13: J_model=1.186368e-02, ||g||=3.360e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   14: J_model=1.185937e-02, ||g||=3.718e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   15: J_model=1.179700e-02, ||g||=2.062e-01, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   16: J_model=1.177945e-02, ||g||=6.630e-02, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   17: J_model=1.177408e-02, ||g||=5.500e-03, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   18: J_model=1.177398e-02, ||g||=1.562e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] iter   19: J_model=1.177398e-02, ||g||=1.590e-04, epsilon=1.000e-04, RSS=1027.4 MB, PeakRSS=1018.9 MB
+  [alternating_hep_quadratic_cvar[5/5]] done: success=True, nit=19, avg_iter_time=57.37s
+  [alternating_hep_quadratic_cvar[5/5]] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [alternating_hep_quadratic_cvar] optimal: J_model(z*)=1.177398e-02, J_true(z*)=1.222726e-02, cvar_true(z*)=1.815837e-03, mean_qoi(z*)=1.968370e-04, var_qoi(z*)=4.043932e-07, rel_err(z*)=3.707e-02
+
+Optimizing saa_1 with L-BFGS-B ...
+  [saa_1               ] initial guess: zero control with t=0
+  [saa_1               ] initial: J_model(init)=2.297600e+00, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=5.520e-01
+  [saa_1               ] iter    1: J_model=9.999861e-01, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] iter    2: J_model=1.365465e-01, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] iter    3: J_model=1.152720e-01, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] iter    4: J_model=1.148959e-01, ||g||=1.243e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] iter    5: J_model=1.148959e-01, ||g||=4.497e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] iter    6: J_model=1.148959e-01, ||g||=5.273e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] iter    7: J_model=1.148959e-01, ||g||=5.606e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_1               ] done [root-only serial]: success=True, nit=7, avg_iter_time=0.19s
+  [saa_1               ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_1               ] optimal: J_model(z*)=1.148959e-01, J_true(z*)=5.127829e+00, cvar_true(z*)=5.127829e+00, mean_qoi(z*)=7.168142e-01, var_qoi(z*)=1.612652e+00, rel_err(z*)=9.776e-01
+
+Optimizing saa_10 with L-BFGS-B ...
+  [saa_10              ] initial guess: zero control with t=0
+  [saa_10              ] initial: J_model(init)=4.697315e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=8.159e+00
+  [saa_10              ] iter    1: J_model=3.605396e+01, ||g||=9.088e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    2: J_model=3.011224e+01, ||g||=5.108e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    3: J_model=2.517368e+01, ||g||=3.118e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    4: J_model=2.115487e+01, ||g||=1.149e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    5: J_model=1.341846e+01, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    6: J_model=1.112794e+01, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    7: J_model=1.111911e+01, ||g||=2.849e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    8: J_model=1.111911e+01, ||g||=3.281e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter    9: J_model=3.871416e+00, ||g||=1.121e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   10: J_model=2.449495e+00, ||g||=1.035e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   11: J_model=2.424426e+00, ||g||=1.043e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   12: J_model=2.303198e+00, ||g||=1.054e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   13: J_model=2.070684e+00, ||g||=1.058e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   14: J_model=1.984528e+00, ||g||=1.055e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   15: J_model=1.953227e+00, ||g||=1.053e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   16: J_model=1.025637e+00, ||g||=1.051e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   17: J_model=1.014154e+00, ||g||=1.051e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   18: J_model=1.014093e+00, ||g||=1.606e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   19: J_model=8.242338e-01, ||g||=1.040e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   20: J_model=6.046814e-01, ||g||=1.010e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   21: J_model=5.958354e-01, ||g||=1.013e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   22: J_model=5.824565e-01, ||g||=1.015e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   23: J_model=5.410691e-01, ||g||=1.018e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   24: J_model=4.939980e-01, ||g||=1.018e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   25: J_model=4.755297e-01, ||g||=1.016e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   26: J_model=4.726475e-01, ||g||=1.015e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   27: J_model=4.714551e-01, ||g||=1.015e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   28: J_model=4.708066e-01, ||g||=1.015e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   29: J_model=2.611518e-01, ||g||=1.015e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   30: J_model=2.591424e-01, ||g||=9.647e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   31: J_model=1.015618e-01, ||g||=1.004e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   32: J_model=7.129663e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   33: J_model=4.045036e-02, ||g||=1.001e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   34: J_model=3.682974e-02, ||g||=1.001e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   35: J_model=2.637935e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   36: J_model=2.061952e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   37: J_model=2.050101e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   38: J_model=1.986825e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   39: J_model=1.975571e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   40: J_model=1.962245e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   41: J_model=1.950187e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   42: J_model=1.945690e-02, ||g||=2.453e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   43: J_model=1.943049e-02, ||g||=2.670e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   44: J_model=1.941682e-02, ||g||=2.871e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   45: J_model=1.940643e-02, ||g||=3.192e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   46: J_model=1.939471e-02, ||g||=2.552e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   47: J_model=1.937001e-02, ||g||=1.971e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   48: J_model=1.932355e-02, ||g||=1.604e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   49: J_model=1.918723e-02, ||g||=6.032e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   50: J_model=1.886898e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   51: J_model=1.857906e-02, ||g||=9.753e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   52: J_model=1.848602e-02, ||g||=8.233e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   53: J_model=1.846364e-02, ||g||=5.902e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   54: J_model=1.844584e-02, ||g||=3.623e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   55: J_model=1.844022e-02, ||g||=1.619e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   56: J_model=1.843738e-02, ||g||=4.845e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   57: J_model=1.842874e-02, ||g||=1.332e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   58: J_model=1.842489e-02, ||g||=1.296e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   59: J_model=1.842465e-02, ||g||=3.226e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   60: J_model=1.841647e-02, ||g||=3.768e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   61: J_model=1.841172e-02, ||g||=1.450e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   62: J_model=1.839673e-02, ||g||=3.891e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   63: J_model=1.836646e-02, ||g||=2.284e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   64: J_model=1.826865e-02, ||g||=4.887e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   65: J_model=1.814716e-02, ||g||=1.487e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   66: J_model=1.790093e-02, ||g||=9.774e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   67: J_model=1.741985e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   68: J_model=1.729485e-02, ||g||=9.772e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   69: J_model=1.710869e-02, ||g||=4.542e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   70: J_model=1.691656e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   71: J_model=1.669317e-02, ||g||=4.646e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   72: J_model=1.664229e-02, ||g||=9.528e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   73: J_model=1.658526e-02, ||g||=5.928e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   74: J_model=1.657683e-02, ||g||=8.479e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   75: J_model=1.657015e-02, ||g||=1.652e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   76: J_model=1.656664e-02, ||g||=4.680e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   77: J_model=1.656440e-02, ||g||=8.770e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   78: J_model=1.656002e-02, ||g||=2.162e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   79: J_model=1.655360e-02, ||g||=2.616e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   80: J_model=1.654128e-02, ||g||=2.894e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   81: J_model=1.653839e-02, ||g||=2.148e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   82: J_model=1.653228e-02, ||g||=3.027e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   83: J_model=1.652490e-02, ||g||=1.149e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   84: J_model=1.650686e-02, ||g||=3.797e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   85: J_model=1.648210e-02, ||g||=2.640e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   86: J_model=1.634971e-02, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   87: J_model=1.631256e-02, ||g||=8.861e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   88: J_model=1.629402e-02, ||g||=7.775e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   89: J_model=1.629333e-02, ||g||=3.674e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   90: J_model=1.629312e-02, ||g||=2.739e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   91: J_model=1.629296e-02, ||g||=1.530e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   92: J_model=1.629270e-02, ||g||=1.261e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   93: J_model=1.629268e-02, ||g||=6.845e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   94: J_model=1.629267e-02, ||g||=3.112e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   95: J_model=1.629266e-02, ||g||=2.819e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   96: J_model=1.629264e-02, ||g||=8.028e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   97: J_model=1.629256e-02, ||g||=1.867e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   98: J_model=1.629237e-02, ||g||=3.647e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter   99: J_model=1.629188e-02, ||g||=6.598e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  100: J_model=1.629072e-02, ||g||=4.859e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  101: J_model=1.629031e-02, ||g||=2.009e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  102: J_model=1.628775e-02, ||g||=1.547e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  103: J_model=1.628099e-02, ||g||=1.172e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  104: J_model=1.627182e-02, ||g||=9.491e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  105: J_model=1.625803e-02, ||g||=2.415e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  106: J_model=1.625446e-02, ||g||=5.020e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  107: J_model=1.625423e-02, ||g||=4.134e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  108: J_model=1.625421e-02, ||g||=2.058e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  109: J_model=1.625419e-02, ||g||=2.925e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  110: J_model=1.625419e-02, ||g||=3.334e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  111: J_model=1.625419e-02, ||g||=4.336e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  112: J_model=1.625418e-02, ||g||=9.597e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  113: J_model=1.625415e-02, ||g||=1.325e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  114: J_model=1.625401e-02, ||g||=2.118e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  115: J_model=1.625358e-02, ||g||=3.200e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  116: J_model=1.625249e-02, ||g||=3.617e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  117: J_model=1.625232e-02, ||g||=1.296e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  118: J_model=1.624953e-02, ||g||=9.082e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  119: J_model=1.624254e-02, ||g||=3.853e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] iter  120: J_model=1.624054e-02, ||g||=8.643e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_10              ] done [root-only serial]: success=False, nit=120, avg_iter_time=0.48s
+  [saa_10              ] termination: status=1, reason=STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+  [saa_10              ] optimal: J_model(z*)=1.624054e-02, J_true(z*)=1.493344e-02, cvar_true(z*)=3.699006e-03, mean_qoi(z*)=4.894686e-04, var_qoi(z*)=1.017895e-06, rel_err(z*)=8.753e-02
+
+Optimizing saa_39 with L-BFGS-B ...
+  [saa_39              ] initial guess: zero control with t=0
+  [saa_39              ] initial: J_model(init)=1.970704e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=2.843e+00
+  [saa_39              ] iter    1: J_model=1.264349e+01, ||g||=3.648e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    2: J_model=1.185481e+01, ||g||=3.137e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    3: J_model=1.000225e+01, ||g||=6.180e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    4: J_model=9.048918e+00, ||g||=2.304e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    5: J_model=8.845100e+00, ||g||=5.085e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    6: J_model=7.623878e+00, ||g||=2.266e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    7: J_model=6.310450e+00, ||g||=6.060e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    8: J_model=4.603066e+00, ||g||=1.086e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter    9: J_model=4.443380e+00, ||g||=1.589e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   10: J_model=3.175923e+00, ||g||=1.583e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   11: J_model=1.835053e+00, ||g||=2.085e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   12: J_model=8.275750e-01, ||g||=2.080e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   13: J_model=7.136601e-01, ||g||=4.879e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   14: J_model=6.622262e-01, ||g||=4.875e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   15: J_model=5.894266e-01, ||g||=4.873e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   16: J_model=5.385740e-01, ||g||=3.547e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   17: J_model=5.303188e-01, ||g||=4.873e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   18: J_model=5.188594e-01, ||g||=2.879e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   19: J_model=5.165051e-01, ||g||=2.851e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   20: J_model=3.921163e-01, ||g||=2.590e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   21: J_model=2.763041e-01, ||g||=1.052e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   22: J_model=2.613498e-01, ||g||=4.872e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   23: J_model=2.374816e-01, ||g||=2.757e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   24: J_model=2.368582e-01, ||g||=2.750e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   25: J_model=2.192297e-01, ||g||=5.386e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   26: J_model=1.656055e-01, ||g||=5.386e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   27: J_model=1.106946e-01, ||g||=5.386e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   28: J_model=1.090722e-01, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   29: J_model=9.598003e-02, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   30: J_model=5.529132e-02, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   31: J_model=3.448126e-02, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   32: J_model=3.447108e-02, ||g||=2.653e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   33: J_model=2.203721e-02, ||g||=2.589e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   34: J_model=2.181926e-02, ||g||=2.590e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   35: J_model=1.965476e-02, ||g||=5.800e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   36: J_model=1.572221e-02, ||g||=1.051e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   37: J_model=1.520937e-02, ||g||=4.872e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   38: J_model=1.453396e-02, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   39: J_model=1.420239e-02, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   40: J_model=1.419459e-02, ||g||=5.385e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   41: J_model=1.406597e-02, ||g||=4.872e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   42: J_model=1.399366e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   43: J_model=1.398154e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   44: J_model=1.380453e-02, ||g||=3.679e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   45: J_model=1.378341e-02, ||g||=4.872e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   46: J_model=1.361953e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   47: J_model=1.356731e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   48: J_model=1.353455e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   49: J_model=1.352594e-02, ||g||=1.377e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   50: J_model=1.340764e-02, ||g||=1.389e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   51: J_model=1.336620e-02, ||g||=2.568e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   52: J_model=1.317643e-02, ||g||=2.564e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   53: J_model=1.317572e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   54: J_model=1.317126e-02, ||g||=2.564e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   55: J_model=1.316914e-02, ||g||=1.849e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   56: J_model=1.312238e-02, ||g||=4.872e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   57: J_model=1.307412e-02, ||g||=2.820e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   58: J_model=1.304292e-02, ||g||=2.565e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   59: J_model=1.299171e-02, ||g||=6.077e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   60: J_model=1.295155e-02, ||g||=6.345e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   61: J_model=1.290112e-02, ||g||=5.226e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   62: J_model=1.283528e-02, ||g||=5.942e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   63: J_model=1.278794e-02, ||g||=1.633e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   64: J_model=1.275092e-02, ||g||=2.277e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   65: J_model=1.274110e-02, ||g||=9.095e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   66: J_model=1.273837e-02, ||g||=3.869e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   67: J_model=1.273780e-02, ||g||=2.572e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   68: J_model=1.273751e-02, ||g||=2.564e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   69: J_model=1.273304e-02, ||g||=8.333e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   70: J_model=1.272888e-02, ||g||=2.564e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   71: J_model=1.271089e-02, ||g||=2.564e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   72: J_model=1.269959e-02, ||g||=8.629e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   73: J_model=1.267976e-02, ||g||=3.259e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   74: J_model=1.265130e-02, ||g||=2.564e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   75: J_model=1.264486e-02, ||g||=7.593e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   76: J_model=1.264101e-02, ||g||=6.073e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   77: J_model=1.263776e-02, ||g||=1.977e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   78: J_model=1.263563e-02, ||g||=8.152e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   79: J_model=1.263486e-02, ||g||=6.665e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   80: J_model=1.263429e-02, ||g||=1.766e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   81: J_model=1.263407e-02, ||g||=1.623e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   82: J_model=1.263363e-02, ||g||=2.221e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   83: J_model=1.263258e-02, ||g||=1.846e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   84: J_model=1.263164e-02, ||g||=1.761e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   85: J_model=1.262952e-02, ||g||=3.254e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   86: J_model=1.262889e-02, ||g||=2.079e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   87: J_model=1.262775e-02, ||g||=4.749e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   88: J_model=1.262735e-02, ||g||=3.911e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   89: J_model=1.262709e-02, ||g||=1.994e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   90: J_model=1.262681e-02, ||g||=3.347e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   91: J_model=1.262667e-02, ||g||=6.307e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   92: J_model=1.262661e-02, ||g||=1.846e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   93: J_model=1.262648e-02, ||g||=6.285e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   94: J_model=1.262638e-02, ||g||=7.407e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   95: J_model=1.262629e-02, ||g||=6.560e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   96: J_model=1.262628e-02, ||g||=1.156e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   97: J_model=1.262626e-02, ||g||=1.537e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   98: J_model=1.262619e-02, ||g||=8.521e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter   99: J_model=1.262605e-02, ||g||=2.813e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter  100: J_model=1.262583e-02, ||g||=4.254e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter  101: J_model=1.262571e-02, ||g||=3.511e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] iter  102: J_model=1.262571e-02, ||g||=1.569e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_39              ] done [root-only serial]: success=True, nit=102, avg_iter_time=1.49s
+  [saa_39              ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_39              ] optimal: J_model(z*)=1.262571e-02, J_true(z*)=1.295427e-02, cvar_true(z*)=1.678128e-03, mean_qoi(z*)=2.034748e-04, var_qoi(z*)=2.547422e-07, rel_err(z*)=2.536e-02
+
+Optimizing saa_100 with L-BFGS-B ...
+  [saa_100             ] initial guess: zero control with t=0
+  [saa_100             ] initial: J_model(init)=1.624217e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=2.167e+00
+  [saa_100             ] iter    1: J_model=9.130769e+00, ||g||=3.226e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    2: J_model=6.980374e+00, ||g||=8.416e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    3: J_model=6.691736e+00, ||g||=4.580e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    4: J_model=6.527138e+00, ||g||=2.853e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    5: J_model=6.320112e+00, ||g||=1.809e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    6: J_model=6.137467e+00, ||g||=4.185e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    7: J_model=5.368535e+00, ||g||=2.487e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    8: J_model=3.770783e+00, ||g||=2.647e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter    9: J_model=3.067011e+00, ||g||=1.217e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   10: J_model=2.260286e+00, ||g||=1.810e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   11: J_model=5.335896e-01, ||g||=2.408e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   12: J_model=5.075302e-01, ||g||=2.006e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   13: J_model=4.993748e-01, ||g||=2.003e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   14: J_model=4.988309e-01, ||g||=1.460e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   15: J_model=4.983391e-01, ||g||=1.439e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   16: J_model=4.746884e-01, ||g||=2.006e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   17: J_model=2.903137e-01, ||g||=1.200e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   18: J_model=1.556570e-01, ||g||=3.400e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   19: J_model=9.209713e-02, ||g||=4.001e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   20: J_model=6.923756e-02, ||g||=2.002e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   21: J_model=6.590347e-02, ||g||=4.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   22: J_model=6.471829e-02, ||g||=2.657e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   23: J_model=6.404145e-02, ||g||=2.260e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   24: J_model=6.256839e-02, ||g||=2.141e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   25: J_model=6.087247e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   26: J_model=5.701627e-02, ||g||=8.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   27: J_model=5.046930e-02, ||g||=8.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   28: J_model=4.450072e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   29: J_model=3.927254e-02, ||g||=4.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   30: J_model=3.301005e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   31: J_model=2.855172e-02, ||g||=8.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   32: J_model=2.334354e-02, ||g||=6.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   33: J_model=2.275580e-02, ||g||=4.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   34: J_model=1.965273e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   35: J_model=1.905727e-02, ||g||=3.463e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   36: J_model=1.770059e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   37: J_model=1.531087e-02, ||g||=4.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   38: J_model=1.502361e-02, ||g||=3.897e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   39: J_model=1.489602e-02, ||g||=5.599e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   40: J_model=1.485187e-02, ||g||=5.680e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   41: J_model=1.484736e-02, ||g||=5.369e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   42: J_model=1.481157e-02, ||g||=5.563e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   43: J_model=1.481142e-02, ||g||=5.578e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   44: J_model=1.480747e-02, ||g||=5.475e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   45: J_model=1.479498e-02, ||g||=6.227e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   46: J_model=1.479476e-02, ||g||=1.816e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   47: J_model=1.469121e-02, ||g||=4.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   48: J_model=1.439965e-02, ||g||=9.232e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   49: J_model=1.390588e-02, ||g||=5.285e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   50: J_model=1.335658e-02, ||g||=2.034e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   51: J_model=1.312243e-02, ||g||=2.818e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   52: J_model=1.300785e-02, ||g||=7.114e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   53: J_model=1.296486e-02, ||g||=3.536e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   54: J_model=1.294643e-02, ||g||=4.224e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   55: J_model=1.278249e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   56: J_model=1.255675e-02, ||g||=4.579e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   57: J_model=1.246408e-02, ||g||=1.275e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   58: J_model=1.246161e-02, ||g||=5.409e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   59: J_model=1.244242e-02, ||g||=1.057e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   60: J_model=1.243027e-02, ||g||=1.017e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   61: J_model=1.242756e-02, ||g||=2.881e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   62: J_model=1.242575e-02, ||g||=2.018e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   63: J_model=1.242186e-02, ||g||=4.481e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   64: J_model=1.241330e-02, ||g||=5.194e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   65: J_model=1.240199e-02, ||g||=8.260e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   66: J_model=1.238237e-02, ||g||=7.477e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   67: J_model=1.237525e-02, ||g||=1.474e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   68: J_model=1.237460e-02, ||g||=7.152e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   69: J_model=1.237384e-02, ||g||=2.906e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   70: J_model=1.237349e-02, ||g||=6.283e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   71: J_model=1.237328e-02, ||g||=4.877e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   72: J_model=1.237283e-02, ||g||=4.143e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   73: J_model=1.237203e-02, ||g||=3.458e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   74: J_model=1.237173e-02, ||g||=2.734e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   75: J_model=1.236990e-02, ||g||=3.912e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   76: J_model=1.236791e-02, ||g||=2.447e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   77: J_model=1.236711e-02, ||g||=2.311e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   78: J_model=1.236701e-02, ||g||=8.346e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   79: J_model=1.236694e-02, ||g||=3.035e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   80: J_model=1.236692e-02, ||g||=4.739e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   81: J_model=1.236689e-02, ||g||=1.131e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   82: J_model=1.236684e-02, ||g||=6.906e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   83: J_model=1.236655e-02, ||g||=9.488e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   84: J_model=1.236637e-02, ||g||=1.319e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   85: J_model=1.236612e-02, ||g||=6.043e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   86: J_model=1.236586e-02, ||g||=5.822e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   87: J_model=1.236545e-02, ||g||=2.925e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   88: J_model=1.236489e-02, ||g||=2.555e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   89: J_model=1.236428e-02, ||g||=1.731e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   90: J_model=1.236402e-02, ||g||=9.280e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   91: J_model=1.236399e-02, ||g||=1.037e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   92: J_model=1.236394e-02, ||g||=1.028e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] iter   93: J_model=1.236394e-02, ||g||=9.052e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_100             ] done: success=True, nit=93, avg_iter_time=0.38s
+  [saa_100             ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_100             ] optimal: J_model(z*)=1.236394e-02, J_true(z*)=1.237472e-02, cvar_true(z*)=1.360970e-03, mean_qoi(z*)=1.508921e-04, var_qoi(z*)=2.115482e-07, rel_err(z*)=8.711e-04
+
+Optimizing saa_200 with L-BFGS-B ...
+  [saa_200             ] initial guess: zero control with t=0
+  [saa_200             ] initial: J_model(init)=1.733740e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=2.381e+00
+  [saa_200             ] iter    1: J_model=9.426374e+00, ||g||=3.328e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    2: J_model=8.767900e+00, ||g||=2.929e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    3: J_model=6.476647e+00, ||g||=4.610e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    4: J_model=6.361399e+00, ||g||=2.892e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    5: J_model=6.200037e+00, ||g||=1.824e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    6: J_model=6.024495e+00, ||g||=2.530e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    7: J_model=5.823847e+00, ||g||=4.191e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    8: J_model=5.250366e+00, ||g||=5.113e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter    9: J_model=3.016757e+00, ||g||=1.000e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   10: J_model=1.599689e+00, ||g||=8.005e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   11: J_model=1.547787e+00, ||g||=7.010e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   12: J_model=7.826097e-01, ||g||=9.030e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   13: J_model=6.614832e-01, ||g||=5.003e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   14: J_model=5.916615e-01, ||g||=4.002e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   15: J_model=5.536027e-01, ||g||=2.004e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   16: J_model=5.506413e-01, ||g||=1.414e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   17: J_model=5.505800e-01, ||g||=1.412e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   18: J_model=5.172809e-01, ||g||=3.005e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   19: J_model=4.215035e-01, ||g||=2.004e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   20: J_model=3.524162e-01, ||g||=2.004e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   21: J_model=3.086482e-01, ||g||=3.002e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   22: J_model=2.313655e-01, ||g||=5.001e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   23: J_model=1.750728e-01, ||g||=2.001e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   24: J_model=1.547975e-01, ||g||=4.001e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   25: J_model=8.771174e-02, ||g||=3.001e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   26: J_model=6.414909e-02, ||g||=4.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   27: J_model=5.037899e-02, ||g||=5.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   28: J_model=4.940893e-02, ||g||=3.002e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   29: J_model=4.911437e-02, ||g||=2.431e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   30: J_model=4.907927e-02, ||g||=1.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   31: J_model=4.881718e-02, ||g||=1.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   32: J_model=4.873282e-02, ||g||=1.720e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   33: J_model=4.866751e-02, ||g||=1.715e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   34: J_model=4.576049e-02, ||g||=5.554e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   35: J_model=4.147834e-02, ||g||=6.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   36: J_model=1.838614e-02, ||g||=2.840e+00, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   37: J_model=1.634814e-02, ||g||=4.956e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   38: J_model=1.524676e-02, ||g||=5.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   39: J_model=1.519783e-02, ||g||=5.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   40: J_model=1.475488e-02, ||g||=2.515e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   41: J_model=1.469174e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   42: J_model=1.460271e-02, ||g||=5.538e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   43: J_model=1.458830e-02, ||g||=8.997e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   44: J_model=1.458038e-02, ||g||=3.961e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   45: J_model=1.457823e-02, ||g||=2.444e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   46: J_model=1.457359e-02, ||g||=1.895e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   47: J_model=1.450425e-02, ||g||=5.092e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   48: J_model=1.444460e-02, ||g||=5.613e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   49: J_model=1.443189e-02, ||g||=6.364e-04, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   50: J_model=1.432584e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   51: J_model=1.424723e-02, ||g||=1.000e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   52: J_model=1.390617e-02, ||g||=1.217e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   53: J_model=1.325272e-02, ||g||=2.944e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   54: J_model=1.298901e-02, ||g||=1.081e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   55: J_model=1.270022e-02, ||g||=1.390e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   56: J_model=1.258772e-02, ||g||=2.349e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   57: J_model=1.256006e-02, ||g||=1.377e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   58: J_model=1.252201e-02, ||g||=2.441e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   59: J_model=1.249919e-02, ||g||=2.306e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   60: J_model=1.247461e-02, ||g||=1.146e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   61: J_model=1.246772e-02, ||g||=4.254e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   62: J_model=1.246315e-02, ||g||=2.493e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   63: J_model=1.245128e-02, ||g||=3.541e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   64: J_model=1.241122e-02, ||g||=1.046e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   65: J_model=1.236388e-02, ||g||=9.409e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   66: J_model=1.234964e-02, ||g||=2.059e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   67: J_model=1.230641e-02, ||g||=1.592e-01, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   68: J_model=1.228102e-02, ||g||=5.795e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   69: J_model=1.227842e-02, ||g||=8.387e-03, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   70: J_model=1.227812e-02, ||g||=2.552e-02, epsilon=1.000e-04, RSS=1048.9 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   71: J_model=1.227169e-02, ||g||=1.014e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   72: J_model=1.227142e-02, ||g||=4.550e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   73: J_model=1.226675e-02, ||g||=7.595e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   74: J_model=1.225769e-02, ||g||=4.177e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   75: J_model=1.225166e-02, ||g||=2.776e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   76: J_model=1.225058e-02, ||g||=2.754e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   77: J_model=1.225036e-02, ||g||=1.742e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   78: J_model=1.225005e-02, ||g||=1.482e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   79: J_model=1.225005e-02, ||g||=1.346e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   80: J_model=1.224999e-02, ||g||=9.797e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   81: J_model=1.224989e-02, ||g||=5.820e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   82: J_model=1.224974e-02, ||g||=2.693e-04, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   83: J_model=1.224933e-02, ||g||=8.870e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   84: J_model=1.224831e-02, ||g||=2.512e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   85: J_model=1.224704e-02, ||g||=3.340e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   86: J_model=1.224549e-02, ||g||=2.436e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   87: J_model=1.224482e-02, ||g||=2.234e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   88: J_model=1.224479e-02, ||g||=3.836e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   89: J_model=1.224419e-02, ||g||=1.444e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   90: J_model=1.224406e-02, ||g||=1.867e-04, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   91: J_model=1.224405e-02, ||g||=3.777e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   92: J_model=1.224403e-02, ||g||=8.043e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   93: J_model=1.224400e-02, ||g||=1.169e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   94: J_model=1.224393e-02, ||g||=1.360e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   95: J_model=1.224385e-02, ||g||=1.460e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   96: J_model=1.224380e-02, ||g||=7.715e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   97: J_model=1.224375e-02, ||g||=3.789e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   98: J_model=1.224369e-02, ||g||=5.510e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter   99: J_model=1.224364e-02, ||g||=6.535e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  100: J_model=1.224361e-02, ||g||=2.396e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  101: J_model=1.224349e-02, ||g||=1.864e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  102: J_model=1.224327e-02, ||g||=4.009e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  103: J_model=1.224318e-02, ||g||=3.422e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  104: J_model=1.224314e-02, ||g||=4.500e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  105: J_model=1.224310e-02, ||g||=5.320e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  106: J_model=1.224309e-02, ||g||=3.606e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  107: J_model=1.224305e-02, ||g||=4.160e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  108: J_model=1.224304e-02, ||g||=1.406e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  109: J_model=1.224300e-02, ||g||=1.014e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] iter  110: J_model=1.224300e-02, ||g||=2.037e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_200             ] done: success=True, nit=110, avg_iter_time=0.55s
+  [saa_200             ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_200             ] optimal: J_model(z*)=1.224300e-02, J_true(z*)=1.228824e-02, cvar_true(z*)=1.366489e-03, mean_qoi(z*)=1.454364e-04, var_qoi(z*)=2.538053e-07, rel_err(z*)=3.682e-03
+
+Optimizing saa_500 with L-BFGS-B ...
+  [saa_500             ] initial guess: zero control with t=0
+  [saa_500             ] initial: J_model(init)=1.614735e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=2.148e+00
+  [saa_500             ] iter    1: J_model=8.605793e+00, ||g||=3.026e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    2: J_model=8.089261e+00, ||g||=2.548e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    3: J_model=6.527978e+00, ||g||=8.811e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    4: J_model=6.160681e+00, ||g||=4.585e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    5: J_model=5.903120e+00, ||g||=2.021e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    6: J_model=5.791682e+00, ||g||=2.232e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    7: J_model=5.684828e+00, ||g||=3.125e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    8: J_model=5.102731e+00, ||g||=5.298e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter    9: J_model=3.526559e+00, ||g||=8.013e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   10: J_model=1.440146e+00, ||g||=9.201e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   11: J_model=1.060714e+00, ||g||=5.616e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   12: J_model=7.978526e-01, ||g||=4.461e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   13: J_model=6.409374e-01, ||g||=4.833e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   14: J_model=4.934177e-01, ||g||=4.002e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   15: J_model=4.857679e-01, ||g||=1.566e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   16: J_model=4.807546e-01, ||g||=8.086e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   17: J_model=4.780965e-01, ||g||=1.207e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   18: J_model=4.779051e-01, ||g||=1.207e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   19: J_model=4.774011e-01, ||g||=1.206e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   20: J_model=4.627341e-01, ||g||=8.108e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   21: J_model=4.233368e-01, ||g||=3.603e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   22: J_model=3.694818e-01, ||g||=6.401e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   23: J_model=3.231028e-01, ||g||=7.600e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   24: J_model=3.023624e-01, ||g||=8.400e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   25: J_model=2.866330e-01, ||g||=8.001e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   26: J_model=2.479827e-01, ||g||=7.202e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   27: J_model=2.135622e-01, ||g||=4.408e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   28: J_model=1.857747e-01, ||g||=5.169e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   29: J_model=1.372734e-01, ||g||=4.809e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   30: J_model=1.017239e-01, ||g||=1.080e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   31: J_model=9.364266e-02, ||g||=1.201e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   32: J_model=9.263971e-02, ||g||=8.019e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   33: J_model=9.244299e-02, ||g||=8.018e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   34: J_model=9.240957e-02, ||g||=5.732e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   35: J_model=9.235498e-02, ||g||=6.222e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   36: J_model=9.200795e-02, ||g||=4.039e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   37: J_model=9.154644e-02, ||g||=4.048e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   38: J_model=9.094389e-02, ||g||=1.601e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   39: J_model=8.898492e-02, ||g||=4.401e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   40: J_model=8.695860e-02, ||g||=8.000e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   41: J_model=7.986035e-02, ||g||=8.400e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   42: J_model=7.771126e-02, ||g||=8.305e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   43: J_model=6.749816e-02, ||g||=9.201e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   44: J_model=4.986114e-02, ||g||=4.401e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   45: J_model=4.474044e-02, ||g||=2.800e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   46: J_model=4.386832e-02, ||g||=4.006e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   47: J_model=4.375178e-02, ||g||=8.002e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   48: J_model=4.373071e-02, ||g||=1.620e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   49: J_model=4.372642e-02, ||g||=1.605e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   50: J_model=4.369426e-02, ||g||=1.487e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   51: J_model=4.363200e-02, ||g||=8.002e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   52: J_model=4.287686e-02, ||g||=4.526e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   53: J_model=4.052855e-02, ||g||=1.197e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   54: J_model=3.436118e-02, ||g||=8.003e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   55: J_model=2.655040e-02, ||g||=2.000e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   56: J_model=1.816774e-02, ||g||=5.658e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   57: J_model=1.700853e-02, ||g||=5.200e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   58: J_model=1.577294e-02, ||g||=2.856e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   59: J_model=1.526583e-02, ||g||=6.746e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   60: J_model=1.511205e-02, ||g||=3.223e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   61: J_model=1.496354e-02, ||g||=2.400e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   62: J_model=1.488949e-02, ||g||=2.720e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   63: J_model=1.486000e-02, ||g||=6.140e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   64: J_model=1.483141e-02, ||g||=7.276e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   65: J_model=1.481478e-02, ||g||=8.050e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   66: J_model=1.480050e-02, ||g||=5.545e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   67: J_model=1.479898e-02, ||g||=1.402e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   68: J_model=1.479831e-02, ||g||=5.071e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   69: J_model=1.479803e-02, ||g||=1.275e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   70: J_model=1.479782e-02, ||g||=1.031e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   71: J_model=1.479759e-02, ||g||=9.941e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   72: J_model=1.479602e-02, ||g||=5.503e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   73: J_model=1.479543e-02, ||g||=2.512e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   74: J_model=1.479523e-02, ||g||=3.620e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   75: J_model=1.479513e-02, ||g||=1.091e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   76: J_model=1.479481e-02, ||g||=2.718e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   77: J_model=1.479477e-02, ||g||=1.506e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   78: J_model=1.479476e-02, ||g||=2.241e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   79: J_model=1.479474e-02, ||g||=1.854e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   80: J_model=1.479472e-02, ||g||=6.068e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   81: J_model=1.479465e-02, ||g||=6.047e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   82: J_model=1.479462e-02, ||g||=8.228e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   83: J_model=1.479374e-02, ||g||=7.500e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   84: J_model=1.479158e-02, ||g||=2.084e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   85: J_model=1.478576e-02, ||g||=4.748e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   86: J_model=1.476002e-02, ||g||=5.394e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   87: J_model=1.464827e-02, ||g||=2.972e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   88: J_model=1.439466e-02, ||g||=7.844e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   89: J_model=1.399158e-02, ||g||=4.464e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   90: J_model=1.290293e-02, ||g||=4.650e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   91: J_model=1.290260e-02, ||g||=4.612e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   92: J_model=1.234259e-02, ||g||=1.035e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   93: J_model=1.221183e-02, ||g||=2.242e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   94: J_model=1.219111e-02, ||g||=9.792e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   95: J_model=1.217407e-02, ||g||=1.122e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   96: J_model=1.215710e-02, ||g||=1.205e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   97: J_model=1.215422e-02, ||g||=4.547e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   98: J_model=1.214724e-02, ||g||=8.573e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter   99: J_model=1.214160e-02, ||g||=7.583e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter  100: J_model=1.214090e-02, ||g||=4.958e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter  101: J_model=1.214006e-02, ||g||=1.972e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter  102: J_model=1.214001e-02, ||g||=1.138e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter  103: J_model=1.214000e-02, ||g||=3.522e-04, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter  104: J_model=1.213999e-02, ||g||=9.517e-04, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] iter  105: J_model=1.213999e-02, ||g||=3.095e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_500             ] done: success=True, nit=105, avg_iter_time=1.34s
+  [saa_500             ] termination: status=0, reason=CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH
+  [saa_500             ] optimal: J_model(z*)=1.213999e-02, J_true(z*)=1.229556e-02, cvar_true(z*)=1.395673e-03, mean_qoi(z*)=1.458502e-04, var_qoi(z*)=2.812019e-07, rel_err(z*)=1.265e-02
+
+Optimizing saa_1000 with L-BFGS-B ...
+  [saa_1000            ] initial guess: zero control with t=0
+  [saa_1000            ] initial: J_model(init)=1.530614e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=1.984e+00
+  [saa_1000            ] iter    1: J_model=7.811379e+00, ||g||=3.023e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    2: J_model=7.314110e+00, ||g||=2.345e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    3: J_model=6.200318e+00, ||g||=1.172e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    4: J_model=5.677201e+00, ||g||=4.332e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    5: J_model=5.531092e+00, ||g||=2.307e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    6: J_model=5.412479e+00, ||g||=1.833e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    7: J_model=5.321192e+00, ||g||=2.449e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    8: J_model=4.990879e+00, ||g||=5.287e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter    9: J_model=4.517508e+00, ||g||=6.836e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   10: J_model=1.979654e+00, ||g||=9.002e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   11: J_model=7.632492e-01, ||g||=7.002e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   12: J_model=7.077183e-01, ||g||=4.411e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   13: J_model=5.777099e-01, ||g||=6.969e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   14: J_model=5.107036e-01, ||g||=2.013e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   15: J_model=4.971625e-01, ||g||=2.004e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   16: J_model=4.932476e-01, ||g||=6.132e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   17: J_model=4.924106e-01, ||g||=4.193e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   18: J_model=4.917757e-01, ||g||=2.348e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   19: J_model=4.904011e-01, ||g||=1.604e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   20: J_model=4.882586e-01, ||g||=1.007e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   21: J_model=4.592727e-01, ||g||=4.181e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   22: J_model=3.926385e-01, ||g||=9.815e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   23: J_model=3.413109e-01, ||g||=1.040e+00, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   24: J_model=1.612704e-01, ||g||=1.220e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   25: J_model=1.261086e-01, ||g||=7.404e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   26: J_model=9.826588e-02, ||g||=1.801e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   27: J_model=9.654173e-02, ||g||=8.021e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   28: J_model=9.581232e-02, ||g||=6.029e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   29: J_model=9.559975e-02, ||g||=2.084e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   30: J_model=9.558348e-02, ||g||=5.765e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   31: J_model=9.557255e-02, ||g||=5.775e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   32: J_model=7.272196e-02, ||g||=8.098e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   33: J_model=5.742688e-02, ||g||=6.600e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   34: J_model=4.689225e-02, ||g||=1.600e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   35: J_model=4.453036e-02, ||g||=2.800e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   36: J_model=4.405705e-02, ||g||=2.008e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   37: J_model=4.395074e-02, ||g||=2.111e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   38: J_model=4.394878e-02, ||g||=1.578e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   39: J_model=4.392579e-02, ||g||=1.161e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   40: J_model=4.390310e-02, ||g||=2.007e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   41: J_model=4.385289e-02, ||g||=1.498e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   42: J_model=4.371292e-02, ||g||=2.007e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   43: J_model=4.300328e-02, ||g||=1.697e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   44: J_model=4.192868e-02, ||g||=4.006e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   45: J_model=4.015997e-02, ||g||=3.716e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   46: J_model=3.612427e-02, ||g||=1.600e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   47: J_model=3.065742e-02, ||g||=2.266e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   48: J_model=2.355413e-02, ||g||=7.290e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   49: J_model=2.003502e-02, ||g||=3.600e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   50: J_model=1.760541e-02, ||g||=3.561e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   51: J_model=1.724891e-02, ||g||=4.409e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   52: J_model=1.716845e-02, ||g||=6.341e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   53: J_model=1.713200e-02, ||g||=2.407e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   54: J_model=1.712659e-02, ||g||=4.488e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   55: J_model=1.712644e-02, ||g||=2.268e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   56: J_model=1.712620e-02, ||g||=3.562e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   57: J_model=1.712580e-02, ||g||=2.400e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   58: J_model=1.712551e-02, ||g||=1.005e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   59: J_model=1.712515e-02, ||g||=1.717e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   60: J_model=1.712495e-02, ||g||=3.182e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   61: J_model=1.712476e-02, ||g||=1.597e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   62: J_model=1.712441e-02, ||g||=3.926e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   63: J_model=1.712410e-02, ||g||=7.678e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   64: J_model=1.712296e-02, ||g||=3.090e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   65: J_model=1.711291e-02, ||g||=1.504e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   66: J_model=1.709465e-02, ||g||=9.569e-04, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   67: J_model=1.707805e-02, ||g||=8.195e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   68: J_model=1.703917e-02, ||g||=8.088e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   69: J_model=1.703490e-02, ||g||=7.265e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   70: J_model=1.683921e-02, ||g||=4.957e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   71: J_model=1.663147e-02, ||g||=1.601e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   72: J_model=1.631958e-02, ||g||=8.441e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   73: J_model=1.627100e-02, ||g||=2.233e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   74: J_model=1.585793e-02, ||g||=1.738e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   75: J_model=1.577347e-02, ||g||=1.413e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   76: J_model=1.519365e-02, ||g||=4.893e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   77: J_model=1.449057e-02, ||g||=8.937e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   78: J_model=1.358779e-02, ||g||=4.616e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   79: J_model=1.322105e-02, ||g||=2.577e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   80: J_model=1.309422e-02, ||g||=3.705e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   81: J_model=1.308092e-02, ||g||=2.344e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   82: J_model=1.307716e-02, ||g||=2.319e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   83: J_model=1.307600e-02, ||g||=1.521e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   84: J_model=1.307584e-02, ||g||=2.955e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   85: J_model=1.307579e-02, ||g||=2.192e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   86: J_model=1.307567e-02, ||g||=3.439e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   87: J_model=1.307549e-02, ||g||=5.385e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   88: J_model=1.307514e-02, ||g||=7.112e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   89: J_model=1.307497e-02, ||g||=2.114e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   90: J_model=1.307425e-02, ||g||=1.990e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   91: J_model=1.307159e-02, ||g||=3.408e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   92: J_model=1.306635e-02, ||g||=2.619e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   93: J_model=1.305605e-02, ||g||=1.018e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   94: J_model=1.301584e-02, ||g||=5.370e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   95: J_model=1.300786e-02, ||g||=4.873e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   96: J_model=1.298004e-02, ||g||=1.530e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   97: J_model=1.290704e-02, ||g||=1.244e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   98: J_model=1.267800e-02, ||g||=3.070e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter   99: J_model=1.232424e-02, ||g||=3.986e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  100: J_model=1.208198e-02, ||g||=2.240e-01, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  101: J_model=1.192853e-02, ||g||=1.031e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  102: J_model=1.192610e-02, ||g||=4.970e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  103: J_model=1.192471e-02, ||g||=4.817e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  104: J_model=1.192319e-02, ||g||=1.911e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  105: J_model=1.192160e-02, ||g||=8.805e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  106: J_model=1.192118e-02, ||g||=8.237e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  107: J_model=1.192111e-02, ||g||=5.647e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  108: J_model=1.192061e-02, ||g||=4.784e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  109: J_model=1.192039e-02, ||g||=7.269e-04, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  110: J_model=1.191960e-02, ||g||=5.401e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  111: J_model=1.191939e-02, ||g||=5.778e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  112: J_model=1.191926e-02, ||g||=3.617e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  113: J_model=1.191917e-02, ||g||=1.138e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  114: J_model=1.191895e-02, ||g||=1.806e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  115: J_model=1.191863e-02, ||g||=1.132e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  116: J_model=1.191765e-02, ||g||=1.104e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  117: J_model=1.191728e-02, ||g||=7.742e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  118: J_model=1.191662e-02, ||g||=2.542e-02, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  119: J_model=1.191651e-02, ||g||=2.278e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] iter  120: J_model=1.191643e-02, ||g||=1.053e-03, epsilon=1.000e-04, RSS=1049.0 MB, PeakRSS=1040.4 MB
+  [saa_1000            ] done: success=False, nit=120, avg_iter_time=2.48s
+  [saa_1000            ] termination: status=1, reason=STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+  [saa_1000            ] optimal: J_model(z*)=1.191643e-02, J_true(z*)=1.184316e-02, cvar_true(z*)=7.811044e-04, mean_qoi(z*)=8.559218e-05, var_qoi(z*)=7.648614e-08, rel_err(z*)=6.187e-03
+
+Optimizing saa_10000 with L-BFGS-B ...
+  [saa_10000           ] initial guess: zero control with t=0
+  [saa_10000           ] initial: J_model(init)=1.452510e+01, J_true(init)=5.128630e+00, cvar_true(init)=5.128630e+00, mean_qoi(init)=7.169510e-01, var_qoi(init)=1.613135e+00, rel_err(init)=1.832e+00
+  [saa_10000           ] iter    1: J_model=7.289692e+00, ||g||=2.874e+00, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    2: J_model=6.828176e+00, ||g||=2.336e+00, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    3: J_model=5.632373e+00, ||g||=8.838e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    4: J_model=5.300740e+00, ||g||=4.597e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    5: J_model=5.123185e+00, ||g||=1.687e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    6: J_model=5.061029e+00, ||g||=1.665e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    7: J_model=4.915429e+00, ||g||=3.349e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    8: J_model=4.728598e+00, ||g||=4.388e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter    9: J_model=3.671236e+00, ||g||=7.774e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   10: J_model=1.886910e+00, ||g||=9.461e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   11: J_model=1.006496e+00, ||g||=9.220e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   12: J_model=8.776984e-01, ||g||=8.640e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   13: J_model=6.604656e-01, ||g||=6.323e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   14: J_model=6.169827e-01, ||g||=5.186e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   15: J_model=5.237029e-01, ||g||=1.216e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   16: J_model=4.773060e-01, ||g||=3.193e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   17: J_model=4.508228e-01, ||g||=7.292e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   18: J_model=4.504527e-01, ||g||=5.654e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   19: J_model=4.501882e-01, ||g||=1.172e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   20: J_model=4.500764e-01, ||g||=1.959e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   21: J_model=4.493992e-01, ||g||=3.395e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   22: J_model=4.459832e-01, ||g||=1.525e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   23: J_model=4.427162e-01, ||g||=1.996e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   24: J_model=4.071152e-01, ||g||=4.783e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   25: J_model=3.574556e-01, ||g||=8.063e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   26: J_model=2.951090e-01, ||g||=4.924e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   27: J_model=2.614985e-01, ||g||=1.720e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   28: J_model=2.568005e-01, ||g||=3.406e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   29: J_model=2.563302e-01, ||g||=1.006e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   30: J_model=2.562560e-01, ||g||=1.069e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   31: J_model=2.561078e-01, ||g||=6.275e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   32: J_model=2.558114e-01, ||g||=3.132e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   33: J_model=2.546715e-01, ||g||=8.046e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   34: J_model=2.519924e-01, ||g||=1.743e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   35: J_model=2.403002e-01, ||g||=6.229e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   36: J_model=2.223946e-01, ||g||=7.201e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   37: J_model=1.033686e-01, ||g||=2.767e+00, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   38: J_model=7.921653e-02, ||g||=8.157e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   39: J_model=5.492015e-02, ||g||=6.080e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   40: J_model=4.709628e-02, ||g||=6.710e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   41: J_model=4.462529e-02, ||g||=3.160e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   42: J_model=4.167354e-02, ||g||=1.272e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   43: J_model=4.050705e-02, ||g||=5.157e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   44: J_model=3.966377e-02, ||g||=4.619e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   45: J_model=3.951699e-02, ||g||=2.780e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   46: J_model=3.941742e-02, ||g||=3.545e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   47: J_model=3.938797e-02, ||g||=6.896e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   48: J_model=3.935132e-02, ||g||=1.393e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   49: J_model=3.934737e-02, ||g||=1.070e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   50: J_model=3.934588e-02, ||g||=6.849e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   51: J_model=3.934213e-02, ||g||=7.964e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   52: J_model=3.930753e-02, ||g||=1.460e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   53: J_model=3.924506e-02, ||g||=7.489e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   54: J_model=3.910266e-02, ||g||=1.464e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   55: J_model=3.909995e-02, ||g||=2.875e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   56: J_model=3.881954e-02, ||g||=2.697e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   57: J_model=3.752666e-02, ||g||=6.591e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   58: J_model=3.522924e-02, ||g||=1.621e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   59: J_model=2.976648e-02, ||g||=5.105e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   60: J_model=2.339913e-02, ||g||=1.128e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   61: J_model=1.987445e-02, ||g||=1.294e+00, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   62: J_model=1.776015e-02, ||g||=3.789e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   63: J_model=1.743734e-02, ||g||=2.037e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   64: J_model=1.737801e-02, ||g||=1.673e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   65: J_model=1.734053e-02, ||g||=2.243e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   66: J_model=1.733963e-02, ||g||=6.542e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   67: J_model=1.733917e-02, ||g||=4.762e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   68: J_model=1.733879e-02, ||g||=1.445e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   69: J_model=1.733807e-02, ||g||=1.922e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   70: J_model=1.733700e-02, ||g||=1.452e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   71: J_model=1.733650e-02, ||g||=6.562e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   72: J_model=1.733636e-02, ||g||=3.377e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   73: J_model=1.733629e-02, ||g||=4.058e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   74: J_model=1.733624e-02, ||g||=5.407e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   75: J_model=1.733619e-02, ||g||=1.663e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   76: J_model=1.733610e-02, ||g||=1.579e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   77: J_model=1.733601e-02, ||g||=4.899e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   78: J_model=1.733508e-02, ||g||=4.263e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   79: J_model=1.733337e-02, ||g||=2.393e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   80: J_model=1.732753e-02, ||g||=1.856e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   81: J_model=1.728493e-02, ||g||=1.065e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   82: J_model=1.719983e-02, ||g||=1.039e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   83: J_model=1.697431e-02, ||g||=2.917e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   84: J_model=1.648208e-02, ||g||=8.052e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   85: J_model=1.577223e-02, ||g||=1.001e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   86: J_model=1.556693e-02, ||g||=2.004e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   87: J_model=1.497653e-02, ||g||=2.374e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   88: J_model=1.484548e-02, ||g||=1.866e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   89: J_model=1.393367e-02, ||g||=3.597e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   90: J_model=1.312464e-02, ||g||=2.625e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   91: J_model=1.267719e-02, ||g||=1.415e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   92: J_model=1.264308e-02, ||g||=4.320e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   93: J_model=1.259519e-02, ||g||=9.173e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   94: J_model=1.258878e-02, ||g||=3.460e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   95: J_model=1.258765e-02, ||g||=1.583e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   96: J_model=1.258744e-02, ||g||=6.940e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   97: J_model=1.258734e-02, ||g||=4.402e-04, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   98: J_model=1.258733e-02, ||g||=5.843e-04, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter   99: J_model=1.258733e-02, ||g||=3.173e-04, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  100: J_model=1.258730e-02, ||g||=5.083e-04, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  101: J_model=1.258728e-02, ||g||=7.898e-04, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  102: J_model=1.258727e-02, ||g||=4.031e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  103: J_model=1.258726e-02, ||g||=3.019e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  104: J_model=1.258721e-02, ||g||=1.725e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  105: J_model=1.258712e-02, ||g||=6.874e-03, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  106: J_model=1.258684e-02, ||g||=1.921e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  107: J_model=1.258620e-02, ||g||=3.461e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  108: J_model=1.258444e-02, ||g||=6.026e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  109: J_model=1.258017e-02, ||g||=9.699e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  110: J_model=1.256972e-02, ||g||=1.517e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  111: J_model=1.254505e-02, ||g||=2.173e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  112: J_model=1.249028e-02, ||g||=3.262e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  113: J_model=1.239794e-02, ||g||=3.058e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  114: J_model=1.236107e-02, ||g||=5.309e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  115: J_model=1.222949e-02, ||g||=4.418e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  116: J_model=1.209040e-02, ||g||=5.185e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  117: J_model=1.198328e-02, ||g||=1.557e-01, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  118: J_model=1.196938e-02, ||g||=2.916e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  119: J_model=1.196723e-02, ||g||=4.052e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] iter  120: J_model=1.195250e-02, ||g||=8.971e-02, epsilon=1.000e-04, RSS=1025.4 MB, PeakRSS=1040.4 MB
+  [saa_10000           ] done: success=False, nit=120, avg_iter_time=24.12s
+  [saa_10000           ] termination: status=1, reason=STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+  [saa_10000           ] optimal: J_model(z*)=1.195250e-02, J_true(z*)=1.195051e-02, cvar_true(z*)=1.118854e-03, mean_qoi(z*)=1.233129e-04, var_qoi(z*)=1.594179e-07, rel_err(z*)=1.663e-04
+
+------------------------------------------------------------------------------------------
+Summary (ground-truth exact CVaR from sampled QoI list, evaluated at z0 and z*)
+------------------------------------------------------------------------------------------
+linear               | nit= 12 | avg_iter_time=    0.21s | J_model(z*)=9.623552e-03 | init rel_err=7.633e-01 | opt rel_err=8.071e-01 | J_true(z*)=4.987679e-02 | t/VaR rel_err=NA
+quadratic            | nit= 32 | avg_iter_time=   67.32s | J_model(z*)=1.431847e-02 | init rel_err=7.859e-01 | opt rel_err=7.127e-01 | J_true(z*)=4.983020e-02 | t/VaR rel_err=6.541e-01
+mixture_linear_kle   | nit= 13 | avg_iter_time=    0.36s | J_model(z*)=1.143977e-02 | init rel_err=4.929e-01 | opt rel_err=1.871e-01 | J_true(z*)=1.407230e-02 | t/VaR rel_err=NA
+mixture_linear_hep   | nit= 18 | avg_iter_time=    1.59s | J_model(z*)=1.148621e-02 | init rel_err=4.184e-01 | opt rel_err=9.937e-02 | J_true(z*)=1.275352e-02 | t/VaR rel_err=NA
+alternating_hep_linear_cvar | nit= 15 | avg_iter_time=    0.41s | J_model(z*)=1.133648e-02 | init rel_err=4.184e-01 | opt rel_err=7.786e-02 | J_true(z*)=1.229363e-02 | t/VaR rel_err=NA
+mixture_quadratic_kle | nit=109 | avg_iter_time=   55.80s | J_model(z*)=1.185724e-02 | init rel_err=9.284e-02 | opt rel_err=8.377e-02 | J_true(z*)=1.294137e-02 | t/VaR rel_err=2.204e-01
+mixture_quadratic_hep | nit=110 | avg_iter_time=  160.65s | J_model(z*)=1.976389e-02 | init rel_err=7.170e-02 | opt rel_err=2.057e-01 | J_true(z*)=2.488319e-02 | t/VaR rel_err=1.859e-01
+alternating_hep_quadratic_cvar | nit=139 | avg_iter_time=   52.42s | J_model(z*)=1.177398e-02 | init rel_err=6.214e-01 | opt rel_err=3.707e-02 | J_true(z*)=1.222726e-02 | t/VaR rel_err=2.175e-01
+saa_1                | nit=  7 | avg_iter_time=    0.19s | J_model(z*)=1.148959e-01 | init rel_err=5.520e-01 | opt rel_err=9.776e-01 | J_true(z*)=5.127829e+00 | t/VaR rel_err=9.613e-01
+saa_10               | nit=120 | avg_iter_time=    0.48s | J_model(z*)=1.624054e-02 | init rel_err=8.159e+00 | opt rel_err=8.753e-02 | J_true(z*)=1.493344e-02 | t/VaR rel_err=1.638e+00
+saa_39               | nit=102 | avg_iter_time=    1.49s | J_model(z*)=1.262571e-02 | init rel_err=2.843e+00 | opt rel_err=2.536e-02 | J_true(z*)=1.295427e-02 | t/VaR rel_err=2.948e-01
+saa_100              | nit= 93 | avg_iter_time=    0.38s | J_model(z*)=1.236394e-02 | init rel_err=2.167e+00 | opt rel_err=8.711e-04 | J_true(z*)=1.237472e-02 | t/VaR rel_err=1.020e-01
+saa_200              | nit=110 | avg_iter_time=    0.55s | J_model(z*)=1.224300e-02 | init rel_err=2.381e+00 | opt rel_err=3.682e-03 | J_true(z*)=1.228824e-02 | t/VaR rel_err=1.712e-02
+saa_500              | nit=105 | avg_iter_time=    1.34s | J_model(z*)=1.213999e-02 | init rel_err=2.148e+00 | opt rel_err=1.265e-02 | J_true(z*)=1.229556e-02 | t/VaR rel_err=2.188e-01
+saa_1000             | nit=120 | avg_iter_time=    2.48s | J_model(z*)=1.191643e-02 | init rel_err=1.984e+00 | opt rel_err=6.187e-03 | J_true(z*)=1.184316e-02 | t/VaR rel_err=6.907e-02
+saa_10000            | nit=120 | avg_iter_time=   24.12s | J_model(z*)=1.195250e-02 | init rel_err=1.832e+00 | opt rel_err=1.663e-04 | J_true(z*)=1.195051e-02 | t/VaR rel_err=1.474e-01
+------------------------------------------------------------------------------------------
+All outputs written to: results_semilinear_adr_compare_cvar_model
+Terminal outputs saved to: results_semilinear_adr_compare_cvar_model/terminal_output.txt

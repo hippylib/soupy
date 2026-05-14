@@ -24,7 +24,7 @@ Reference truth:
 
 The CVaR objective includes the same L2 control penalty as the mean-variance
 comparison driver. Quadratic CVaR Taylor models use Monte Carlo samples to
-estimate the surrogate CVaR; the default is 1000.
+estimate the surrogate CVaR; the default is 10000.
 """
 
 from __future__ import annotations
@@ -244,6 +244,8 @@ class ScipyObjectiveWithHistory:
 def setup_problem(args, comm_mesh):
     settings = hyperelasticity_problem_settings()
     settings["qoi_type"] = args.qoi_type
+    settings["uncertainty"]["gamma"] = 1.0
+    settings["uncertainty"]["delta"] = 5.0
     settings["geometry"]["lx"] = args.lx
     settings["geometry"]["ly"] = args.ly
     settings["geometry"]["lz"] = args.lz
@@ -311,12 +313,21 @@ def zero_control_np(control_model):
     return np.array(z.get_local(), copy=True)
 
 
-def make_cvar_saa_cost(control_model, prior, penalty, beta, sample_size, seed, comm_sampler):
+def make_cvar_saa_cost(
+    control_model,
+    prior,
+    penalty,
+    beta,
+    sample_size,
+    seed,
+    comm_sampler,
+    epsilon=1e-4,
+):
     settings = superquantileRiskMeasureSAASettings()
     settings["beta"] = beta
     settings["sample_size"] = sample_size
     settings["seed"] = seed
-    settings["epsilon"] = 1e-4
+    settings["epsilon"] = float(epsilon)
     risk = SuperquantileRiskMeasureSAA(control_model, prior, settings=settings, comm_sampler=comm_sampler)
     return RiskMeasureControlCostFunctional(risk, penalty)
 
@@ -340,7 +351,10 @@ def should_use_linear_warm_start(model_name: str) -> bool:
 
 
 def is_explicit_continuation_model(model_name: str) -> bool:
-    return model_name in {"quadratic", "mixture_quadratic_kle", "mixture_quadratic_hep"}
+    return (
+        model_name in {"quadratic", "mixture_quadratic_kle", "mixture_quadratic_hep", "alternating_hep_quadratic_cvar"}
+        or is_saa_model(model_name)
+    )
 
 
 def make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_override=None):
@@ -354,6 +368,7 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_over
             sample_size=sample_size,
             seed=args.saa_seed,
             comm_sampler=MPI.COMM_WORLD if sample_size >= 100 else MPI.COMM_SELF,
+            epsilon=1e-4 if epsilon_override is None else float(epsilon_override),
         )
 
     if model_name == "linear":
@@ -588,26 +603,41 @@ def optimize_with_explicit_continuation(
             )
             sys.stdout.flush()
 
-        approx_cost = make_cvar_cost(
-            model_name,
-            control_model,
-            prior,
-            penalty,
-            args,
-            epsilon_override=epsilon,
-        )
-        inner_bounds = make_bounds(current_x0_np, args)
-        inner_label = f"{model_name}[eps={epsilon:.0e}]"
-        inner_payload = optimize_with_tracking(
-            inner_label,
-            approx_cost,
-            current_x0_np,
-            inner_bounds,
-            args,
-            rank,
-            maxiter=maxiter,
-            root_only=root_only,
-        )
+        if model_name == "alternating_hep_quadratic_cvar":
+            inner_payload = optimize_alternating_hep_with_tracking(
+                model_name,
+                control_model,
+                prior,
+                penalty,
+                current_x0_np,
+                args,
+                rank,
+                maxiter=maxiter,
+                epsilon_override=epsilon,
+                stage_label=f"eps={epsilon:.0e}",
+            )
+        else:
+            approx_cost = make_cvar_cost(
+                model_name,
+                control_model,
+                prior,
+                penalty,
+                args,
+                epsilon_override=epsilon,
+            )
+            inner_bounds = make_bounds(current_x0_np, args)
+            inner_label = f"{model_name}[eps={epsilon:.0e}]"
+            inner_payload = optimize_with_tracking(
+                inner_label,
+                approx_cost,
+                current_x0_np,
+                inner_bounds,
+                args,
+                rank,
+                maxiter=maxiter,
+                root_only=root_only,
+            )
+            del approx_cost
 
         for record in inner_payload["iter_records"]:
             combined_iter_records.append(
@@ -640,10 +670,10 @@ def optimize_with_explicit_continuation(
                 "message": str(inner_payload["message"]),
                 "iter_count": int(inner_payload["iter_count"]),
                 "approx_opt": float(inner_payload["approx_opt"]),
+                "outer_payloads": inner_payload.get("outer_payloads"),
             }
         )
         final_payload = inner_payload
-        del approx_cost
 
     if final_payload is None:
         raise RuntimeError(f"Explicit continuation for {model_name} produced no payload.")
@@ -679,6 +709,8 @@ def optimize_alternating_hep_with_tracking(
     args,
     rank,
     maxiter,
+    epsilon_override=None,
+    stage_label=None,
 ):
     initial_x0_np = np.array(x0_np, copy=True)
     current_x0_np = np.array(x0_np, copy=True)
@@ -692,15 +724,26 @@ def optimize_alternating_hep_with_tracking(
 
     for outer_idx in range(args.alternating_hep_steps):
         if rank == 0:
+            stage_prefix = "" if stage_label is None else f"{stage_label} "
             print(
-                f"  [{model_name:20s}] alternating outer step "
+                f"  [{model_name:20s}] {stage_prefix}alternating outer step "
                 f"{outer_idx + 1}/{args.alternating_hep_steps}: rebuild fixed-HEP objective"
             )
             sys.stdout.flush()
 
-        approx_cost = make_cvar_cost(model_name, control_model, prior, penalty, args)
+        approx_cost = make_cvar_cost(
+            model_name,
+            control_model,
+            prior,
+            penalty,
+            args,
+            epsilon_override=epsilon_override,
+        )
         bounds = make_bounds(current_x0_np, args)
-        inner_label = f"{model_name}[{outer_idx + 1}/{args.alternating_hep_steps}]"
+        if stage_label is None:
+            inner_label = f"{model_name}[{outer_idx + 1}/{args.alternating_hep_steps}]"
+        else:
+            inner_label = f"{model_name}[{stage_label}][{outer_idx + 1}/{args.alternating_hep_steps}]"
         inner_payload = optimize_with_tracking(
             inner_label,
             approx_cost,
@@ -737,6 +780,8 @@ def optimize_alternating_hep_with_tracking(
         outer_payloads.append(
             {
                 "outer_step": outer_idx + 1,
+                "stage_label": stage_label,
+                "epsilon": None if epsilon_override is None else float(epsilon_override),
                 "success": bool(inner_payload["success"]),
                 "status": int(inner_payload["status"]),
                 "message": str(inner_payload["message"]),
@@ -1035,7 +1080,7 @@ def main():
     parser.add_argument("--cvar-beta", "--beta", dest="cvar_beta", type=float, default=0.95, help="CVaR confidence level")
     parser.add_argument("--n-tr", type=int, default=10, help="Number of Hessian modes for quadratic models")
     parser.add_argument("--n-mix", type=int, default=39, help="Number of mixture components")
-    parser.add_argument("--quadratic-cvar-n-mc", type=int, default=1000, help="MC samples for quadratic CVaR surrogates")
+    parser.add_argument("--quadratic-cvar-n-mc", type=int, default=10000, help="MC samples for quadratic CVaR surrogates")
     parser.add_argument("--alternating-hep-steps", type=int, default=5, help="Number of outer rebuild-optimize steps for alternating HEP CVaR models")
     parser.add_argument("--truth-saa-samples", "--saa-samples", dest="truth_saa_samples", type=int, default=100000)
     parser.add_argument("--saa-seed", type=int, default=1)
@@ -1096,7 +1141,7 @@ def main():
             print(f"penalty={args.penalty}")
             print(f"mesh={args.nx}x{args.ny}" + (f"x{args.nz}" if args.geometry_dim == 3 else ""))
             print(
-                "Explicit continuation for quadratic models: "
+                "Explicit continuation for quadratic, SAA, and alternating-HQP models: "
                 + " -> ".join(f"{eps:.0e}" for eps in EXPLICIT_CVAR_CONTINUATION_LEVELS)
             )
             print(f"terminal log file: {log_path}")
@@ -1186,8 +1231,8 @@ def main():
                 sys.stdout.flush()
 
             bounds = make_bounds(x0_np, args) if (run_parallel_model or rank == 0) else None
-            if is_alternating_hep_model(model_name):
-                res = optimize_alternating_hep_with_tracking(
+            if is_explicit_continuation_model(model_name):
+                res = optimize_with_explicit_continuation(
                     model_name,
                     control_model,
                     prior,
@@ -1195,10 +1240,10 @@ def main():
                     x0_np,
                     args,
                     rank,
-                    maxiter=args.maxiter,
+                    maxiter=args.maxiter_saa if is_saa_model(model_name) else args.maxiter,
                 )
-            elif is_explicit_continuation_model(model_name):
-                res = optimize_with_explicit_continuation(
+            elif is_alternating_hep_model(model_name):
+                res = optimize_alternating_hep_with_tracking(
                     model_name,
                     control_model,
                     prior,

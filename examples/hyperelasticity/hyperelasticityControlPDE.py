@@ -83,11 +83,12 @@ class HyperelasticityVarfHandler:
         Control variable to elastic modulus form
         """
         percentage = z
-        E = self.E0 + (percentage**3) * (self.E1 - self.E0)
+        E = self.E0 + dl.exp(m) * (self.E1 - self.E0) * (percentage**3)
         return E 
 
     def parameterControl2Traction(self, m, z):
-        return self.t_nominal * dl.exp(m)
+        del m, z
+        return self.t_nominal
 
     def energy(self, u, m, p, z, load_step=1.0):
         """
@@ -187,5 +188,4 @@ class HyperelasticityControlPDE(soupy.PDEVariationalControlProblem):
                 self.n_linear_solves += num_iters
         state.zero()
         state.axpy(1., u.vector())
-
 
