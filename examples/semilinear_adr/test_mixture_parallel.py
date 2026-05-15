@@ -31,10 +31,13 @@ from mpi4py import MPI
 import hippylib as hp
 import soupy
 from semilinear_adr_problem import (
+    ControlParameters,
     MeshParameters,
     PDEParameters,
     PriorParameters,
-    SemilinearEllipticVarfHandler,
+    ControlledSemilinearADRWellVarfHandler,
+    make_wave_control_coefficients,
+    setup_control_function_space,
     setup_mesh,
     setup_prior,
     setup_qoi,
@@ -56,7 +59,7 @@ dl.set_log_active(False)
 
 
 class ControlledSemilinearADRVarfHandler:
-    """Add the control as a source term: f becomes f + z."""
+    """Legacy field-control wrapper retained for backward compatibility."""
 
     def __init__(self, base_varf_handler):
         self.base_varf_handler = base_varf_handler
@@ -80,19 +83,18 @@ def setup_control_problem(nx, ny, comm_mesh, newton_max_it, newton_rtol, newton_
     mesh_parameters = MeshParameters(nx=nx, ny=ny)
     pde_parameters = PDEParameters()
     prior_parameters = PriorParameters()
-    qoi_type = "l2"
+    control_parameters = ControlParameters()
+    qoi_type = "mismatch"
 
     mesh = setup_mesh(mesh_parameters, comm_mesh)
     Vh_state = dl.FunctionSpace(mesh, "CG", 1)
     Vh_parameter = dl.FunctionSpace(mesh, "CG", 1)
-    Vh_control = dl.FunctionSpace(mesh, "CG", 1)
+    Vh_control = setup_control_function_space(mesh, control_parameters)
     Vh = [Vh_state, Vh_parameter, Vh_state, Vh_control]
 
-    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    pde_varf = ControlledSemilinearADRVarfHandler(
-        SemilinearEllipticVarfHandler(Vh, pde_parameters)
-    )
+    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    pde_varf = ControlledSemilinearADRWellVarfHandler(Vh, pde_parameters, control_parameters)
     pde = PDEVariationalControlProblem(Vh, pde_varf, bc, bc0, is_fwd_linear=False)
     pde.set_nonlinear_solver_parameters(
         {
@@ -111,10 +113,10 @@ def setup_control_problem(nx, ny, comm_mesh, newton_max_it, newton_rtol, newton_
     qoi = VariationalControlQoI(Vh, SemilinearADRQoIFormHandler(base_qoi.qoi_varf))
     control_model = ControlModel(pde, qoi)
 
-    return control_model, prior, Vh
+    return control_model, prior, Vh, control_parameters
 
 
-def make_control_vector(cost_functional, Vh_control, control_mode, amplitude):
+def make_control_vector(cost_functional, control_parameters, control_mode, amplitude):
     z = cost_functional.generate_vector(soupy.CONTROL)
     z.zero()
 
@@ -123,15 +125,7 @@ def make_control_vector(cost_functional, Vh_control, control_mode, amplitude):
         return z
 
     if control_mode == "wave":
-        expr = dl.Expression(
-            "a*sin(pi*x[0])*sin(pi*x[1])",
-            a=amplitude,
-            pi=np.pi,
-            degree=4,
-            mpi_comm=Vh_control.mesh().mpi_comm(),
-        )
-        z_fun = dl.interpolate(expr, Vh_control)
-        z.axpy(1.0, z_fun.vector())
+        z.set_local(make_wave_control_coefficients(control_parameters, amplitude))
         z.apply("")
         return z
 
@@ -449,7 +443,7 @@ def main():
             "Either rerun with matching values or pass --allow-multi-clusters-per-rank."
         )
 
-    control_model, prior, Vh = setup_control_problem(
+    control_model, prior, Vh, control_parameters = setup_control_problem(
         nx=args.nx,
         ny=args.ny,
         comm_mesh=MPI.COMM_SELF,
@@ -457,7 +451,6 @@ def main():
         newton_rtol=args.newton_rtol,
         newton_atol=args.newton_atol,
     )
-    Vh_control = Vh[soupy.CONTROL]
 
     mv_settings = {
         "beta": args.beta,
@@ -481,13 +474,13 @@ def main():
 
     z_zero = make_control_vector(
         TaylorMixtureLinearControlCostFunctional(control_model, prior, settings=mv_settings, comm_sampler=MPI.COMM_SELF),
-        Vh_control,
+        control_parameters,
         "zero",
         args.control_amplitude,
     )
     z_wave = make_control_vector(
         TaylorMixtureLinearControlCostFunctional(control_model, prior, settings=mv_settings, comm_sampler=MPI.COMM_SELF),
-        Vh_control,
+        control_parameters,
         "wave",
         args.control_amplitude,
     )

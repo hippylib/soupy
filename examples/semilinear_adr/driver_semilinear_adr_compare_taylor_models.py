@@ -2,9 +2,9 @@
 
 This mirrors the workflow/style of
 `examples/poisson/driver_poisson_compare_taylor_models.py`, adapted to the
-semilinear ADR problem. The control enters as an additive source term, so the
-PDE right hand side is changed from f to f + z. The initial control is zero
-everywhere.
+semilinear ADR problem. The PDE has no known source term; the right hand
+side is entirely the Gaussian-well combination sum_i z_i psi_i. The initial
+control is the zero coefficient vector.
 
 Models compared:
 - linear
@@ -64,10 +64,13 @@ from mpi4py import MPI
 import hippylib as hp
 import soupy
 from semilinear_adr_problem import (
+    ControlParameters,
     MeshParameters,
     PDEParameters,
     PriorParameters,
-    SemilinearEllipticVarfHandler,
+    ControlledSemilinearADRWellVarfHandler,
+    control_coefficients_to_function,
+    setup_control_function_space,
     setup_mesh,
     setup_prior,
     setup_qoi,
@@ -161,7 +164,7 @@ class IterRecord:
 
 
 class ControlledSemilinearADRVarfHandler:
-    """Add the control as a source term: f becomes f + z."""
+    """Legacy field-control wrapper retained for backward compatibility."""
 
     def __init__(self, base_varf_handler):
         self.base_varf_handler = base_varf_handler
@@ -264,7 +267,8 @@ def setup_problem(args, comm_mesh):
     mesh_parameters = MeshParameters()
     pde_parameters = PDEParameters()
     prior_parameters = PriorParameters()
-    qoi_type = "l2"
+    control_parameters = ControlParameters()
+    qoi_type = "mismatch"
 
     if args.nx is not None:
         mesh_parameters.nx = args.nx
@@ -274,14 +278,12 @@ def setup_problem(args, comm_mesh):
     mesh = setup_mesh(mesh_parameters, comm_mesh)
     Vh_state = dl.FunctionSpace(mesh, "CG", 1)
     Vh_parameter = dl.FunctionSpace(mesh, "CG", 1)
-    Vh_control = dl.FunctionSpace(mesh, "CG", 1)
+    Vh_control = setup_control_function_space(mesh, control_parameters)
     Vh = [Vh_state, Vh_parameter, Vh_state, Vh_control]
 
-    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    pde_varf = ControlledSemilinearADRVarfHandler(
-        SemilinearEllipticVarfHandler(Vh, pde_parameters)
-    )
+    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    pde_varf = ControlledSemilinearADRWellVarfHandler(Vh, pde_parameters, control_parameters)
     pde = PDEVariationalControlProblem(Vh, pde_varf, bc, bc0, is_fwd_linear=False)
     pde.set_nonlinear_solver_parameters(
         {
@@ -304,6 +306,7 @@ def setup_problem(args, comm_mesh):
         "mesh_parameters": mesh_parameters,
         "pde_parameters": pde_parameters,
         "prior_parameters": prior_parameters,
+        "control_parameters": control_parameters,
         "qoi_type": qoi_type,
         "mesh": mesh,
         "Vh": Vh,
@@ -749,8 +752,7 @@ def solve_state_at_control(control_model, prior, z_np):
     return x[soupy.CONTROL].copy(), x[soupy.STATE].copy()
 
 
-def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
-    V_control = Vh[soupy.CONTROL]
+def save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, save_dir):
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
 
@@ -760,14 +762,14 @@ def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
         z_model_opt = results[model_name]["z_opt_np"]
         control_model_vec, state_model_vec = solve_state_at_control(control_model, prior, z_model_opt)
 
-        control_model_fun = vector_to_function(V_control, control_model_vec)
+        control_model_fun = control_coefficients_to_function(V_state_scalar, control_model_vec, control_parameters)
         state_model_fun = scalarize_for_plot(vector_to_function(V_state, state_model_vec), V_state_scalar)
 
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
         for ax, fun, title in zip(
             axes,
             [control_model_fun, state_model_fun],
-            [f"{model_name} z*", f"{model_name} u(z*)"],
+            [f"{model_name} source(z*)", f"{model_name} u(z*)"],
         ):
             plt.sca(ax)
             artist = dl.plot(fun)
@@ -784,7 +786,7 @@ def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
     fig, axes = plt.subplots(n_models, 2, figsize=(10, 3.6 * n_models))
     if n_models == 1:
         axes = np.array([axes])
-    col_titles = ["optimal control z*", "state u(z*)"]
+    col_titles = ["optimal control source", "state u(z*)"]
     for j, title in enumerate(col_titles):
         axes[0, j].set_title(title)
     for i, (model_name, control_model_fun, state_model_fun) in enumerate(overview_payload):
@@ -895,8 +897,8 @@ def main():
             print("=" * 90)
             print(f"Ground-truth SAA samples: {args.truth_saa_samples}")
             print(f"beta={args.beta}, n_tr={args.n_tr}, n_mix={args.n_mix}")
-            print("control source term: f -> f + z")
-            print("initial control: zero everywhere")
+            print("control source term: rhs = sum_i z_i psi_i (no known source f)")
+            print("initial control: zero well coefficients")
             print(f"terminal log file: {log_path}")
             print("=" * 90)
             sys.stdout.flush()
@@ -905,6 +907,7 @@ def main():
         Vh = problem["Vh"]
         control_model = problem["control_model"]
         prior = problem["prior"]
+        control_parameters = problem["control_parameters"]
 
         results: Dict[str, Dict] = {}
         for model_name in MODEL_ORDER:
@@ -1024,7 +1027,7 @@ def main():
                         "ny": int(problem["mesh_parameters"].ny),
                     },
                     "qoi_type": problem["qoi_type"],
-                    "control_source": "f + z",
+                    "control_source": "sum_i z_i psi_i",
                     "penalization": None,
                 },
                 "truth_evaluation": {
@@ -1054,7 +1057,7 @@ def main():
                 json.dump(json_payload, f, indent=2)
 
             plot_curves(results, args.save_dir)
-            save_optimal_field_plots(results, control_model, prior, Vh, args.save_dir)
+            save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, args.save_dir)
             save_optimal_pde_solution_plot(results, control_model, prior, Vh, args.save_dir)
 
             timing_rows = []

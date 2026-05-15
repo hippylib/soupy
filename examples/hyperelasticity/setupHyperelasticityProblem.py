@@ -156,7 +156,7 @@ def hyperelasticity_problem_settings():
     settings["geometry"] = {"lx" : 2.0, "ly" : 0.5, "lz" : 0.25, "dim" : 2}
     settings["mesh"] = {"nx" : 64, "ny" : 16, "nz" : 8}
     settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0], "verbose" : False}
-    settings["uncertainty"] = {"gamma" : 1.0, "delta" : 5.0, "robin_bc" : True}
+    settings["uncertainty"] = {"gamma" : 0.1, "delta" : 0.5, "robin_bc" : True}
     return settings
 
 

@@ -2,9 +2,9 @@
 
 This mirrors the workflow/style of
 `examples/poisson/driver_poisson_compare_models_fixed_controls.py`, but for
-the semilinear ADR problem without an active control. We embed the problem in a
-dummy one-dimensional control space and evaluate every model at the fixed
-control z = 0.
+the semilinear ADR problem at the zero Gaussian-well control. We keep the
+full coefficient-based control space and evaluate every model at the fixed
+control vector z = 0.
 
 Compared models:
 - MC
@@ -65,10 +65,12 @@ from mpi4py import MPI
 import hippylib as hp
 import soupy
 from semilinear_adr_problem import (
+    ControlParameters,
     MeshParameters,
     PDEParameters,
     PriorParameters,
-    SemilinearEllipticVarfHandler,
+    ControlledSemilinearADRWellVarfHandler,
+    setup_control_function_space,
     setup_mesh,
     setup_prior,
     setup_qoi,
@@ -212,7 +214,8 @@ def setup_problem(args, comm_mesh):
     mesh_parameters = MeshParameters()
     pde_parameters = PDEParameters()
     prior_parameters = PriorParameters()
-    qoi_type = "l2"
+    control_parameters = ControlParameters()
+    qoi_type = "mismatch"
 
     if args.nx is not None:
         mesh_parameters.nx = args.nx
@@ -222,14 +225,12 @@ def setup_problem(args, comm_mesh):
     mesh = setup_mesh(mesh_parameters, comm_mesh)
     Vh_state = dl.FunctionSpace(mesh, "CG", 1)
     Vh_parameter = dl.FunctionSpace(mesh, "CG", 1)
-    Vh_control = dl.VectorFunctionSpace(mesh, "R", degree=0, dim=1)
+    Vh_control = setup_control_function_space(mesh, control_parameters)
     Vh = [Vh_state, Vh_parameter, Vh_state, Vh_control]
 
-    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    pde_varf = StaticSemilinearADRControlVarfHandler(
-        SemilinearEllipticVarfHandler(Vh, pde_parameters)
-    )
+    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    pde_varf = ControlledSemilinearADRWellVarfHandler(Vh, pde_parameters, control_parameters)
     pde = PDEVariationalControlProblem(Vh, pde_varf, bc, bc0, is_fwd_linear=False)
     pde.set_nonlinear_solver_parameters(
         {
@@ -255,6 +256,7 @@ def setup_problem(args, comm_mesh):
         "mesh_parameters": mesh_parameters,
         "pde_parameters": pde_parameters,
         "prior_parameters": prior_parameters,
+        "control_parameters": control_parameters,
         "qoi_type": qoi_type,
         "mesh": mesh,
         "Vh": Vh,

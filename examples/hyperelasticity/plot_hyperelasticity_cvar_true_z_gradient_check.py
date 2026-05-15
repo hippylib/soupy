@@ -1,19 +1,16 @@
-"""Directional finite-difference checks for hyperelasticity CVaR Taylor-model gradients.
+"""Compare CVaR model z-gradients against a shared SAA_10000 FD reference.
 
-For each approximation, this script computes
+For each approximation, this script computes the model directional derivative
 
-    FD(eps) = [Q(z + eps * dz) - Q(z)] / eps
+    g_model(z, t) . dz
 
-and compares it with the algorithmic directional derivative
+and compares it against the forward-difference reference built from the same
+"true" objective for every model:
 
-    g(z, t) . dz
+    FD_true(eps) = [J_true(z + eps * dz) - J_true(z)] / eps
 
-where g(z, t) is the returned gradient. For augmented CVaR models we also
-check the pure ``t`` direction separately.
-
-The script plots |FD(eps) - g.dz| versus eps on log-log axes. For a forward
-difference with accurate gradients, the error should scale approximately as
-O(eps) over a suitable epsilon range.
+where J_true is the SAA_10000 CVaR objective with the same L2 control penalty.
+Only the three epsilon levels 1e-3, 1e-4, and 1e-5 are used.
 """
 
 import argparse
@@ -39,7 +36,12 @@ if os.environ.get("HIPPYLIB_PATH", "") not in sys.path:
     sys.path.append(os.environ.get("HIPPYLIB_PATH", ""))
 
 import soupy
-from soupy import CONTROL
+from soupy import (
+    CONTROL,
+    RiskMeasureControlCostFunctional,
+    SuperquantileRiskMeasureSAA,
+    superquantileRiskMeasureSAASettings,
+)
 from soupy.approximations.taylor import (
     TaylorLinearCVaRControlCostFunctional,
     TaylorMixtureLinearCVaRControlCostFunctional,
@@ -49,6 +51,10 @@ from soupy.approximations.taylor import (
 from soupy.modeling.augmentedVector import AugmentedVector
 
 from setupHyperelasticityProblem import hyperelasticity_problem_settings, setup_hyperelasticity_problem
+
+
+TRUE_OBJECTIVE_SAMPLE_SIZE = 10000
+EPSILON_LEVELS = np.array([1e-3, 1e-4, 1e-5], dtype=float)
 
 
 def setup_problem(args):
@@ -92,64 +98,60 @@ def set_z_direction(vector, dz_local):
         vector.apply("")
 
 
-def set_t_direction(vector, dt_value=1.0):
-    if not is_augmented_control(vector):
-        raise RuntimeError("Pure t-direction requires an augmented control vector.")
-    base = vector.get_vector()
-    base.zero()
-    base.apply("")
-    vector.set_scalar(float(dt_value))
+def make_cvar_saa_cost(control_model, prior, penalty, beta, sample_size, seed, comm_sampler, epsilon=1e-4):
+    settings = superquantileRiskMeasureSAASettings()
+    settings["beta"] = beta
+    settings["sample_size"] = sample_size
+    settings["seed"] = seed
+    settings["epsilon"] = float(epsilon)
+    risk = SuperquantileRiskMeasureSAA(control_model, prior, settings=settings, comm_sampler=comm_sampler)
+    return RiskMeasureControlCostFunctional(risk, penalty)
 
 
-def sweep_fd_error(cost, point, direction, epsilons):
-    """Compare algorithmic and FD directional derivatives along direction."""
-    g = cost.generate_vector(CONTROL)
+def compute_model_directional_derivative(cost, point, direction):
+    gradient = cost.generate_vector(CONTROL)
+    cost.cost(point, order=1)
+    cost.grad(gradient)
+    return gradient.inner(direction)
 
-    q0 = cost.cost(point, order=1, FD_gradient_check=True)
-    cost.grad(g)
-    directional_true = g.inner(direction)
 
-    point_eps = cost.generate_vector(CONTROL)
+def sweep_true_fd_reference(true_cost, z_local, dz_local, epsilons):
+    z0 = true_cost.generate_vector(CONTROL)
+    z0.set_local(np.array(z_local, copy=True))
+    z0.apply("")
+    q0 = float(true_cost.cost(z0, order=0))
+
+    z_eps = true_cost.generate_vector(CONTROL)
     fd_values = np.zeros_like(epsilons)
-    abs_errors = np.zeros_like(epsilons)
-    rel_errors = np.zeros_like(epsilons)
-    denom = max(abs(directional_true), 1e-14)
-
     for i, eps in enumerate(epsilons):
-        point_eps.zero()
-        point_eps.axpy(1.0, point)
-        point_eps.axpy(float(eps), direction)
-
-        q_eps = cost.cost(point_eps, order=0, FD_gradient_check=True)
-        directional_fd = (q_eps - q0) / float(eps)
-
-        fd_values[i] = directional_fd
-        abs_errors[i] = abs(directional_fd - directional_true)
-        rel_errors[i] = abs_errors[i] / denom
-
-    return directional_true, fd_values, abs_errors, rel_errors
+        z_eps.set_local(z_local + float(eps) * dz_local)
+        z_eps.apply("")
+        q_eps = float(true_cost.cost(z_eps, order=0))
+        fd_values[i] = (q_eps - q0) / float(eps)
+    return fd_values
 
 
-def fit_loglog_slope(epsilons, errors, start_idx, end_idx):
-    i0 = max(0, start_idx)
-    i1 = min(len(epsilons), end_idx)
-    x = np.log10(epsilons[i0:i1])
-    y = np.log10(errors[i0:i1])
-    slope, intercept = np.polyfit(x, y, 1)
-    return slope, intercept
+def compute_errors(reference_fd, model_directional_derivative):
+    abs_errors = np.abs(reference_fd - model_directional_derivative)
+    rel_errors = abs_errors / np.maximum(np.abs(reference_fd), 1e-14)
+    return abs_errors, rel_errors
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Check z-gradient accuracy for hyperelasticity CVaR Taylor approximations"
+        description="Check hyperelasticity CVaR model z-gradients against a shared SAA_10000 FD reference"
     )
     parser.add_argument("--beta", type=float, default=0.95, help="CVaR confidence level")
     parser.add_argument("--n-mix", type=int, default=11, help="Number of mixture components")
-    parser.add_argument("--n-tr", type=int, default=10, help="Number of dominant Hessian modes")
-    parser.add_argument("--quad-n-mc", type=int, default=200, help="MC samples for quadratic CVaR surrogates")
-    parser.add_argument("--qoi-type", type=str, default="virtual_work",
-                        choices=["all", "stiffness", "point", "virtual_work"])
-    parser.add_argument("--penalty", type=float, default=1e-2, help="Control penalty")
+    parser.add_argument("--n-tr", type=int, default=50, help="Number of dominant Hessian modes")
+    parser.add_argument("--quad-n-mc", type=int, default=1000, help="MC samples for quadratic CVaR surrogates")
+    parser.add_argument(
+        "--qoi-type",
+        type=str,
+        default="virtual_work",
+        choices=["all", "stiffness", "point", "virtual_work"],
+    )
+    parser.add_argument("--penalty", type=float, default=1e-1, help="Control penalty")
     parser.add_argument("--z-value", type=float, default=0.5, help="Constant control test value")
     parser.add_argument("--t-value", type=float, default=0.0, help="Initial auxiliary scalar t")
     parser.add_argument("--lx", type=float, default=2.0, help="Beam length in x")
@@ -159,12 +161,8 @@ def main():
     parser.add_argument("--nx", type=int, default=32, help="Mesh cells in x")
     parser.add_argument("--ny", type=int, default=8, help="Mesh cells in y")
     parser.add_argument("--nz", type=int, default=8, help="Mesh cells in z")
-    parser.add_argument("--eps-min", type=float, default=1e-6, help="Minimum epsilon")
-    parser.add_argument("--eps-max", type=float, default=1e1, help="Maximum epsilon")
-    parser.add_argument("--n-eps", type=int, default=16, help="Number of epsilon values")
+    parser.add_argument("--saa-seed", type=int, default=1, help="Seed used by the shared SAA_10000 true objective")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for dz")
-    parser.add_argument("--fit-start", type=int, default=3, help="Fit window start index")
-    parser.add_argument("--fit-end", type=int, default=12, help="Fit window end index (exclusive)")
     parser.add_argument("--save-dir", type=str, default="results_z_gradient_check", help="Output directory")
     parser.add_argument(
         "--out",
@@ -175,18 +173,21 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", default=False, help="Verbose CVaR output")
     args = parser.parse_args()
 
-    if args.eps_min <= 0.0 or args.eps_max <= 0.0:
-        raise ValueError("eps-min and eps-max must be positive")
-    if args.eps_min >= args.eps_max:
-        raise ValueError("eps-min must be smaller than eps-max")
-    if args.n_eps < 3:
-        raise ValueError("n-eps must be >= 3")
-
     os.makedirs(args.save_dir, exist_ok=True)
     out = args.out if os.path.isabs(args.out) else os.path.join(args.save_dir, args.out)
-    epsilons = np.logspace(np.log10(args.eps_min), np.log10(args.eps_max), args.n_eps)
+    epsilons = np.array(EPSILON_LEVELS, copy=True)
 
     control_model, prior, penalty = setup_problem(args)
+    true_cost = make_cvar_saa_cost(
+        control_model,
+        prior,
+        penalty,
+        beta=args.beta,
+        sample_size=TRUE_OBJECTIVE_SAMPLE_SIZE,
+        seed=args.saa_seed,
+        comm_sampler=MPI.COMM_WORLD,
+        epsilon=1e-4,
+    )
 
     model_specs = [
         (
@@ -243,7 +244,14 @@ def main():
                 control_model,
                 prior,
                 penalty,
-                {"beta": args.beta, "N_mix": args.n_mix, "direction": "kle", "N_tr": args.n_tr, "N_mc": args.quad_n_mc, "verbose": args.verbose},
+                {
+                    "beta": args.beta,
+                    "N_mix": args.n_mix,
+                    "direction": "kle",
+                    "N_tr": args.n_tr,
+                    "N_mc": args.quad_n_mc,
+                    "verbose": args.verbose,
+                },
                 comm_sampler=MPI.COMM_WORLD,
             ),
         ),
@@ -255,7 +263,14 @@ def main():
                 control_model,
                 prior,
                 penalty,
-                {"beta": args.beta, "N_mix": args.n_mix, "direction": "hep", "N_tr": args.n_tr, "N_mc": args.quad_n_mc, "verbose": args.verbose},
+                {
+                    "beta": args.beta,
+                    "N_mix": args.n_mix,
+                    "direction": "hep",
+                    "N_tr": args.n_tr,
+                    "N_mc": args.quad_n_mc,
+                    "verbose": args.verbose,
+                },
                 comm_sampler=MPI.COMM_WORLD,
             ),
         ),
@@ -270,64 +285,36 @@ def main():
         raise RuntimeError("Random direction has zero norm")
     dz_local /= dz_norm
 
+    true_fd_values = sweep_true_fd_reference(true_cost, z_local, dz_local, epsilons)
+
     z_results = []
-    t_results = []
     for key, label, style, cost in model_specs:
         point = cost.generate_vector(CONTROL)
         z_dir = cost.generate_vector(CONTROL)
         set_test_point(point, z_local, t_value=args.t_value)
         set_z_direction(z_dir, dz_local)
 
-        true_val, fd_vals, abs_err, rel_err = sweep_fd_error(cost, point, z_dir, epsilons)
-        slope, _ = fit_loglog_slope(epsilons, abs_err, args.fit_start, args.fit_end)
+        model_val = compute_model_directional_derivative(cost, point, z_dir)
+        abs_err, rel_err = compute_errors(true_fd_values, model_val)
         z_results.append(
             {
                 "key": key,
                 "label": label,
                 "style": style,
-                "true": true_val,
-                "fd": fd_vals,
+                "model": model_val,
+                "fd": np.array(true_fd_values, copy=True),
                 "abs_err": abs_err,
                 "rel_err": rel_err,
-                "slope": slope,
             }
         )
 
-        if key in {"quadratic", "mixture-quadratic-kle", "mixture-quadratic-hep"}:
-            if not is_augmented_control(point):
-                raise RuntimeError(f"{key} is expected to use an augmented control vector.")
-            t_dir = cost.generate_vector(CONTROL)
-            set_t_direction(t_dir, dt_value=1.0)
-            t_true, t_fd, t_abs_err, t_rel_err = sweep_fd_error(cost, point, t_dir, epsilons)
-            t_slope, _ = fit_loglog_slope(epsilons, t_abs_err, args.fit_start, args.fit_end)
-            t_results.append(
-                {
-                    "key": key,
-                    "label": label,
-                    "style": style,
-                    "true": t_true,
-                    "fd": t_fd,
-                    "abs_err": t_abs_err,
-                    "rel_err": t_rel_err,
-                    "slope": t_slope,
-                }
-            )
+    print(f"Shared SAA_{TRUE_OBJECTIVE_SAMPLE_SIZE} z-direction FD reference:")
+    for eps, fd_value in zip(epsilons, true_fd_values):
+        print(f"  eps = {eps:.0e}  FD_true = {fd_value:.12e}")
 
-    print("z-directional derivative check:")
+    print("Model z-directional derivatives:")
     for result in z_results:
-        print(f"  {result['key']:<22} g.dz = {result['true']:.12e}")
-
-    print("Estimated z-gradient convergence slope (log-log error vs epsilon):")
-    for result in z_results:
-        print(f"  {result['key']:<22} slope ~ {result['slope']:.3f}")
-
-    print("t-directional derivative check:")
-    for result in t_results:
-        print(f"  {result['key']:<22} g.dt = {result['true']:.12e}")
-
-    print("Estimated t-gradient convergence slope (log-log error vs epsilon):")
-    for result in t_results:
-        print(f"  {result['key']:<22} slope ~ {result['slope']:.3f}")
+        print(f"  {result['key']:<22} g_model.dz = {result['model']:.12e}")
 
     plt.figure(figsize=(8.0, 5.5))
     for result in z_results:
@@ -335,22 +322,11 @@ def main():
             epsilons,
             result["abs_err"],
             result["style"],
-            label=f"{result['label']} (slope~{result['slope']:.2f})",
+            label=result["label"],
         )
-
-    ref_source = z_results[0]["abs_err"]
-    ref = ref_source[max(1, min(len(ref_source) - 1, args.fit_start))]
-    eps_ref = epsilons[max(1, min(len(epsilons) - 1, args.fit_start))]
-    plt.loglog(
-        epsilons,
-        ref * (epsilons / eps_ref),
-        "k--",
-        linewidth=1.2,
-        label="O(epsilon) ref",
-    )
     plt.xlabel("epsilon")
-    plt.ylabel("|FD - g·dz|")
-    plt.title("Hyperelasticity CVaR z-gradient FD error")
+    plt.ylabel(r"$|FD_{\mathrm{true}} - g_{\mathrm{model}} \cdot dz|$")
+    plt.title(f"Hyperelasticity CVaR z-gradient error vs SAA_{TRUE_OBJECTIVE_SAMPLE_SIZE}")
     plt.grid(True, which="both", alpha=0.25)
     plt.legend()
     plt.tight_layout()
@@ -371,59 +347,13 @@ def main():
             label=result["label"],
         )
     plt.xlabel("epsilon")
-    plt.ylabel("|FD - g·dz| / max(|g·dz|, 1e-14)")
-    plt.title("Hyperelasticity CVaR z-gradient relative FD error")
+    plt.ylabel(r"$|FD_{\mathrm{true}} - g_{\mathrm{model}} \cdot dz| / \max(|FD_{\mathrm{true}}|, 10^{-14})$")
+    plt.title(f"Hyperelasticity CVaR relative z-gradient error vs SAA_{TRUE_OBJECTIVE_SAMPLE_SIZE}")
     plt.grid(True, which="both", alpha=0.25)
     plt.legend()
     plt.tight_layout()
     plt.savefig(rel_out, dpi=180)
     print(f"Saved plot to: {rel_out}")
-
-    t_out = f"{out_root}_t_gradient{out_ext}"
-    plt.figure(figsize=(8.0, 5.5))
-    for result in t_results:
-        plt.loglog(
-            epsilons,
-            result["abs_err"],
-            result["style"],
-            label=f"{result['label']} (slope~{result['slope']:.2f})",
-        )
-    if t_results:
-        t_ref_source = t_results[0]["abs_err"]
-        t_ref = t_ref_source[max(1, min(len(t_ref_source) - 1, args.fit_start))]
-        plt.loglog(
-            epsilons,
-            t_ref * (epsilons / eps_ref),
-            "k--",
-            linewidth=1.2,
-            label="O(epsilon) ref",
-        )
-    plt.xlabel("epsilon")
-    plt.ylabel("|FD - g·dt|")
-    plt.title("Hyperelasticity CVaR t-gradient FD error")
-    plt.grid(True, which="both", alpha=0.25)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(t_out, dpi=180)
-    print(f"Saved plot to: {t_out}")
-
-    t_rel_out = f"{out_root}_t_gradient_relative{out_ext}"
-    plt.figure(figsize=(8.0, 5.5))
-    for result in t_results:
-        plt.loglog(
-            epsilons,
-            result["rel_err"],
-            result["style"],
-            label=result["label"],
-        )
-    plt.xlabel("epsilon")
-    plt.ylabel("|FD - g·dt| / max(|g·dt|, 1e-14)")
-    plt.title("Hyperelasticity CVaR t-gradient relative FD error")
-    plt.grid(True, which="both", alpha=0.25)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(t_rel_out, dpi=180)
-    print(f"Saved plot to: {t_rel_out}")
 
 
 if __name__ == "__main__":

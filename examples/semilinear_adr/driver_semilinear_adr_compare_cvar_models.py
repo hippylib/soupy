@@ -64,10 +64,13 @@ from mpi4py import MPI
 
 import soupy
 from semilinear_adr_problem import (
+    ControlParameters,
     MeshParameters,
     PDEParameters,
     PriorParameters,
-    SemilinearEllipticVarfHandler,
+    ControlledSemilinearADRWellVarfHandler,
+    control_coefficients_to_function,
+    setup_control_function_space,
     setup_mesh,
     setup_prior,
     setup_qoi,
@@ -169,7 +172,7 @@ class IterRecord:
 
 
 class ControlledSemilinearADRVarfHandler:
-    """Add the control as a source term: f becomes f + z."""
+    """Legacy field-control wrapper retained for backward compatibility."""
 
     def __init__(self, base_varf_handler):
         self.base_varf_handler = base_varf_handler
@@ -280,7 +283,8 @@ def setup_problem(args, comm_mesh):
     mesh_parameters = MeshParameters()
     pde_parameters = PDEParameters()
     prior_parameters = PriorParameters()
-    qoi_type = "l2"
+    control_parameters = ControlParameters()
+    qoi_type = "mismatch"
 
     if args.nx is not None:
         mesh_parameters.nx = args.nx
@@ -290,12 +294,12 @@ def setup_problem(args, comm_mesh):
     mesh = setup_mesh(mesh_parameters, comm_mesh)
     Vh_state = dl.FunctionSpace(mesh, "CG", 1)
     Vh_parameter = dl.FunctionSpace(mesh, "CG", 1)
-    Vh_control = dl.FunctionSpace(mesh, "CG", 1)
+    Vh_control = setup_control_function_space(mesh, control_parameters)
     Vh = [Vh_state, Vh_parameter, Vh_state, Vh_control]
 
-    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary && near(x[0], 0.0)")
-    pde_varf = ControlledSemilinearADRVarfHandler(SemilinearEllipticVarfHandler(Vh, pde_parameters))
+    bc = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    bc0 = dl.DirichletBC(Vh_state, dl.Constant(0.0), "on_boundary")
+    pde_varf = ControlledSemilinearADRWellVarfHandler(Vh, pde_parameters, control_parameters)
     pde = PDEVariationalControlProblem(Vh, pde_varf, bc, bc0, is_fwd_linear=False)
     pde.set_nonlinear_solver_parameters(
         {
@@ -319,6 +323,7 @@ def setup_problem(args, comm_mesh):
         "mesh_parameters": mesh_parameters,
         "pde_parameters": pde_parameters,
         "prior_parameters": prior_parameters,
+        "control_parameters": control_parameters,
         "qoi_type": qoi_type,
         "mesh": mesh,
         "Vh": Vh,
@@ -589,7 +594,13 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
             jac=wrapper.jac(),
             callback=callback,
             bounds=bounds,
-            options={"maxiter": maxiter, "disp": False},
+            options={
+                "maxiter": maxiter,
+                "disp": False,
+                "ftol": 1e-20,
+                "gtol": 1e-4,
+                "maxls": 50,
+            },
         )
         total_time = time.perf_counter() - t0
         iter_count = len(iter_records) if iter_records else int(result.nit)
@@ -1081,19 +1092,18 @@ def solve_state_at_control(control_model, prior, control_np):
     return x[soupy.CONTROL].copy(), x[soupy.STATE].copy()
 
 
-def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
-    V_control = Vh[soupy.CONTROL]
+def save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, save_dir):
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
 
     overview_payload = []
     for model_name in MODEL_ORDER:
         control_vec, state_vec = solve_state_at_control(control_model, prior, results[model_name]["control_opt_np"])
-        control_fun = vector_to_function(V_control, control_vec)
+        control_fun = control_coefficients_to_function(V_state_scalar, control_vec, control_parameters)
         state_fun = scalarize_for_plot(vector_to_function(V_state, state_vec), V_state_scalar)
 
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-        for ax, fun, title in zip(axes, [control_fun, state_fun], [f"{model_name} z*", f"{model_name} u(z*)"]):
+        for ax, fun, title in zip(axes, [control_fun, state_fun], [f"{model_name} source(z*)", f"{model_name} u(z*)"]):
             artist = plot_on_axes(fun, ax)
             ax.set_title(title)
             ax.set_xlabel("x")
@@ -1108,7 +1118,7 @@ def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
     fig, axes = plt.subplots(n_models, 2, figsize=(10, 3.6 * n_models))
     if n_models == 1:
         axes = np.array([axes])
-    for j, title in enumerate(["optimal control z*", "state u(z*)"]):
+    for j, title in enumerate(["optimal control source", "state u(z*)"]):
         axes[0, j].set_title(title)
     for i, (model_name, control_fun, state_fun) in enumerate(overview_payload):
         for j, fun in enumerate([control_fun, state_fun]):
@@ -1158,14 +1168,14 @@ def main():
     parser.add_argument("--quadratic-cvar-n-mc", type=int, default=10000, help="MC samples for quadratic CVaR surrogates")
     parser.add_argument("--truth-saa-samples", type=int, default=100000, help="Sample size for ground-truth CVaR SAA evaluation")
     parser.add_argument("--saa-seed", type=int, default=1)
-    parser.add_argument("--penalty", type=float, default=1e-3)
-    parser.add_argument("--maxiter", type=int, default=120)
-    parser.add_argument("--maxiter-saa", type=int, default=120)
+    parser.add_argument("--penalty", type=float, default=0)
+    parser.add_argument("--maxiter", type=int, default=240)
+    parser.add_argument("--maxiter-saa", type=int, default=240)
     parser.add_argument("--alternating-hep-steps", type=int, default=5, help="Number of outer rebuild-optimize steps for alternating HEP CVaR models")
     parser.add_argument("--nx", type=int, default=32)
     parser.add_argument("--ny", type=int, default=32)
-    parser.add_argument("--bound-lb", type=float, default=-10.0, help="Lower bound for the control source field")
-    parser.add_argument("--bound-ub", type=float, default=10.0, help="Upper bound for the control source field")
+    parser.add_argument("--bound-lb", type=float, default=-4.0, help="Lower bound for each Gaussian-well control coefficient")
+    parser.add_argument("--bound-ub", type=float, default=4.0, help="Upper bound for each Gaussian-well control coefficient")
     parser.add_argument("--newton-max-it", type=int, default=50)
     parser.add_argument("--newton-rtol", type=float, default=1e-8)
     parser.add_argument("--newton-atol", type=float, default=1e-10)
@@ -1209,8 +1219,8 @@ def main():
             print(f"alternating_hep_steps={args.alternating_hep_steps}")
             print(f"penalty={args.penalty}")
             print(f"box constraint on control: {args.bound_lb} <= z <= {args.bound_ub}")
-            print("control source term: f -> f + z")
-            print("initial control: zero everywhere")
+            print("control source term: rhs = sum_i z_i psi_i (no known source f)")
+            print("initial control: zero well coefficients")
             print(
                 "Explicit continuation for quadratic, SAA, and alternating-HQP models: "
                 + " -> ".join(f"{eps:.0e}" for eps in EXPLICIT_CVAR_CONTINUATION_LEVELS)
@@ -1223,6 +1233,7 @@ def main():
         Vh = problem["Vh"]
         control_model = problem["control_model"]
         prior = problem["prior"]
+        control_parameters = problem["control_parameters"]
         penalty = problem["penalty"]
         control0_np = zero_control_np(control_model)
         args.control_dim = int(control0_np.size)
@@ -1425,7 +1436,7 @@ def main():
                         "ny": int(problem["mesh_parameters"].ny),
                     },
                     "qoi_type": problem["qoi_type"],
-                    "control_source": "f + z",
+                    "control_source": "sum_i z_i psi_i",
                     "control_bounds": {"lb": float(args.bound_lb), "ub": float(args.bound_ub)},
                     "penalization": {"type": "L2", "alpha": float(args.penalty)},
                 },
@@ -1464,7 +1475,7 @@ def main():
                 json.dump(json_payload, f, indent=2)
 
             plot_curves(results, args.save_dir)
-            save_optimal_field_plots(results, control_model, prior, Vh, args.save_dir)
+            save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, args.save_dir)
             save_optimal_pde_solution_plot(results, control_model, prior, Vh, args.save_dir)
 
             with open(os.path.join(args.save_dir, "timing_comparison.csv"), "w", newline="") as f:

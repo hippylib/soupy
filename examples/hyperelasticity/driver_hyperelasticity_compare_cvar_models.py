@@ -244,8 +244,8 @@ class ScipyObjectiveWithHistory:
 def setup_problem(args, comm_mesh):
     settings = hyperelasticity_problem_settings()
     settings["qoi_type"] = args.qoi_type
-    settings["uncertainty"]["gamma"] = 1.0
-    settings["uncertainty"]["delta"] = 5.0
+    settings["uncertainty"]["gamma"] = 0.1
+    settings["uncertainty"]["delta"] = 0.5
     settings["geometry"]["lx"] = args.lx
     settings["geometry"]["ly"] = args.ly
     settings["geometry"]["lz"] = args.lz
@@ -519,7 +519,13 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
             jac=wrapper.jac(),
             callback=callback,
             bounds=bounds,
-            options={"maxiter": maxiter, "disp": False},
+            options={
+                "maxiter": maxiter,
+                "disp": False,
+                "ftol": 1e-20,
+                "gtol": 1e-4,
+                "maxls": 50,
+            },
         )
         total_time = time.perf_counter() - t0
         iter_count = len(iter_records) if iter_records else int(result.nit)
@@ -1087,8 +1093,8 @@ def main():
     parser.add_argument("--qoi-type", type=str, default="virtual_work",
                         choices=["all", "stiffness", "point", "virtual_work"])
     parser.add_argument("--penalty", type=float, default=1e-1)
-    parser.add_argument("--maxiter", type=int, default=120)
-    parser.add_argument("--maxiter-saa", type=int, default=120)
+    parser.add_argument("--maxiter", type=int, default=240)
+    parser.add_argument("--maxiter-saa", type=int, default=240)
     parser.add_argument("--nx", type=int, default= 64)
     parser.add_argument("--ny", type=int, default= 16)
     parser.add_argument("--nz", type=int, default=8)
@@ -1152,6 +1158,7 @@ def main():
         control0_np = zero_control_np(control_model)
         base_control_np = np.full_like(control0_np, 0.5)
         base_t = 0.5
+        linear_base_t = 0.0
         args.control_dim = len(control0_np)
         linear_init_control_np = np.array(control0_np, copy=True)
         linear_init_t = 0.0
@@ -1176,7 +1183,9 @@ def main():
                 )
                 init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
                 init_control_np = MPI.COMM_WORLD.bcast(init_control_np if rank == 0 else None, root=0)
-                init_scalar = linear_init_t if use_linear_warm_start else base_t
+                init_scalar = linear_init_t if use_linear_warm_start else (
+                    linear_base_t if model_name == "linear" else base_t
+                )
                 x0_np, approx_init, init_t = initial_model_point_at_control(
                     approx_cost,
                     init_control_np,
@@ -1187,7 +1196,9 @@ def main():
                     model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override
                 )
                 init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
-                init_scalar = linear_init_t if use_linear_warm_start else base_t
+                init_scalar = linear_init_t if use_linear_warm_start else (
+                    linear_base_t if model_name == "linear" else base_t
+                )
                 x0_np, approx_init, init_t = initial_model_point_at_control(
                     approx_cost,
                     init_control_np,
@@ -1220,6 +1231,8 @@ def main():
                 print(f"\nOptimizing {model_name} with L-BFGS-B ...")
                 if use_linear_warm_start:
                     print(f"  [{model_name:20s}] initial guess: linear optimum z* with t initialized from linear surrogate VaR")
+                elif model_name == "linear":
+                    print(f"  [{model_name:20s}] initial guess: 0.5 control with t=0.0")
                 else:
                     print(f"  [{model_name:20s}] initial guess: 0.5 control with t=0.5")
                 print(
