@@ -1092,7 +1092,7 @@ def main():
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--qoi-type", type=str, default="virtual_work",
                         choices=["all", "stiffness", "point", "virtual_work"])
-    parser.add_argument("--penalty", type=float, default=1e-1)
+    parser.add_argument("--penalty", type=float, default=5e-1)
     parser.add_argument("--maxiter", type=int, default=240)
     parser.add_argument("--maxiter-saa", type=int, default=240)
     parser.add_argument("--nx", type=int, default= 64)

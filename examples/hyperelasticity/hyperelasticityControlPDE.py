@@ -58,8 +58,8 @@ class Top(dl.SubDomain):
 
 def hyperElasticityPDESettings():
     settings = dict() 
-    settings["E0"] = 20
-    settings["E1"] = 200
+    settings["E0"] = 10
+    settings["E1"] = 100
     settings["nu"] = 0.3 
     settings["eps"] = 1e-2
     return settings
