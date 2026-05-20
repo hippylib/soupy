@@ -46,11 +46,9 @@ MODEL_ORDER = [
     "mixture_quadratic_kle",
     "mixture_quadratic_hep",
     "saa_10",
+    "saa_20",
+    "saa_50",
     "saa_100",
-    "saa_200",
-    "saa_500",
-    "saa_1000",
-    "saa_10000",
 ]
 
 MODEL_COLORS = {
@@ -61,11 +59,9 @@ MODEL_COLORS = {
     "mixture_quadratic_kle": "tab:red",
     "mixture_quadratic_hep": "tab:brown",
     "saa_10": "#17becf",
+    "saa_20": "#bcbd22",
+    "saa_50": "#9467bd",
     "saa_100": "#7f7f7f",
-    "saa_200": "#9467bd",
-    "saa_500": "#e377c2",
-    "saa_1000": "#8c564b",
-    "saa_10000": "#bcbd22",
 }
 
 
@@ -142,7 +138,7 @@ def main():
     parser.add_argument("--beta", type=float, default=1.0, help="Variance weight beta")
     parser.add_argument("--n-tr", type=int, default=50, help="Number of Hessian modes for quadratic models")
     parser.add_argument("--n-mix", type=int, default=11, help="Number of mixture components")
-    parser.add_argument("--truth-saa-samples", "--saa-samples", dest="truth_saa_samples", type=int, default=100000)
+    parser.add_argument("--truth-saa-samples", "--saa-samples", dest="truth_saa_samples", type=int, default=5000)
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--qoi-type", type=str, default="velocity_tracking", choices=["velocity_tracking"])
     parser.add_argument("--penalty", type=float, default=1.0, help="Penalty coefficient on ||phi(z)||_L2^2")

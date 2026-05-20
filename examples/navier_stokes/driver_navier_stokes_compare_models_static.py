@@ -157,14 +157,14 @@ def evaluate_mixture_model(model_name: str, control_model, prior, z0, args, gt_s
 
 def main():
     parser = argparse.ArgumentParser(description="Compare static approximation errors for Navier-Stokes at z = 0")
-    parser.add_argument("--mixture-sizes", type=str, default="1, 3, 5, 7, 9, 15, 21, 27, 33, 39")
-    parser.add_argument("--mc-samples", type=str, default="1, 2, 5, 10, 20, 50, 100, 200, 500, 1000")
+    parser.add_argument("--mixture-sizes", type=str, default="1, 3, 5, 7, 9, 11, 13, 15")
+    parser.add_argument("--mc-samples", type=str, default="1, 2, 5, 10, 20, 50, 100, 200")
     parser.add_argument("--mc-trials", type=int, default=5)
-    parser.add_argument("--ground-truth-samples", type=int, default=10)
+    parser.add_argument("--ground-truth-samples", type=int, default=5000)
     parser.add_argument("--sample-seed", type=int, default=1)
     parser.add_argument("--cvar-beta", type=float, default=0.95)
     parser.add_argument("--n-tr", type=int, default=50)
-    parser.add_argument("--quadratic-cvar-n-mc", type=int, default=5000)
+    parser.add_argument("--quadratic-cvar-n-mc", type=int, default=1000)
     parser.add_argument("--qoi-type", type=str, default="velocity_tracking", choices=["velocity_tracking"])
     parser.add_argument("--penalty", type=float, default=1.0)
     parser.add_argument("--mesh-base-directory", type=str, default="./")
