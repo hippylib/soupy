@@ -16,7 +16,7 @@ def defaultBluffBodySettings():
     settings = dict()
     settings["nu"] = 5e-3
     settings["continuation"] = False
-    settings["stabilization"] = True
+    settings["stabilization"] = False
     settings["nitche"] = True
     settings["gamma"] = 1.
     settings["delta"] = 5.

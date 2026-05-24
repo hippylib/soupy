@@ -31,7 +31,7 @@ def rotate_points(p_list, alpha, translate=np.array([0.0, 0.0, 0.0])):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Solving OUU problem")
-    parser.add_argument('-m', '--mesh_size', choices=["fine", "medium", "medium_coarse", "coarse", "coarsest"], type=str, default="medium", help="mesh size")
+    parser.add_argument('-m', '--mesh_size', choices=["fine", "medium", "medium_coarse", "coarse", "coarsest"], type=str, default="coarse", help="mesh size")
     parser.add_argument('-L', '--L', type=float, default=2.0, help="Length of domain")
     parser.add_argument('-H', '--H', type=float, default=1.0, help="Height of domain")
     parser.add_argument('-R', '--R', type=float, default=0.1, help="Radius of obstacle")

@@ -20,7 +20,7 @@ sys.path.append(os.environ.get("HIPPYLIB_PATH", ""))
 sys.path.append(_SOUPY_ROOT)
 
 import soupy
-from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, setup_problem
+from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, save_optimal_state_component_plots, save_parameter_sample_plots, setup_problem
 from navier_stokes_driver_common import TeeStream, get_current_rss_mb, get_peak_rss_mb, relative_error
 from soupy import RiskMeasureControlCostFunctional, SuperquantileRiskMeasureSAA, superquantileRiskMeasureSAASettings
 from soupy.approximations.taylor import (
@@ -56,7 +56,91 @@ MODEL_COLORS = {
     "saa_50": "#9467bd",
     "saa_100": "#7f7f7f",
 }
-EXPLICIT_CVAR_CONTINUATION_LEVELS = [1e-2, 3e-3, 1e-3, 3e-4, 1e-4]
+EXPLICIT_CVAR_CONTINUATION_LEVELS = [1e-4]
+LBFGSB_OPTIONS = {
+    "maxiter": None,
+    "disp": False,
+    "ftol": 1e-20,
+    "gtol": 1e-4,
+    "maxls": 50,
+}
+
+
+def print_driver_banner(args, log_path):
+    print("=" * 78)
+    print("Navier-Stokes CVaR Model Comparison:")
+    print("  linear / quadratic / mixture_linear_kle / mixture_linear_hep / mixture_quadratic_kle / mixture_quadratic_hep")
+    print("  saa_1 / saa_10 / saa_20 / saa_50 / saa_100")
+    print("  serial: linear / quadratic / saa_1 / saa_10 / saa_20 / saa_50")
+    print("  parallel on all ranks: mixture_* / saa_100")
+    print("=" * 78)
+    print(f"Ground-truth exact-CVaR sample count: {args.truth_saa_samples}")
+    print(
+        f"cvar_beta={args.cvar_beta}, n_tr={args.n_tr}, n_mix={args.n_mix}, "
+        f"quadratic_cvar_n_mc={args.quadratic_cvar_n_mc}, penalty={args.penalty}"
+    )
+    print(
+        f"mesh_resolution={args.mesh_resolution}, mesh_format={args.mesh_format}, "
+        f"nu={args.nu}, gamma={args.gamma}, delta={args.delta}, mean_velocity={args.mean_velocity}"
+    )
+    print(
+        f"continuation={args.continuation}, stabilization={args.stabilization}, "
+        f"nitche={args.nitche}"
+    )
+    print(
+        "Explicit continuation for quadratic and SAA models: "
+        + " -> ".join(f"{eps:.0e}" for eps in EXPLICIT_CVAR_CONTINUATION_LEVELS)
+    )
+    print(f"terminal log file: {log_path}")
+    print("=" * 78)
+    sys.stdout.flush()
+
+
+def print_initial_summary(model_name, use_linear_warm_start, approx_init, true_init, true_init_mean, true_init_var, true_init_cvar, init_rel_err):
+    print(f"\nOptimizing {model_name} with L-BFGS-B ...")
+    if use_linear_warm_start:
+        print(f"  [{model_name:20s}] initial guess: linear optimum z* with t initialized from linear surrogate VaR")
+    else:
+        print(f"  [{model_name:20s}] initial guess: zero control with t=0.0")
+    print(
+        f"  [{model_name:20s}] initial: "
+        f"J_model(init)={approx_init:.6e}, J_true(init)={true_init:.6e}, "
+        f"cvar_true(init)={true_init_cvar:.6e}, mean_qoi(init)={true_init_mean:.6e}, "
+        f"var_qoi(init)={true_init_var:.6e}, rel_err(init)={init_rel_err:.3e}"
+    )
+    sys.stdout.flush()
+
+
+def print_optimal_summary(model_name, res):
+    print(
+        f"  [{model_name:20s}] optimal: "
+        f"J_model(z*)={res['approx_opt']:.6e}, J_true(z*)={res['true_opt']:.6e}, "
+        f"cvar_true(z*)={res['true_opt_cvar']:.6e}, mean_qoi(z*)={res['true_opt_mean']:.6e}, "
+        f"var_qoi(z*)={res['true_opt_var']:.6e}, rel_err(z*)={res['opt_rel_err']:.3e}"
+    )
+    sys.stdout.flush()
+
+
+def print_final_summary(results, log_path, save_dir):
+    print("\n" + "-" * 78)
+    print("Summary (ground-truth exact CVaR from sampled QoI list, evaluated at z0 and z*)")
+    print("-" * 78)
+    for model_name in MODEL_ORDER:
+        rr = results[model_name]
+        t_rel_err = "NA" if rr["opt_t_var_rel_err"] is None else f"{rr['opt_t_var_rel_err']:.3e}"
+        print(
+            f"{model_name:20s} | nit={rr['iter_count']:3d} | "
+            f"avg_iter_time={rr['avg_iter_time_sec']:8.2f}s | "
+            f"J_model(z*)={rr['approx_opt']:.6e} | "
+            f"init rel_err={rr['init_rel_err']:.3e} | "
+            f"opt rel_err={rr['opt_rel_err']:.3e} | "
+            f"J_true(z*)={rr['true_opt']:.6e} | "
+            f"t/VaR rel_err={t_rel_err}"
+        )
+    print("-" * 78)
+    print(f"All outputs written to: {save_dir}")
+    print(f"Terminal outputs saved to: {log_path}")
+    sys.stdout.flush()
 
 
 @dataclass
@@ -74,6 +158,20 @@ class IterRecord:
     grad_rss_after_mb: float
 
 
+def projected_gradient_inf_norm(x, grad, bounds):
+    if grad is None:
+        return float("nan")
+    x = np.asarray(x, dtype=float)
+    projected_grad = np.asarray(grad, dtype=float).copy()
+    if bounds is not None:
+        lb = np.asarray(bounds.lb, dtype=float)
+        ub = np.asarray(bounds.ub, dtype=float)
+        at_lb = np.isfinite(lb) & np.isclose(x, lb) & (projected_grad > 0.0)
+        at_ub = np.isfinite(ub) & np.isclose(x, ub) & (projected_grad < 0.0)
+        projected_grad[at_lb | at_ub] = 0.0
+    return float(np.linalg.norm(projected_grad, ord=np.inf))
+
+
 class ScipyObjectiveWithHistory:
     def __init__(self, cost_functional):
         self.cost_functional = cost_functional
@@ -81,6 +179,7 @@ class ScipyObjectiveWithHistory:
         self._g = cost_functional.generate_vector(soupy.CONTROL)
         self.latest_cost = np.nan
         self.latest_grad_norm = np.nan
+        self.latest_gradient = None
         self.latest_cost_rss_before_mb = np.nan
         self.latest_cost_rss_after_mb = np.nan
         self.latest_grad_rss_before_mb = np.nan
@@ -115,9 +214,10 @@ class ScipyObjectiveWithHistory:
             self.latest_grad_rss_before_mb = get_current_rss_mb()
             self.cost_functional.cost(self._z, order=1)
             self.latest_grad_norm = float(self.cost_functional.grad(self._g))
+            self.latest_gradient = np.array(self._g.get_local(), copy=True)
             self.latest_grad_rss_after_mb = get_current_rss_mb()
             self.n_grad += 1
-            return self._g.get_local()
+            return self.latest_gradient
         return g
 
 
@@ -244,21 +344,40 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
         iter_records: List[IterRecord] = []
         callback_last_time = None
 
-        def callback(_xk):
+        def callback(xk):
             nonlocal callback_last_time
             now = time.perf_counter()
             iter_time = np.nan if callback_last_time is None else now - callback_last_time
             callback_last_time = now
-            iter_records.append(IterRecord(len(iter_records) + 1, float(wrapper.latest_cost), float(wrapper.latest_grad_norm), float(wrapper.current_smoothing_epsilon()), iter_time, get_current_rss_mb(), get_peak_rss_mb(), float(wrapper.latest_cost_rss_before_mb), float(wrapper.latest_cost_rss_after_mb), float(wrapper.latest_grad_rss_before_mb), float(wrapper.latest_grad_rss_after_mb)))
+            iter_records.append(IterRecord(len(iter_records) + 1, float(wrapper.latest_cost), projected_gradient_inf_norm(xk, wrapper.latest_gradient, bounds), float(wrapper.current_smoothing_epsilon()), iter_time, get_current_rss_mb(), get_peak_rss_mb(), float(wrapper.latest_cost_rss_before_mb), float(wrapper.latest_cost_rss_after_mb), float(wrapper.latest_grad_rss_before_mb), float(wrapper.latest_grad_rss_after_mb)))
 
         t0 = time.perf_counter()
-        result = scipy.optimize.minimize(wrapper.function(), x0, method="L-BFGS-B", jac=wrapper.jac(), callback=callback, bounds=bounds, options={"maxiter": maxiter, "disp": False, "ftol": 1e-20, "gtol": 1e-4, "maxls": 50})
+        result = scipy.optimize.minimize(wrapper.function(), x0, method="L-BFGS-B", jac=wrapper.jac(), callback=callback, bounds=bounds, options={**LBFGSB_OPTIONS, "maxiter": maxiter})
         total_time = time.perf_counter() - t0
         iter_count = len(iter_records) if iter_records else int(result.nit)
         avg_iter_time_sec = total_time / max(iter_count, 1)
+
+        for r in iter_records:
+            if rank == 0 and r.iteration % args.print_every == 0:
+                print(
+                    f"  [{model_name:20s}] iter {r.iteration:4d}: "
+                    f"eps={r.epsilon:.1e}, J_model={r.model_cost:.6e}, ||proj g||_inf={r.residual:.3e}, "
+                    f"RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB, "
+                    f"cost_mem={r.cost_rss_before_mb:.1f}->{r.cost_rss_after_mb:.1f} MB, "
+                    f"grad_mem={r.grad_rss_before_mb:.1f}->{r.grad_rss_after_mb:.1f} MB"
+                )
+                sys.stdout.flush()
+
         z_opt_vec = np_to_control(approx_cost, result.x)
         control_opt_np, t_opt = split_control(z_opt_vec)
         approx_opt = float(approx_cost.cost(z_opt_vec, order=0))
+        if rank == 0:
+            serial_note = " [root-only serial]" if root_only else ""
+            print(
+                f"  [{model_name:20s}] done{serial_note}: success={result.success}, nit={iter_count}, "
+                f"avg_iter_time={avg_iter_time_sec:.2f}s"
+            )
+            sys.stdout.flush()
         payload = {"success": bool(result.success), "status": int(result.status), "message": str(result.message), "nfev": int(result.nfev), "njev": int(result.njev), "iter_records": iter_records, "iter_count": iter_count, "avg_iter_time_sec": avg_iter_time_sec, "total_time_sec": total_time, "x0_np": np.array(x0, copy=True), "z_opt_np": np.array(result.x, copy=True), "control_opt_np": control_opt_np, "t_opt": t_opt, "approx_opt": approx_opt}
     if root_only:
         payload = MPI.COMM_WORLD.bcast(payload if rank == 0 else None, root=0)
@@ -318,7 +437,7 @@ def make_bounds(x0, args):
 def save_iteration_csv(path, records: List[IterRecord]):
     with open(path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["iteration", "model_cost", "residual", "epsilon", "iter_time_sec", "rss_mb", "peak_rss_mb", "cost_rss_before_mb", "cost_rss_after_mb", "grad_rss_before_mb", "grad_rss_after_mb"])
+        writer.writerow(["iteration", "model_cost", "projected_grad_inf_norm", "epsilon", "iter_time_sec", "rss_mb", "peak_rss_mb", "cost_rss_before_mb", "cost_rss_after_mb", "grad_rss_before_mb", "grad_rss_after_mb"])
         for r in records:
             writer.writerow([r.iteration, r.model_cost, r.residual, r.epsilon, r.iter_time_sec, r.rss_mb, r.peak_rss_mb, r.cost_rss_before_mb, r.cost_rss_after_mb, r.grad_rss_before_mb, r.grad_rss_after_mb])
 
@@ -346,7 +465,29 @@ def plot_curves(results, save_dir):
         if not rec:
             continue
         plt.semilogy([r.iteration for r in rec], [max(abs(r.model_cost), 1e-16) for r in rec], marker="o", linewidth=1.5, markersize=3, color=MODEL_COLORS[model], label=model)
-    plt.legend(); plt.tight_layout(); plt.savefig(os.path.join(save_dir, "objective_per_iteration.png"), dpi=180); plt.close()
+    plt.xlabel("Iteration")
+    plt.ylabel("Model CVaR Objective")
+    plt.title("CVaR Objective Value per Iteration")
+    plt.grid(True, which="both", alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, "objective_per_iteration.png"), dpi=180)
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+    for model in MODEL_ORDER:
+        rec = results[model]["iter_records"]
+        if not rec:
+            continue
+        plt.semilogy([r.iteration for r in rec], [max(r.residual, 1e-16) for r in rec], marker="o", linewidth=1.5, markersize=3, color=MODEL_COLORS[model], label=model)
+    plt.xlabel("Iteration")
+    plt.ylabel("Projected Gradient Inf Norm")
+    plt.title("Projected Gradient Inf Norm per Iteration")
+    plt.grid(True, which="both", alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, "residual_per_iteration.png"), dpi=180)
+    plt.close()
 
 
 def main():
@@ -359,8 +500,8 @@ def main():
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--qoi-type", type=str, default="velocity_tracking", choices=["velocity_tracking"])
     parser.add_argument("--penalty", type=float, default=1.0)
-    parser.add_argument("--maxiter", type=int, default=240)
-    parser.add_argument("--maxiter-saa", type=int, default=240)
+    parser.add_argument("--maxiter", type=int, default=500)
+    parser.add_argument("--maxiter-saa", type=int, default=500)
     parser.add_argument("--mesh-base-directory", type=str, default="./")
     parser.add_argument("--mesh-resolution", type=str, default="medium")
     parser.add_argument("--mesh-format", type=str, default="xdmf")
@@ -380,7 +521,7 @@ def main():
     parser.add_argument("--bound-lb", type=float, default=-2.0)
     parser.add_argument("--bound-ub", type=float, default=2.0)
     parser.add_argument("-v", "--verbose", action="store_true", default=False)
-    parser.set_defaults(continuation=True, stabilization=True, nitche=True)
+    parser.set_defaults(continuation=True, stabilization=False, nitche=True)
     args = parser.parse_args()
 
     rank = MPI.COMM_WORLD.Get_rank()
@@ -397,11 +538,16 @@ def main():
         sys.stderr = TeeStream(original_stderr, log_file)
 
     try:
+        if rank == 0:
+            print_driver_banner(args, log_path)
+
         problem = setup_problem(args, comm_mesh)
         Vh = problem["Vh"]
         control_model = problem["control_model"]
         prior = problem["prior"]
         penalty = problem["penalty"]
+        if rank == 0:
+            save_parameter_sample_plots(prior, Vh, args.save_dir)
         control0_np = zero_control_np(control_model)
         base_control_np = control0_np.copy()
         base_t = 0.0
@@ -444,6 +590,9 @@ def main():
             del truth_cost
             init_rel_err = relative_error(approx_init, true_init)
 
+            if rank == 0:
+                print_initial_summary(model_name, use_linear_warm_start, approx_init, true_init, true_init_mean, true_init_var, true_init_cvar, init_rel_err)
+
             bounds = make_bounds(x0_np, args) if (run_parallel_model or rank == 0) else None
             if is_explicit_continuation_model(model_name):
                 res = optimize_with_explicit_continuation(model_name, control_model, prior, penalty, x0_np, args, rank, maxiter=args.maxiter_saa if is_saa_model(model_name) else args.maxiter)
@@ -477,6 +626,8 @@ def main():
                 linear_init_t = 0.0 if linear_var is None else float(linear_var)
             if approx_cost is not None:
                 del approx_cost
+            if rank == 0:
+                print_optimal_summary(model_name, res)
 
         if rank == 0:
             for model_name in MODEL_ORDER:
@@ -491,6 +642,8 @@ def main():
             plot_curves(results, args.save_dir)
             save_optimal_field_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
             save_optimal_pde_solution_plot(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
+            save_optimal_state_component_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
+            print_final_summary(results, log_path, args.save_dir)
     finally:
         if rank == 0 and log_file is not None:
             sys.stdout = original_stdout

@@ -45,7 +45,7 @@ MODEL_ORDER = ["mc_single", "mc", "mixture_linear_kle", "mixture_linear_hep", "m
 MIXTURE_MODEL_ORDER = ["mixture_linear_kle", "mixture_linear_hep", "mixture_quadratic_kle", "mixture_quadratic_hep"]
 MODEL_LABELS = {
     "mc_single": "MC (single trial)",
-    "mc": "MC (200 trial)",
+    "mc": "MC (20 trial)",
     "mixture_linear_kle": "Mixture linear KLE",
     "mixture_linear_hep": "Mixture linear HEP",
     "mixture_quadratic_kle": "Mixture quadratic KLE",
@@ -157,9 +157,9 @@ def evaluate_mixture_model(model_name: str, control_model, prior, z0, args, gt_s
 
 def main():
     parser = argparse.ArgumentParser(description="Compare static approximation errors for Navier-Stokes at z = 0")
-    parser.add_argument("--mixture-sizes", type=str, default="1, 3, 5, 7, 9, 11, 13, 15")
+    parser.add_argument("--mixture-sizes", type=str, default="1, 3, 5, 7, 9, 15, 21, 27, 33, 39")
     parser.add_argument("--mc-samples", type=str, default="1, 2, 5, 10, 20, 50, 100, 200")
-    parser.add_argument("--mc-trials", type=int, default=5)
+    parser.add_argument("--mc-trials", type=int, default=20)
     parser.add_argument("--ground-truth-samples", type=int, default=5000)
     parser.add_argument("--sample-seed", type=int, default=1)
     parser.add_argument("--cvar-beta", type=float, default=0.95)
@@ -168,7 +168,7 @@ def main():
     parser.add_argument("--qoi-type", type=str, default="velocity_tracking", choices=["velocity_tracking"])
     parser.add_argument("--penalty", type=float, default=1.0)
     parser.add_argument("--mesh-base-directory", type=str, default="./")
-    parser.add_argument("--mesh-resolution", type=str, default="medium")
+    parser.add_argument("--mesh-resolution", type=str, default="coarse")
     parser.add_argument("--mesh-format", type=str, default="xdmf")
     parser.add_argument("--nu", type=float, default=5e-3)
     parser.add_argument("--gamma", type=float, default=1.0)

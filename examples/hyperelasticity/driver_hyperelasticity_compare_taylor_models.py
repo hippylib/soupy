@@ -63,6 +63,7 @@ import numpy as np
 import scipy.optimize
 from mpi4py import MPI
 
+import hippylib as hp
 import soupy
 from soupy import MeanVarRiskMeasureSAA, RiskMeasureControlCostFunctional, meanVarRiskMeasureSAASettings
 from soupy.approximations.taylor import (
@@ -142,6 +143,55 @@ class IterRecord:
     grad_rss_after_mb: float
 
 
+class VolumeFractionPenalization(soupy.Penalization):
+    def __init__(self, Vh, alpha=1.0, target_fraction=0.5):
+        self.Vh = Vh
+        self.alpha = float(alpha)
+        self.domain_measure = float(dl.assemble(dl.Constant(1.0) * dl.dx(domain=self.Vh[soupy.CONTROL].mesh())))
+        self.target_volume = float(target_fraction) * self.domain_measure
+        z_test = dl.TestFunction(self.Vh[soupy.CONTROL])
+        self.volume_vec = dl.assemble(z_test * dl.dx)
+
+    def init_vector(self, z):
+        if hasattr(z, "get_vector"):
+            return
+        self.volume_vec.init_vector(z, 0)
+
+    def _control_vector(self, z):
+        if hasattr(z, "get_vector"):
+            return z.get_vector()
+        return z
+
+    def cost(self, z):
+        z_vec = self._control_vector(z)
+        volume_misfit = self.volume_vec.inner(z_vec) - self.target_volume
+        return self.alpha * volume_misfit * volume_misfit
+
+    def grad(self, z, out):
+        if hasattr(z, "get_vector"):
+            out.set_scalar(0.0)
+            out_vec = out.get_vector()
+            z_vec = z.get_vector()
+        else:
+            out_vec = out
+            z_vec = z
+        out_vec.zero()
+        volume_misfit = self.volume_vec.inner(z_vec) - self.target_volume
+        out_vec.axpy(2.0 * self.alpha * volume_misfit, self.volume_vec)
+
+    def hessian(self, z, zhat, out):
+        del z
+        if hasattr(zhat, "get_vector"):
+            out.set_scalar(0.0)
+            out_vec = out.get_vector()
+            zhat_vec = zhat.get_vector()
+        else:
+            out_vec = out
+            zhat_vec = zhat
+        out_vec.zero()
+        out_vec.axpy(2.0 * self.alpha * self.volume_vec.inner(zhat_vec), self.volume_vec)
+
+
 def _rss_from_proc_status_mb() -> float:
     """Read current RSS from /proc/self/status when available."""
     try:
@@ -180,6 +230,20 @@ def get_peak_rss_mb() -> float:
         return float("nan")
 
 
+def projected_gradient_inf_norm(x, grad, bounds):
+    if grad is None:
+        return float("nan")
+    x = np.asarray(x, dtype=float)
+    projected_grad = np.asarray(grad, dtype=float).copy()
+    if bounds is not None:
+        lb = np.asarray(bounds.lb, dtype=float)
+        ub = np.asarray(bounds.ub, dtype=float)
+        at_lb = np.isfinite(lb) & np.isclose(x, lb) & (projected_grad > 0.0)
+        at_ub = np.isfinite(ub) & np.isclose(x, ub) & (projected_grad < 0.0)
+        projected_grad[at_lb | at_ub] = 0.0
+    return float(np.linalg.norm(projected_grad, ord=np.inf))
+
+
 class ScipyObjectiveWithHistory:
     def __init__(self, cost_functional):
         self.cost_functional = cost_functional
@@ -187,6 +251,7 @@ class ScipyObjectiveWithHistory:
         self._g = cost_functional.generate_vector(soupy.CONTROL)
         self.latest_cost = np.nan
         self.latest_grad_norm = np.nan
+        self.latest_gradient = None
         self.latest_cost_rss_before_mb = np.nan
         self.latest_cost_rss_after_mb = np.nan
         self.latest_grad_rss_before_mb = np.nan
@@ -213,9 +278,10 @@ class ScipyObjectiveWithHistory:
             self.latest_grad_rss_before_mb = get_current_rss_mb()
             self.cost_functional.cost(self._z, order=1)
             self.latest_grad_norm = float(self.cost_functional.grad(self._g))
+            self.latest_gradient = np.array(self._g.get_local(), copy=True)
             self.latest_grad_rss_after_mb = get_current_rss_mb()
             self.n_grad += 1
-            return self._g.get_local()
+            return self.latest_gradient
 
         return g
 
@@ -231,7 +297,7 @@ def setup_problem(args, comm_mesh):
     settings["mesh"]["ny"] = args.ny
     settings["mesh"]["nz"] = args.nz
     mesh, Vh, _, control_model, prior = setup_hyperelasticity_problem(settings, comm_mesh)
-    penalty = soupy.L2Penalization(Vh, args.penalty)
+    penalty = VolumeFractionPenalization(Vh, args.penalty, target_fraction=0.5)
     return mesh, Vh, control_model, prior, penalty
 
 
@@ -391,7 +457,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
                 IterRecord(
                     iteration=len(iter_records) + 1,
                     model_cost=float(wrapper.latest_cost),
-                    residual=float(wrapper.latest_grad_norm),
+                    residual=projected_gradient_inf_norm(xk, wrapper.latest_gradient, bounds),
                     iter_time_sec=iter_time,
                     rss_mb=get_current_rss_mb(),
                     peak_rss_mb=get_peak_rss_mb(),
@@ -410,7 +476,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
             jac=wrapper.jac(),
             callback=callback,
             bounds=bounds,
-            options={"maxiter": maxiter, "disp": False},
+            options={"maxiter": maxiter, "disp": False, "ftol": 1e-20, "gtol": 1e-4, "maxls": 50},
         )
         total_time = time.perf_counter() - t0
         iter_count = len(iter_records) if iter_records else int(result.nit)
@@ -420,7 +486,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
             if rank == 0 and r.iteration % args.print_every == 0:
                 print(
                     f"  [{model_name:20s}] iter {r.iteration:4d}: "
-                    f"J_model={r.model_cost:.6e}, ||g||={r.residual:.3e}, "
+                    f"J_model={r.model_cost:.6e}, ||proj g||_inf={r.residual:.3e}, "
                     f"RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB, "
                     f"cost_mem={r.cost_rss_before_mb:.1f}->{r.cost_rss_after_mb:.1f} MB, "
                     f"grad_mem={r.grad_rss_before_mb:.1f}->{r.grad_rss_after_mb:.1f} MB"
@@ -467,7 +533,7 @@ def save_iteration_csv(path, records: List[IterRecord]):
             [
                 "iteration",
                 "model_cost",
-                "residual",
+                "projected_grad_inf_norm",
                 "iter_time_sec",
                 "rss_mb",
                 "peak_rss_mb",
@@ -559,8 +625,8 @@ def plot_curves(results, save_dir):
         y = [max(r.residual, 1e-16) for r in rec]
         plt.semilogy(x, y, marker="o", linewidth=1.5, markersize=3, color=MODEL_COLORS[model], label=model)
     plt.xlabel("Iteration")
-    plt.ylabel("Residual ||grad||")
-    plt.title("Residual per Iteration")
+    plt.ylabel("Projected Gradient Inf Norm")
+    plt.title("Projected Gradient Inf Norm per Iteration")
     plt.grid(True, which="both", alpha=0.3)
     plt.legend()
     plt.tight_layout()
@@ -643,6 +709,76 @@ def plot_on_axes(function, ax):
     return dl.plot(function)
 
 
+
+def save_parameter_sample_plots(prior, Vh, save_dir, sample_count=3, seed=11):
+    V_parameter = Vh[soupy.PARAMETER]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    fig, axes = plt.subplots(1, sample_count, figsize=(4.2 * sample_count, 3.6))
+    axes = np.atleast_1d(axes)
+    for i, ax in enumerate(axes):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        m_fun = scalarize_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        artist = plot_on_axes(m_fun, ax)
+        ax.set_title(f"parameter sample {i + 1}")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "parameter_samples.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_young_modulus_moment_plots(prior, Vh, save_dir, sample_count=10000, seed=23, E0=20.0, E1=200.0):
+    V_parameter = Vh[soupy.PARAMETER]
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    sum_E = None
+    sum_E2 = None
+    for _ in range(sample_count):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        E_local = E0 + np.exp(m.get_local()) * (E1 - E0)
+        if sum_E is None:
+            sum_E = np.zeros_like(E_local)
+            sum_E2 = np.zeros_like(E_local)
+        sum_E += E_local
+        sum_E2 += E_local * E_local
+
+    mean_E = sum_E / float(sample_count)
+    var_E = np.maximum(sum_E2 / float(sample_count) - mean_E * mean_E, 0.0)
+    std_E = np.sqrt(var_E)
+
+    mean_fun = dl.Function(V_parameter)
+    mean_fun.vector().set_local(mean_E)
+    mean_fun.vector().apply("")
+    std_fun = dl.Function(V_parameter)
+    std_fun.vector().set_local(std_E)
+    std_fun.vector().apply("")
+
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.8))
+    for ax, fun, title in zip(
+        axes,
+        [mean_fun, std_fun],
+        [f"Young modulus mean ({sample_count} samples)", f"Young modulus std ({sample_count} samples)"],
+    ):
+        artist = plot_on_axes(fun, ax)
+        ax.set_title(title)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "young_modulus_mean_std.png"), dpi=180)
+    plt.close(fig)
+
 def solve_state_at_control(control_model, prior, z_np):
     x = control_model.generate_vector("ALL")
     x[soupy.PARAMETER].zero()
@@ -703,6 +839,69 @@ def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
     plt.close(fig)
 
 
+
+def state_components_for_plot(V_state, state_vector):
+    state_fun = vector_to_function(V_state, state_vector)
+    components = state_fun.split(deepcopy=True)
+    if len(components) < 2:
+        raise ValueError("Expected a vector-valued hyperelasticity state with at least two components.")
+    return components[0], components[1]
+
+
+def save_optimal_state_component_plots(results, control_model, prior, Vh, save_dir):
+    payload = []
+    for model_name in MODEL_ORDER:
+        z_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        _, state_vec = solve_state_at_control(control_model, prior, z_np)
+        u_x, u_y = state_components_for_plot(Vh[soupy.STATE], state_vec)
+        payload.append((model_name, u_x, u_y))
+
+    fig, axes = plt.subplots(len(payload), 2, figsize=(9, 3.6 * len(payload)))
+    axes = np.atleast_2d(axes)
+    for i, (model_name, u_x, u_y) in enumerate(payload):
+        for ax, fun, title in zip(axes[i], [u_x, u_y], [f"{model_name} u_x(z*)", f"{model_name} u_y(z*)"]):
+            artist = plot_on_axes(fun, ax)
+            ax.set_title(title)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_state_components.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_optimal_deformed_material_plots(results, control_model, prior, Vh, save_dir):
+    V_parameter = Vh[soupy.PARAMETER]
+    parameter_fun = vector_to_function(V_parameter, prior.mean)
+
+    payload = []
+    for model_name in MODEL_ORDER:
+        z_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        _, state_vec = solve_state_at_control(control_model, prior, z_np)
+        state_fun = vector_to_function(Vh[soupy.STATE], state_vec)
+        payload.append((model_name, state_fun))
+
+    fig, axes = plt.subplots(len(payload), 2, figsize=(12, 4.2 * len(payload)))
+    axes = np.atleast_2d(axes)
+    for i, (model_name, state_fun) in enumerate(payload):
+        plt.sca(axes[i, 0])
+        artist = dl.plot(parameter_fun, mode="color", cmap="turbo", shading="gouraud")
+        axes[i, 0].set_title(f"{model_name} parameter mean")
+        axes[i, 0].set_xlabel("X_1")
+        axes[i, 0].set_ylabel("X_2")
+        plt.colorbar(artist, ax=axes[i, 0], pad=0.03, fraction=0.05, aspect=20)
+
+        plt.sca(axes[i, 1])
+        artist = dl.plot(state_fun, mode="displacement", cmap="turbo", shading="gouraud")
+        axes[i, 1].set_title(f"{model_name} deformed shape x = X + u(X)")
+        axes[i, 1].set_xlabel("X_1")
+        axes[i, 1].set_ylabel("X_2")
+        cbar = plt.colorbar(artist, ax=axes[i, 1], pad=0.03, fraction=0.05, aspect=20)
+        cbar.set_label("||u||_2", rotation=0, labelpad=15)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_deformed_materials.png"), dpi=180)
+    plt.close(fig)
+
 def save_optimal_pde_solution_plot(results, control_model, prior, Vh, save_dir):
     """Plot PDE solutions at each model's optimal control."""
     V_state = Vh[soupy.STATE]
@@ -756,9 +955,9 @@ def main():
     parser.add_argument("--saa-seed", type=int, default=1, help="Seed for SAA sampling")
     parser.add_argument("--qoi-type", type=str, default="virtual_work",
                         choices=["all", "stiffness", "point", "virtual_work"])
-    parser.add_argument("--penalty", type=float, default=1e-2, help="Control penalty")
-    parser.add_argument("--maxiter", type=int, default=60, help="Max iterations for each Taylor model")
-    parser.add_argument("--maxiter-saa", type=int, default=60, help="Max iterations for optimized SAA models")
+    parser.add_argument("--penalty", type=float, default=1.0, help="Volume-fraction penalty coefficient")
+    parser.add_argument("--maxiter", type=int, default=500, help="Max iterations for each Taylor model")
+    parser.add_argument("--maxiter-saa", type=int, default=500, help="Max iterations for optimized SAA models")
     parser.add_argument("--nx", type=int, default=32, help="Mesh cells in x")
     parser.add_argument("--ny", type=int, default=8, help="Mesh cells in y")
     parser.add_argument("--nz", type=int, default=8, help="Mesh cells in z for 3D settings")
@@ -815,6 +1014,9 @@ def main():
             sys.stdout.flush()
 
         _, Vh, control_model, prior, penalty = setup_problem(args, comm_mesh)
+        if rank == 0:
+            save_parameter_sample_plots(prior, Vh, args.save_dir)
+            save_young_modulus_moment_plots(prior, Vh, args.save_dir)
         bounds = scipy.optimize.Bounds(lb=args.bound_lb, ub=args.bound_ub)
 
         # Compare all optimization models. Ground truth is built and released model-by-model
@@ -964,6 +1166,8 @@ def main():
             plot_curves(results, args.save_dir)
             save_optimal_field_plots(results, control_model, prior, Vh, args.save_dir)
             save_optimal_pde_solution_plot(results, control_model, prior, Vh, args.save_dir)
+            save_optimal_state_component_plots(results, control_model, prior, Vh, args.save_dir)
+            save_optimal_deformed_material_plots(results, control_model, prior, Vh, args.save_dir)
 
             timing_rows = []
             for model_name in MODEL_ORDER:

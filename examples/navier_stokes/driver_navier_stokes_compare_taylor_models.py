@@ -17,7 +17,7 @@ import scipy.optimize
 from mpi4py import MPI
 
 import soupy
-from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, setup_problem
+from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, save_optimal_state_component_plots, save_parameter_sample_plots, setup_problem
 from navier_stokes_driver_common import (
     TeeStream,
     evaluate_cost,
@@ -63,6 +63,71 @@ MODEL_COLORS = {
     "saa_50": "#9467bd",
     "saa_100": "#7f7f7f",
 }
+
+
+def print_driver_banner(args, log_path):
+    print("=" * 78)
+    print("Navier-Stokes Taylor Model Comparison:")
+    print("  linear / quadratic / mixture_linear_kle / mixture_linear_hep / mixture_quadratic_kle / mixture_quadratic_hep")
+    print("  saa_10 / saa_20 / saa_50 / saa_100")
+    print("  serial: linear / quadratic / saa_10 / saa_20 / saa_50")
+    print("  parallel on all ranks: mixture_* / saa_100")
+    print("=" * 78)
+    print(f"Ground-truth SAA sample count: {args.truth_saa_samples}")
+    print(f"beta={args.beta}, n_tr={args.n_tr}, n_mix={args.n_mix}, penalty={args.penalty}")
+    print(
+        f"mesh_resolution={args.mesh_resolution}, mesh_format={args.mesh_format}, "
+        f"nu={args.nu}, gamma={args.gamma}, delta={args.delta}, mean_velocity={args.mean_velocity}"
+    )
+    print(
+        f"continuation={args.continuation}, stabilization={args.stabilization}, "
+        f"nitche={args.nitche}"
+    )
+    print(f"terminal log file: {log_path}")
+    print("=" * 78)
+    sys.stdout.flush()
+
+
+def print_initial_summary(model_name, approx_init, true_init, true_init_mean, true_init_var, init_rel_err):
+    print(f"\nOptimizing {model_name} with L-BFGS-B ...")
+    print(f"  [{model_name:20s}] initial guess: zero control")
+    print(
+        f"  [{model_name:20s}] initial: "
+        f"J_model(init)={approx_init:.6e}, J_true(init)={true_init:.6e}, "
+        f"mean_qoi(init)={true_init_mean:.6e}, var_qoi(init)={true_init_var:.6e}, "
+        f"rel_err(init)={init_rel_err:.3e}"
+    )
+    sys.stdout.flush()
+
+
+def print_optimal_summary(model_name, res):
+    print(
+        f"  [{model_name:20s}] optimal: "
+        f"J_model(z*)={res['approx_opt']:.6e}, J_true(z*)={res['true_opt']:.6e}, "
+        f"mean_qoi(z*)={res['true_opt_mean']:.6e}, var_qoi(z*)={res['true_opt_var']:.6e}, "
+        f"rel_err(z*)={res['opt_rel_err']:.3e}"
+    )
+    sys.stdout.flush()
+
+
+def print_final_summary(results, log_path, save_dir):
+    print("\n" + "-" * 78)
+    print("Summary (ground-truth SAA objective evaluated at z0 and z*)")
+    print("-" * 78)
+    for model_name in MODEL_ORDER:
+        rr = results[model_name]
+        print(
+            f"{model_name:20s} | nit={rr['iter_count']:3d} | "
+            f"avg_iter_time={rr['avg_iter_time_sec']:8.2f}s | "
+            f"J_model(z*)={rr['approx_opt']:.6e} | "
+            f"init rel_err={rr['init_rel_err']:.3e} | "
+            f"opt rel_err={rr['opt_rel_err']:.3e} | "
+            f"J_true(z*)={rr['true_opt']:.6e}"
+        )
+    print("-" * 78)
+    print(f"All outputs written to: {save_dir}")
+    print(f"Terminal outputs saved to: {log_path}")
+    sys.stdout.flush()
 
 
 def make_taylor_cost(model_name, control_model, prior, penalty, args):
@@ -142,8 +207,8 @@ def main():
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--qoi-type", type=str, default="velocity_tracking", choices=["velocity_tracking"])
     parser.add_argument("--penalty", type=float, default=1.0, help="Penalty coefficient on ||phi(z)||_L2^2")
-    parser.add_argument("--maxiter", type=int, default=60)
-    parser.add_argument("--maxiter-saa", type=int, default=60)
+    parser.add_argument("--maxiter", type=int, default=500)
+    parser.add_argument("--maxiter-saa", type=int, default=500)
     parser.add_argument("--mesh-base-directory", type=str, default="./")
     parser.add_argument("--mesh-resolution", type=str, default="medium")
     parser.add_argument("--mesh-format", type=str, default="xdmf")
@@ -163,7 +228,7 @@ def main():
     parser.add_argument("--bound-lb", type=float, default=-2.0)
     parser.add_argument("--bound-ub", type=float, default=2.0)
     parser.add_argument("-v", "--verbose", action="store_true", default=False)
-    parser.set_defaults(continuation=True, stabilization=True, nitche=True)
+    parser.set_defaults(continuation=True, stabilization=False, nitche=True)
     args = parser.parse_args()
 
     rank = MPI.COMM_WORLD.Get_rank()
@@ -180,11 +245,16 @@ def main():
         sys.stderr = TeeStream(original_stderr, log_file)
 
     try:
+        if rank == 0:
+            print_driver_banner(args, log_path)
+
         problem = setup_problem(args, comm_mesh)
         Vh = problem["Vh"]
         control_model = problem["control_model"]
         prior = problem["prior"]
         penalty = problem["penalty"]
+        if rank == 0:
+            save_parameter_sample_plots(prior, Vh, args.save_dir)
         bounds = scipy.optimize.Bounds(lb=args.bound_lb, ub=args.bound_ub)
 
         results: Dict[str, Dict] = {}
@@ -211,6 +281,9 @@ def main():
             del truth_cost
             init_rel_err = relative_error(approx_init, true_init)
 
+            if rank == 0:
+                print_initial_summary(model_name, approx_init, true_init, true_init_mean, true_init_var, init_rel_err)
+
             res = optimize_with_tracking(
                 model_name,
                 approx_cost,
@@ -233,6 +306,8 @@ def main():
             results[model_name] = res
             if approx_cost is not None:
                 del approx_cost
+            if rank == 0:
+                print_optimal_summary(model_name, res)
 
         if rank == 0:
             for model_name in MODEL_ORDER:
@@ -269,11 +344,14 @@ def main():
             plot_curves(results, MODEL_ORDER, MODEL_COLORS, args.save_dir)
             save_optimal_field_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
             save_optimal_pde_solution_plot(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
+            save_optimal_state_component_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
 
             with open(os.path.join(args.save_dir, "timing_comparison.csv"), "w", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(["model", "total_iterations", "avg_iter_time_sec"])
                 writer.writerows([[m, results[m]["iter_count"], results[m]["avg_iter_time_sec"]] for m in MODEL_ORDER])
+
+            print_final_summary(results, log_path, args.save_dir)
     finally:
         if rank == 0 and log_file is not None:
             sys.stdout = original_stdout

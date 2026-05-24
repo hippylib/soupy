@@ -57,6 +57,7 @@ sys.path.append(_soupy_root)
 
 import dolfin as dl
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 import numpy as np
 import scipy.optimize
 from mpi4py import MPI
@@ -221,6 +222,20 @@ def get_peak_rss_mb() -> float:
         return float("nan")
 
 
+def projected_gradient_inf_norm(x, grad, bounds):
+    if grad is None:
+        return float("nan")
+    x = np.asarray(x, dtype=float)
+    projected_grad = np.asarray(grad, dtype=float).copy()
+    if bounds is not None:
+        lb = np.asarray(bounds.lb, dtype=float)
+        ub = np.asarray(bounds.ub, dtype=float)
+        at_lb = np.isfinite(lb) & np.isclose(x, lb) & (projected_grad > 0.0)
+        at_ub = np.isfinite(ub) & np.isclose(x, ub) & (projected_grad < 0.0)
+        projected_grad[at_lb | at_ub] = 0.0
+    return float(np.linalg.norm(projected_grad, ord=np.inf))
+
+
 class ScipyObjectiveWithHistory:
     """Wrap a cost functional for scipy minimize and keep latest value/grad norm."""
 
@@ -230,6 +245,7 @@ class ScipyObjectiveWithHistory:
         self._g = cost_functional.generate_vector(soupy.CONTROL)
         self.latest_cost = np.nan
         self.latest_grad_norm = np.nan
+        self.latest_gradient = None
         self.latest_cost_rss_before_mb = np.nan
         self.latest_cost_rss_after_mb = np.nan
         self.latest_grad_rss_before_mb = np.nan
@@ -256,9 +272,10 @@ class ScipyObjectiveWithHistory:
             self.latest_grad_rss_before_mb = get_current_rss_mb()
             self.cost_functional.cost(self._z, order=1)
             self.latest_grad_norm = float(self.cost_functional.grad(self._g))
+            self.latest_gradient = np.array(self._g.get_local(), copy=True)
             self.latest_grad_rss_after_mb = get_current_rss_mb()
             self.n_grad += 1
-            return self._g.get_local()
+            return self.latest_gradient
 
         return g
 
@@ -473,7 +490,6 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, root_on
         callback_last_time = None
 
         def callback(xk):
-            del xk
             nonlocal callback_last_time
             now = time.perf_counter()
             iter_time = np.nan if callback_last_time is None else now - callback_last_time
@@ -482,7 +498,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, root_on
                 IterRecord(
                     iteration=len(iter_records) + 1,
                     model_cost=float(wrapper.latest_cost),
-                    residual=float(wrapper.latest_grad_norm),
+                    residual=projected_gradient_inf_norm(xk, wrapper.latest_gradient, None),
                     iter_time_sec=iter_time,
                     rss_mb=get_current_rss_mb(),
                     peak_rss_mb=get_peak_rss_mb(),
@@ -500,7 +516,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, root_on
             method="L-BFGS-B",
             jac=wrapper.jac(),
             callback=callback,
-            options={"maxiter": maxiter, "disp": False},
+            options={"maxiter": maxiter, "disp": False, "ftol": 1e-20, "gtol": 1e-4, "maxls": 100},
         )
         total_time = time.perf_counter() - t0
         iter_count = len(iter_records) if iter_records else int(result.nit)
@@ -510,7 +526,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, root_on
             if rank == 0 and r.iteration % args.print_every == 0:
                 print(
                     f"  [{model_name:20s}] iter {r.iteration:4d}: "
-                    f"J_model={r.model_cost:.6e}, ||g||={r.residual:.3e}, "
+                    f"J_model={r.model_cost:.6e}, ||proj g||_inf={r.residual:.3e}, "
                     f"RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB, "
                     f"cost_mem={r.cost_rss_before_mb:.1f}->{r.cost_rss_after_mb:.1f} MB, "
                     f"grad_mem={r.grad_rss_before_mb:.1f}->{r.grad_rss_after_mb:.1f} MB"
@@ -558,7 +574,7 @@ def save_iteration_csv(path, records: List[IterRecord]):
             [
                 "iteration",
                 "model_cost",
-                "residual",
+                "projected_grad_inf_norm",
                 "iter_time_sec",
                 "rss_mb",
                 "peak_rss_mb",
@@ -667,8 +683,8 @@ def plot_curves(results, save_dir):
             label=model,
         )
     plt.xlabel("Iteration")
-    plt.ylabel("Residual ||grad||")
-    plt.title("Residual per Iteration")
+    plt.ylabel("Projected Gradient Inf Norm")
+    plt.title("Projected Gradient Inf Norm per Iteration")
     plt.grid(True, which="both", alpha=0.3)
     plt.legend()
     plt.tight_layout()
@@ -742,6 +758,96 @@ def scalarize_for_plot(function, scalar_space):
     return function
 
 
+def plot_on_axes(function, ax):
+    plt.sca(ax)
+    return dl.plot(function)
+
+
+def make_target_state_function(function_space):
+    mesh = function_space.mesh()
+    target_expr = dl.Expression(
+        "sin(2*pi*x[0])*sin(2*pi*x[1])",
+        pi=np.pi,
+        degree=4,
+        mpi_comm=mesh.mpi_comm(),
+    )
+    return dl.interpolate(target_expr, function_space)
+
+
+def control_coefficients_to_grid(control_np, control_parameters):
+    coeffs = np.asarray(control_np, dtype=float)
+    n_wells = int(control_parameters.n_wells_per_side)
+    if coeffs.size != n_wells * n_wells:
+        raise ValueError(
+            f"Expected {n_wells * n_wells} control coefficients, received {coeffs.size}."
+        )
+
+    well_grid = np.linspace(
+        control_parameters.loc_lower,
+        control_parameters.loc_upper,
+        n_wells,
+    )
+    coeff_grid = np.zeros((n_wells, n_wells))
+    count = 0
+    for i in range(n_wells):
+        for j in range(n_wells):
+            coeff_grid[j, i] = coeffs[count]
+            count += 1
+    return well_grid, coeff_grid
+
+
+def plot_control_coefficients_on_axes(control_np, control_parameters, ax):
+    well_grid, coeff_grid = control_coefficients_to_grid(control_np, control_parameters)
+    z_max = float(np.max(np.abs(coeff_grid)))
+    if z_max == 0.0:
+        z_max = 1.0
+    width = (control_parameters.loc_upper - control_parameters.loc_lower) / control_parameters.n_wells_per_side
+    extent = [
+        well_grid[0] - 0.5 * width,
+        well_grid[-1] + 0.5 * width,
+        well_grid[0] - 0.5 * width,
+        well_grid[-1] + 0.5 * width,
+    ]
+    artist = ax.imshow(
+        coeff_grid,
+        origin="lower",
+        extent=extent,
+        cmap=plt.get_cmap("coolwarm"),
+        norm=Normalize(vmin=-z_max, vmax=z_max),
+        interpolation="nearest",
+        aspect="equal",
+    )
+    ax.set_xlim(extent[0], extent[1])
+    ax.set_ylim(extent[2], extent[3])
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    return artist
+
+
+
+def save_parameter_sample_plots(prior, Vh, save_dir, sample_count=3, seed=11):
+    V_parameter = Vh[soupy.PARAMETER]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    fig, axes = plt.subplots(1, sample_count, figsize=(4.2 * sample_count, 3.6))
+    axes = np.atleast_1d(axes)
+    for i, ax in enumerate(axes):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        m_fun = scalarize_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        artist = plot_on_axes(m_fun, ax)
+        ax.set_title(f"parameter sample {i + 1}")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "parameter_samples.png"), dpi=180)
+    plt.close(fig)
+
 def solve_state_at_control(control_model, prior, z_np):
     x = control_model.generate_vector("ALL")
     x[soupy.PARAMETER].zero()
@@ -755,46 +861,55 @@ def solve_state_at_control(control_model, prior, z_np):
 def save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, save_dir):
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
+    target_fun = make_target_state_function(V_state_scalar)
 
     overview_payload = []
 
     for model_name in MODEL_ORDER:
         z_model_opt = results[model_name]["z_opt_np"]
         control_model_vec, state_model_vec = solve_state_at_control(control_model, prior, z_model_opt)
+        control_np = np.array(control_model_vec.get_local(), copy=True)
 
         control_model_fun = control_coefficients_to_function(V_state_scalar, control_model_vec, control_parameters)
         state_model_fun = scalarize_for_plot(vector_to_function(V_state, state_model_vec), V_state_scalar)
 
-        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-        for ax, fun, title in zip(
-            axes,
-            [control_model_fun, state_model_fun],
-            [f"{model_name} source(z*)", f"{model_name} u(z*)"],
-        ):
-            plt.sca(ax)
-            artist = dl.plot(fun)
-            ax.set_title(title)
-            ax.set_xlabel("x")
-            ax.set_ylabel("y")
-            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        artist = plot_on_axes(control_model_fun, axes[0, 0])
+        axes[0, 0].set_title(f"{model_name} source(z*)")
+        axes[0, 0].set_xlabel("x")
+        axes[0, 0].set_ylabel("y")
+        plt.colorbar(artist, ax=axes[0, 0], fraction=0.046, pad=0.04)
+        artist = plot_control_coefficients_on_axes(control_np, control_parameters, axes[0, 1])
+        axes[0, 1].set_title(f"{model_name} well coefficients z*")
+        plt.colorbar(artist, ax=axes[0, 1], fraction=0.046, pad=0.04)
+        artist = plot_on_axes(state_model_fun, axes[1, 0])
+        axes[1, 0].set_title(f"{model_name} u(z*)")
+        axes[1, 0].set_xlabel("x")
+        axes[1, 0].set_ylabel("y")
+        plt.colorbar(artist, ax=axes[1, 0], fraction=0.046, pad=0.04)
+        artist = plot_on_axes(target_fun, axes[1, 1])
+        axes[1, 1].set_title("target state")
+        axes[1, 1].set_xlabel("x")
+        axes[1, 1].set_ylabel("y")
+        plt.colorbar(artist, ax=axes[1, 1], fraction=0.046, pad=0.04)
         fig.tight_layout()
         fig.savefig(os.path.join(save_dir, f"{model_name}_optimal_fields.png"), dpi=180)
         plt.close(fig)
-        overview_payload.append((model_name, control_model_fun, state_model_fun))
+        overview_payload.append((model_name, control_np, control_model_fun, state_model_fun))
 
     n_models = len(overview_payload)
-    fig, axes = plt.subplots(n_models, 2, figsize=(10, 3.6 * n_models))
+    fig, axes = plt.subplots(n_models, 4, figsize=(18, 3.6 * n_models))
     if n_models == 1:
         axes = np.array([axes])
-    col_titles = ["optimal control source", "state u(z*)"]
+    col_titles = ["optimal control source", "well coefficients z*", "state u(z*)", "target state"]
     for j, title in enumerate(col_titles):
         axes[0, j].set_title(title)
-    for i, (model_name, control_model_fun, state_model_fun) in enumerate(overview_payload):
-        fields = [control_model_fun, state_model_fun]
-        for j, fun in enumerate(fields):
-            ax = axes[i, j]
-            plt.sca(ax)
-            dl.plot(fun)
+    for i, (model_name, control_np, control_model_fun, state_model_fun) in enumerate(overview_payload):
+        plot_on_axes(control_model_fun, axes[i, 0])
+        plot_control_coefficients_on_axes(control_np, control_parameters, axes[i, 1])
+        plot_on_axes(state_model_fun, axes[i, 2])
+        plot_on_axes(target_fun, axes[i, 3])
+        for ax in axes[i, :]:
             ax.set_xticks([])
             ax.set_yticks([])
         axes[i, 0].set_ylabel(model_name, rotation=90, fontsize=10)
@@ -804,9 +919,10 @@ def save_optimal_field_plots(results, control_model, prior, Vh, control_paramete
 
 
 def save_optimal_pde_solution_plot(results, control_model, prior, Vh, save_dir):
-    """Plot PDE solutions at each model's optimal control."""
+    """Plot PDE solutions at each model's optimal control next to the target state."""
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
+    target_fun = make_target_state_function(V_state_scalar)
 
     solution_payload = []
     for model_name in MODEL_ORDER:
@@ -818,23 +934,16 @@ def save_optimal_pde_solution_plot(results, control_model, prior, Vh, save_dir):
         state_model_fun = scalarize_for_plot(vector_to_function(V_state, state_model_vec), V_state_scalar)
         solution_payload.append((model_name, state_model_fun))
 
-    n_models = len(solution_payload)
-    ncols = 3
-    nrows = int(np.ceil(n_models / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(4.4 * ncols, 3.6 * nrows))
-    axes = np.atleast_1d(axes).reshape(nrows, ncols)
+    fig, axes = plt.subplots(len(solution_payload), 2, figsize=(9, 3.6 * len(solution_payload)))
+    axes = np.atleast_2d(axes)
 
-    for ax in axes.ravel():
-        ax.axis("off")
-
-    for ax, (model_name, state_model_fun) in zip(axes.ravel(), solution_payload):
-        ax.axis("on")
-        plt.sca(ax)
-        artist = dl.plot(state_model_fun)
-        ax.set_title(f"{model_name} u(z*)")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    for i, (model_name, state_model_fun) in enumerate(solution_payload):
+        for ax, fun, title in zip(axes[i], [state_model_fun, target_fun], [f"{model_name} u(z*)", "target state"]):
+            artist = plot_on_axes(fun, ax)
+            ax.set_title(title)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
 
     fig.tight_layout()
     fig.savefig(os.path.join(save_dir, "optimal_pde_solutions.png"), dpi=180)
@@ -850,8 +959,8 @@ def main():
     parser.add_argument("--n-mix", type=int, default=39, help="Number of mixture components")
     parser.add_argument("--truth-saa-samples", type=int, default=100000, help="Sample size for ground-truth SAA evaluation")
     parser.add_argument("--saa-seed", type=int, default=1, help="Seed for SAA sampling")
-    parser.add_argument("--maxiter", type=int, default=60, help="Max iterations for each Taylor model")
-    parser.add_argument("--maxiter-saa", type=int, default=60, help="Max iterations for optimized SAA models")
+    parser.add_argument("--maxiter", type=int, default=500, help="Max iterations for each Taylor model")
+    parser.add_argument("--maxiter-saa", type=int, default=500, help="Max iterations for optimized SAA models")
     parser.add_argument("--nx", type=int, default=16, help="Mesh cells in x")
     parser.add_argument("--ny", type=int, default=16, help="Mesh cells in y")
     parser.add_argument("--newton-max-it", type=int, default=50)
@@ -908,6 +1017,8 @@ def main():
         control_model = problem["control_model"]
         prior = problem["prior"]
         control_parameters = problem["control_parameters"]
+        if rank == 0:
+            save_parameter_sample_plots(prior, Vh, args.save_dir)
 
         results: Dict[str, Dict] = {}
         for model_name in MODEL_ORDER:

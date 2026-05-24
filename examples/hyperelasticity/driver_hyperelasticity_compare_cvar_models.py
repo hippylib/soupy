@@ -5,10 +5,8 @@ Models compared:
 - quadratic
 - mixture_linear_kle
 - mixture_linear_hep
-- alternating_hep_linear_cvar
 - mixture_quadratic_kle
 - mixture_quadratic_hep
-- alternating_hep_quadratic_cvar
 - saa_1
 - saa_10
 - saa_100
@@ -60,6 +58,7 @@ import numpy as np
 import scipy.optimize
 from mpi4py import MPI
 
+import hippylib as hp
 import soupy
 from soupy import (
     RiskMeasureControlCostFunctional,
@@ -67,8 +66,6 @@ from soupy import (
     superquantileRiskMeasureSAASettings,
 )
 from soupy.approximations.taylor import (
-    TaylorAlternatingHEPLinearCVaRControlCostFunctional,
-    TaylorAlternatingHEPQuadraticCVaRControlCostFunctional,
     TaylorLinearCVaRControlCostFunctional,
     TaylorMixtureLinearCVaRControlCostFunctional,
     TaylorMixtureQuadraticCVaRControlCostFunctional,
@@ -92,10 +89,8 @@ MODEL_ORDER = [
     "quadratic",
     "mixture_linear_kle",
     "mixture_linear_hep",
-    "alternating_hep_linear_cvar",
     "mixture_quadratic_kle",
     "mixture_quadratic_hep",
-    "alternating_hep_quadratic_cvar",
     "saa_1",
     "saa_10",
     "saa_100",
@@ -109,10 +104,8 @@ MODEL_COLORS = {
     "quadratic": "tab:orange",
     "mixture_linear_kle": "tab:green",
     "mixture_linear_hep": "tab:olive",
-    "alternating_hep_linear_cvar": "tab:cyan",
     "mixture_quadratic_kle": "tab:red",
     "mixture_quadratic_hep": "tab:brown",
-    "alternating_hep_quadratic_cvar": "tab:pink",
     "saa_1": "black",
     "saa_10": "#17becf",
     "saa_100": "#7f7f7f",
@@ -122,7 +115,7 @@ MODEL_COLORS = {
     "saa_10000": "#bcbd22",
 }
 
-EXPLICIT_CVAR_CONTINUATION_LEVELS = [1e-2, 3e-3, 1e-3, 3e-4, 1e-4]
+EXPLICIT_CVAR_CONTINUATION_LEVELS = [1e-4]
 
 
 class TeeStream:
@@ -152,6 +145,55 @@ class IterRecord:
     cost_rss_after_mb: float
     grad_rss_before_mb: float
     grad_rss_after_mb: float
+
+
+class VolumeFractionPenalization(soupy.Penalization):
+    def __init__(self, Vh, alpha=1.0, target_fraction=0.5):
+        self.Vh = Vh
+        self.alpha = float(alpha)
+        self.domain_measure = float(dl.assemble(dl.Constant(1.0) * dl.dx(domain=self.Vh[soupy.CONTROL].mesh())))
+        self.target_volume = float(target_fraction) * self.domain_measure
+        z_test = dl.TestFunction(self.Vh[soupy.CONTROL])
+        self.volume_vec = dl.assemble(z_test * dl.dx)
+
+    def init_vector(self, z):
+        if hasattr(z, "get_vector"):
+            return
+        self.volume_vec.init_vector(z, 0)
+
+    def _control_vector(self, z):
+        if hasattr(z, "get_vector"):
+            return z.get_vector()
+        return z
+
+    def cost(self, z):
+        z_vec = self._control_vector(z)
+        volume_misfit = self.volume_vec.inner(z_vec) - self.target_volume
+        return self.alpha * volume_misfit * volume_misfit
+
+    def grad(self, z, out):
+        if hasattr(z, "get_vector"):
+            out.set_scalar(0.0)
+            out_vec = out.get_vector()
+            z_vec = z.get_vector()
+        else:
+            out_vec = out
+            z_vec = z
+        out_vec.zero()
+        volume_misfit = self.volume_vec.inner(z_vec) - self.target_volume
+        out_vec.axpy(2.0 * self.alpha * volume_misfit, self.volume_vec)
+
+    def hessian(self, z, zhat, out):
+        del z
+        if hasattr(zhat, "get_vector"):
+            out.set_scalar(0.0)
+            out_vec = out.get_vector()
+            zhat_vec = zhat.get_vector()
+        else:
+            out_vec = out
+            zhat_vec = zhat
+        out_vec.zero()
+        out_vec.axpy(2.0 * self.alpha * self.volume_vec.inner(zhat_vec), self.volume_vec)
 
 
 def _rss_from_proc_status_mb() -> float:
@@ -188,6 +230,20 @@ def get_peak_rss_mb() -> float:
         return float("nan")
 
 
+def projected_gradient_inf_norm(x, grad, bounds):
+    if grad is None:
+        return float("nan")
+    x = np.asarray(x, dtype=float)
+    projected_grad = np.asarray(grad, dtype=float).copy()
+    if bounds is not None:
+        lb = np.asarray(bounds.lb, dtype=float)
+        ub = np.asarray(bounds.ub, dtype=float)
+        at_lb = np.isfinite(lb) & np.isclose(x, lb) & (projected_grad > 0.0)
+        at_ub = np.isfinite(ub) & np.isclose(x, ub) & (projected_grad < 0.0)
+        projected_grad[at_lb | at_ub] = 0.0
+    return float(np.linalg.norm(projected_grad, ord=np.inf))
+
+
 class ScipyObjectiveWithHistory:
     def __init__(self, cost_functional):
         self.cost_functional = cost_functional
@@ -195,6 +251,7 @@ class ScipyObjectiveWithHistory:
         self._g = cost_functional.generate_vector(soupy.CONTROL)
         self.latest_cost = np.nan
         self.latest_grad_norm = np.nan
+        self.latest_gradient = None
         self.latest_cost_rss_before_mb = np.nan
         self.latest_cost_rss_after_mb = np.nan
         self.latest_grad_rss_before_mb = np.nan
@@ -234,9 +291,10 @@ class ScipyObjectiveWithHistory:
             self.latest_grad_rss_before_mb = get_current_rss_mb()
             self.cost_functional.cost(self._z, order=1)
             self.latest_grad_norm = float(self.cost_functional.grad(self._g))
+            self.latest_gradient = np.array(self._g.get_local(), copy=True)
             self.latest_grad_rss_after_mb = get_current_rss_mb()
             self.n_grad += 1
-            return self._g.get_local()
+            return self.latest_gradient
 
         return g
 
@@ -244,8 +302,6 @@ class ScipyObjectiveWithHistory:
 def setup_problem(args, comm_mesh):
     settings = hyperelasticity_problem_settings()
     settings["qoi_type"] = args.qoi_type
-    settings["uncertainty"]["gamma"] = 0.1
-    settings["uncertainty"]["delta"] = 0.5
     settings["geometry"]["lx"] = args.lx
     settings["geometry"]["ly"] = args.ly
     settings["geometry"]["lz"] = args.lz
@@ -254,7 +310,7 @@ def setup_problem(args, comm_mesh):
     settings["mesh"]["ny"] = args.ny
     settings["mesh"]["nz"] = args.nz
     mesh, Vh, _, control_model, prior = setup_hyperelasticity_problem(settings, comm_mesh)
-    penalty = soupy.L2Penalization(Vh, args.penalty)
+    penalty = VolumeFractionPenalization(Vh, args.penalty, target_fraction=0.5)
     return mesh, Vh, control_model, prior, penalty
 
 
@@ -335,8 +391,6 @@ def make_cvar_saa_cost(
 def model_uses_world_parallel(model_name: str) -> bool:
     if model_name.startswith("mixture_"):
         return True
-    if model_name.startswith("alternating_hep_"):
-        return True
     if model_name.startswith("saa_"):
         return int(model_name.split("_", 1)[1]) >= 100
     return False
@@ -352,7 +406,7 @@ def should_use_linear_warm_start(model_name: str) -> bool:
 
 def is_explicit_continuation_model(model_name: str) -> bool:
     return (
-        model_name in {"quadratic", "mixture_quadratic_kle", "mixture_quadratic_hep", "alternating_hep_quadratic_cvar"}
+        model_name in {"quadratic", "mixture_quadratic_kle", "mixture_quadratic_hep"}
         or is_saa_model(model_name)
     )
 
@@ -407,14 +461,6 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_over
             {"beta": args.cvar_beta, "N_mix": args.n_mix, "direction": "hep", "verbose": args.verbose},
             comm_sampler=MPI.COMM_WORLD,
         )
-    if model_name == "alternating_hep_linear_cvar":
-        return TaylorAlternatingHEPLinearCVaRControlCostFunctional(
-            control_model,
-            prior,
-            penalty,
-            {"beta": args.cvar_beta, "N_mix": args.n_mix, "direction": "hep", "verbose": args.verbose},
-            comm_sampler=MPI.COMM_WORLD,
-        )
     if model_name == "mixture_quadratic_kle":
         return TaylorMixtureQuadraticCVaRControlCostFunctional(
             control_model,
@@ -433,22 +479,6 @@ def make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_over
         )
     if model_name == "mixture_quadratic_hep":
         return TaylorMixtureQuadraticCVaRControlCostFunctional(
-            control_model,
-            prior,
-            penalty,
-            {
-                "beta": args.cvar_beta,
-                "N_mix": args.n_mix,
-                "direction": "hep",
-                "N_tr": args.n_tr,
-                "N_mc": args.quadratic_cvar_n_mc,
-                "epsilon": 1e-4 if epsilon_override is None else float(epsilon_override),
-                "verbose": args.verbose,
-            },
-            comm_sampler=MPI.COMM_WORLD,
-        )
-    if model_name == "alternating_hep_quadratic_cvar":
-        return TaylorAlternatingHEPQuadraticCVaRControlCostFunctional(
             control_model,
             prior,
             penalty,
@@ -491,7 +521,6 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
         callback_last_time = None
 
         def callback(xk):
-            del xk
             nonlocal callback_last_time
             now = time.perf_counter()
             iter_time = np.nan if callback_last_time is None else now - callback_last_time
@@ -500,7 +529,7 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
                 IterRecord(
                     iteration=len(iter_records) + 1,
                     model_cost=float(wrapper.latest_cost),
-                    residual=float(wrapper.latest_grad_norm),
+                    residual=projected_gradient_inf_norm(xk, wrapper.latest_gradient, bounds),
                     epsilon=float(wrapper.current_smoothing_epsilon()),
                     iter_time_sec=iter_time,
                     rss_mb=get_current_rss_mb(),
@@ -535,7 +564,7 @@ def optimize_with_tracking(model_name, approx_cost, x0, bounds, args, rank, maxi
             if rank == 0 and r.iteration % args.print_every == 0:
                 print(
                     f"  [{model_name:20s}] iter {r.iteration:4d}: "
-                    f"J_model={r.model_cost:.6e}, ||g||={r.residual:.3e}, "
+                    f"J_model={r.model_cost:.6e}, ||proj g||_inf={r.residual:.3e}, "
                     f"epsilon={r.epsilon:.3e}, RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB"
                 )
                 sys.stdout.flush()
@@ -609,41 +638,27 @@ def optimize_with_explicit_continuation(
             )
             sys.stdout.flush()
 
-        if model_name == "alternating_hep_quadratic_cvar":
-            inner_payload = optimize_alternating_hep_with_tracking(
-                model_name,
-                control_model,
-                prior,
-                penalty,
-                current_x0_np,
-                args,
-                rank,
-                maxiter=maxiter,
-                epsilon_override=epsilon,
-                stage_label=f"eps={epsilon:.0e}",
-            )
-        else:
-            approx_cost = make_cvar_cost(
-                model_name,
-                control_model,
-                prior,
-                penalty,
-                args,
-                epsilon_override=epsilon,
-            )
-            inner_bounds = make_bounds(current_x0_np, args)
-            inner_label = f"{model_name}[eps={epsilon:.0e}]"
-            inner_payload = optimize_with_tracking(
-                inner_label,
-                approx_cost,
-                current_x0_np,
-                inner_bounds,
-                args,
-                rank,
-                maxiter=maxiter,
-                root_only=root_only,
-            )
-            del approx_cost
+        approx_cost = make_cvar_cost(
+            model_name,
+            control_model,
+            prior,
+            penalty,
+            args,
+            epsilon_override=epsilon,
+        )
+        inner_bounds = make_bounds(current_x0_np, args)
+        inner_label = f"{model_name}[eps={epsilon:.0e}]"
+        inner_payload = optimize_with_tracking(
+            inner_label,
+            approx_cost,
+            current_x0_np,
+            inner_bounds,
+            args,
+            rank,
+            maxiter=maxiter,
+            root_only=root_only,
+        )
+        del approx_cost
 
         for record in inner_payload["iter_records"]:
             combined_iter_records.append(
@@ -702,121 +717,6 @@ def optimize_with_explicit_continuation(
     return final_payload
 
 
-def is_alternating_hep_model(model_name: str) -> bool:
-    return model_name in {"alternating_hep_linear_cvar", "alternating_hep_quadratic_cvar"}
-
-
-def optimize_alternating_hep_with_tracking(
-    model_name,
-    control_model,
-    prior,
-    penalty,
-    x0_np,
-    args,
-    rank,
-    maxiter,
-    epsilon_override=None,
-    stage_label=None,
-):
-    initial_x0_np = np.array(x0_np, copy=True)
-    current_x0_np = np.array(x0_np, copy=True)
-    total_iter_count = 0
-    total_time_sec = 0.0
-    total_nfev = 0
-    total_njev = 0
-    combined_iter_records: List[IterRecord] = []
-    outer_payloads = []
-    final_payload = None
-
-    for outer_idx in range(args.alternating_hep_steps):
-        if rank == 0:
-            stage_prefix = "" if stage_label is None else f"{stage_label} "
-            print(
-                f"  [{model_name:20s}] {stage_prefix}alternating outer step "
-                f"{outer_idx + 1}/{args.alternating_hep_steps}: rebuild fixed-HEP objective"
-            )
-            sys.stdout.flush()
-
-        approx_cost = make_cvar_cost(
-            model_name,
-            control_model,
-            prior,
-            penalty,
-            args,
-            epsilon_override=epsilon_override,
-        )
-        bounds = make_bounds(current_x0_np, args)
-        if stage_label is None:
-            inner_label = f"{model_name}[{outer_idx + 1}/{args.alternating_hep_steps}]"
-        else:
-            inner_label = f"{model_name}[{stage_label}][{outer_idx + 1}/{args.alternating_hep_steps}]"
-        inner_payload = optimize_with_tracking(
-            inner_label,
-            approx_cost,
-            current_x0_np,
-            bounds,
-            args,
-            rank,
-            maxiter=maxiter,
-            root_only=False,
-        )
-
-        for record in inner_payload["iter_records"]:
-            combined_iter_records.append(
-                IterRecord(
-                    iteration=record.iteration + total_iter_count,
-                    model_cost=record.model_cost,
-                    residual=record.residual,
-                    epsilon=record.epsilon,
-                    iter_time_sec=record.iter_time_sec,
-                    rss_mb=record.rss_mb,
-                    peak_rss_mb=record.peak_rss_mb,
-                    cost_rss_before_mb=record.cost_rss_before_mb,
-                    cost_rss_after_mb=record.cost_rss_after_mb,
-                    grad_rss_before_mb=record.grad_rss_before_mb,
-                    grad_rss_after_mb=record.grad_rss_after_mb,
-                )
-            )
-
-        total_iter_count += int(inner_payload["iter_count"])
-        total_time_sec += float(inner_payload["total_time_sec"])
-        total_nfev += int(inner_payload["nfev"])
-        total_njev += int(inner_payload["njev"])
-        current_x0_np = np.array(inner_payload["z_opt_np"], copy=True)
-        outer_payloads.append(
-            {
-                "outer_step": outer_idx + 1,
-                "stage_label": stage_label,
-                "epsilon": None if epsilon_override is None else float(epsilon_override),
-                "success": bool(inner_payload["success"]),
-                "status": int(inner_payload["status"]),
-                "message": str(inner_payload["message"]),
-                "iter_count": int(inner_payload["iter_count"]),
-                "approx_opt": float(inner_payload["approx_opt"]),
-            }
-        )
-        final_payload = inner_payload
-        del approx_cost
-
-    if final_payload is None:
-        raise RuntimeError(f"Alternating optimization for {model_name} produced no payload.")
-
-    final_payload = dict(final_payload)
-    final_payload["success"] = all(payload["success"] for payload in outer_payloads)
-    final_payload["x0_np"] = np.array(initial_x0_np, copy=True)
-    final_payload["z_opt_np"] = np.array(current_x0_np, copy=True)
-    final_payload["iter_records"] = combined_iter_records
-    final_payload["iter_count"] = total_iter_count
-    final_payload["avg_iter_time_sec"] = total_time_sec / max(total_iter_count, 1)
-    final_payload["total_time_sec"] = total_time_sec
-    final_payload["nfev"] = total_nfev
-    final_payload["njev"] = total_njev
-    final_payload["outer_payloads"] = outer_payloads
-    if not final_payload["success"]:
-        final_payload["message"] = "One or more alternating outer steps failed; final outer step: " + str(final_payload["message"])
-    return final_payload
-
-
 def make_bounds(x0, args):
     lb = np.full_like(x0, args.bound_lb, dtype=float)
     ub = np.full_like(x0, args.bound_ub, dtype=float)
@@ -835,7 +735,7 @@ def save_iteration_csv(path, records: List[IterRecord]):
             [
                 "iteration",
                 "model_cost",
-                "residual",
+                "projected_grad_inf_norm",
                 "epsilon",
                 "iter_time_sec",
                 "rss_mb",
@@ -927,8 +827,8 @@ def plot_curves(results, save_dir):
         y = [max(r.residual, 1e-16) for r in rec]
         plt.semilogy(x, y, marker="o", linewidth=1.5, markersize=3, color=MODEL_COLORS[model], label=model)
     plt.xlabel("Iteration")
-    plt.ylabel("Residual ||grad||")
-    plt.title("Residual per Iteration")
+    plt.ylabel("Projected Gradient Inf Norm")
+    plt.title("Projected Gradient Inf Norm per Iteration")
     plt.grid(True, which="both", alpha=0.3)
     plt.legend()
     plt.tight_layout()
@@ -1002,6 +902,76 @@ def plot_on_axes(function, ax):
     return dl.plot(function)
 
 
+
+def save_parameter_sample_plots(prior, Vh, save_dir, sample_count=3, seed=11):
+    V_parameter = Vh[soupy.PARAMETER]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    fig, axes = plt.subplots(1, sample_count, figsize=(4.2 * sample_count, 3.6))
+    axes = np.atleast_1d(axes)
+    for i, ax in enumerate(axes):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        m_fun = scalarize_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        artist = plot_on_axes(m_fun, ax)
+        ax.set_title(f"parameter sample {i + 1}")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "parameter_samples.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_young_modulus_moment_plots(prior, Vh, save_dir, sample_count=10000, seed=23, E0=20.0, E1=200.0):
+    V_parameter = Vh[soupy.PARAMETER]
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    sum_E = None
+    sum_E2 = None
+    for _ in range(sample_count):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        E_local = E0 + np.exp(m.get_local()) * (E1 - E0)
+        if sum_E is None:
+            sum_E = np.zeros_like(E_local)
+            sum_E2 = np.zeros_like(E_local)
+        sum_E += E_local
+        sum_E2 += E_local * E_local
+
+    mean_E = sum_E / float(sample_count)
+    var_E = np.maximum(sum_E2 / float(sample_count) - mean_E * mean_E, 0.0)
+    std_E = np.sqrt(var_E)
+
+    mean_fun = dl.Function(V_parameter)
+    mean_fun.vector().set_local(mean_E)
+    mean_fun.vector().apply("")
+    std_fun = dl.Function(V_parameter)
+    std_fun.vector().set_local(std_E)
+    std_fun.vector().apply("")
+
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.8))
+    for ax, fun, title in zip(
+        axes,
+        [mean_fun, std_fun],
+        [f"Young modulus mean ({sample_count} samples)", f"Young modulus std ({sample_count} samples)"],
+    ):
+        artist = plot_on_axes(fun, ax)
+        ax.set_title(title)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "young_modulus_mean_std.png"), dpi=180)
+    plt.close(fig)
+
 def solve_state_at_control(control_model, prior, control_np):
     x = control_model.generate_vector("ALL")
     x[soupy.PARAMETER].zero()
@@ -1053,6 +1023,69 @@ def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
     plt.close(fig)
 
 
+
+def state_components_for_plot(V_state, state_vector):
+    state_fun = vector_to_function(V_state, state_vector)
+    components = state_fun.split(deepcopy=True)
+    if len(components) < 2:
+        raise ValueError("Expected a vector-valued hyperelasticity state with at least two components.")
+    return components[0], components[1]
+
+
+def save_optimal_state_component_plots(results, control_model, prior, Vh, save_dir):
+    payload = []
+    for model_name in MODEL_ORDER:
+        z_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        _, state_vec = solve_state_at_control(control_model, prior, z_np)
+        u_x, u_y = state_components_for_plot(Vh[soupy.STATE], state_vec)
+        payload.append((model_name, u_x, u_y))
+
+    fig, axes = plt.subplots(len(payload), 2, figsize=(9, 3.6 * len(payload)))
+    axes = np.atleast_2d(axes)
+    for i, (model_name, u_x, u_y) in enumerate(payload):
+        for ax, fun, title in zip(axes[i], [u_x, u_y], [f"{model_name} u_x(z*)", f"{model_name} u_y(z*)"]):
+            artist = plot_on_axes(fun, ax)
+            ax.set_title(title)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_state_components.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_optimal_deformed_material_plots(results, control_model, prior, Vh, save_dir):
+    V_parameter = Vh[soupy.PARAMETER]
+    parameter_fun = vector_to_function(V_parameter, prior.mean)
+
+    payload = []
+    for model_name in MODEL_ORDER:
+        z_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        _, state_vec = solve_state_at_control(control_model, prior, z_np)
+        state_fun = vector_to_function(Vh[soupy.STATE], state_vec)
+        payload.append((model_name, state_fun))
+
+    fig, axes = plt.subplots(len(payload), 2, figsize=(12, 4.2 * len(payload)))
+    axes = np.atleast_2d(axes)
+    for i, (model_name, state_fun) in enumerate(payload):
+        plt.sca(axes[i, 0])
+        artist = dl.plot(parameter_fun, mode="color", cmap="turbo", shading="gouraud")
+        axes[i, 0].set_title(f"{model_name} parameter mean")
+        axes[i, 0].set_xlabel("X_1")
+        axes[i, 0].set_ylabel("X_2")
+        plt.colorbar(artist, ax=axes[i, 0], pad=0.03, fraction=0.05, aspect=20)
+
+        plt.sca(axes[i, 1])
+        artist = dl.plot(state_fun, mode="displacement", cmap="turbo", shading="gouraud")
+        axes[i, 1].set_title(f"{model_name} deformed shape x = X + u(X)")
+        axes[i, 1].set_xlabel("X_1")
+        axes[i, 1].set_ylabel("X_2")
+        cbar = plt.colorbar(artist, ax=axes[i, 1], pad=0.03, fraction=0.05, aspect=20)
+        cbar.set_label("||u||_2", rotation=0, labelpad=15)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_deformed_materials.png"), dpi=180)
+    plt.close(fig)
+
 def save_optimal_pde_solution_plot(results, control_model, prior, Vh, save_dir):
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
@@ -1087,14 +1120,13 @@ def main():
     parser.add_argument("--n-tr", type=int, default=50, help="Number of Hessian modes for quadratic models")
     parser.add_argument("--n-mix", type=int, default=11, help="Number of mixture components")
     parser.add_argument("--quadratic-cvar-n-mc", type=int, default=5000, help="MC samples for quadratic CVaR surrogates")
-    parser.add_argument("--alternating-hep-steps", type=int, default=5, help="Number of outer rebuild-optimize steps for alternating HEP CVaR models")
     parser.add_argument("--truth-saa-samples", "--saa-samples", dest="truth_saa_samples", type=int, default=100000)
     parser.add_argument("--saa-seed", type=int, default=1)
     parser.add_argument("--qoi-type", type=str, default="virtual_work",
                         choices=["all", "stiffness", "point", "virtual_work"])
-    parser.add_argument("--penalty", type=float, default=5e-1)
-    parser.add_argument("--maxiter", type=int, default=240)
-    parser.add_argument("--maxiter-saa", type=int, default=240)
+    parser.add_argument("--penalty", type=float, default=1.0)
+    parser.add_argument("--maxiter", type=int, default=500)
+    parser.add_argument("--maxiter-saa", type=int, default=500)
     parser.add_argument("--nx", type=int, default= 64)
     parser.add_argument("--ny", type=int, default= 16)
     parser.add_argument("--nz", type=int, default=8)
@@ -1130,24 +1162,23 @@ def main():
         if rank == 0:
             print("=" * 78)
             print("Hyperelasticity CVaR Model Comparison:")
-            print("  linear / quadratic / mixture_linear_kle / mixture_linear_hep / alternating_hep_linear_cvar")
+            print("  linear / quadratic / mixture_linear_kle / mixture_linear_hep")
             print(
-                "  mixture_quadratic_kle / mixture_quadratic_hep / alternating_hep_quadratic_cvar / "
+                "  mixture_quadratic_kle / mixture_quadratic_hep / "
                 "saa_1 / saa_10 / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000"
             )
             print("  serial: linear / quadratic / saa_1 / saa_10")
-            print("  parallel on all ranks: mixture_* / alternating_hep_* / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000")
+            print("  parallel on all ranks: mixture_* / saa_100 / saa_200 / saa_500 / saa_1000 / saa_10000")
             print("=" * 78)
             print(f"Ground-truth exact-CVaR sample count: {args.truth_saa_samples}")
             print(
                 f"cvar_beta={args.cvar_beta}, n_tr={args.n_tr}, n_mix={args.n_mix}, "
                 f"quadratic_cvar_n_mc={args.quadratic_cvar_n_mc}"
             )
-            print(f"alternating_hep_steps={args.alternating_hep_steps}")
             print(f"penalty={args.penalty}")
             print(f"mesh={args.nx}x{args.ny}" + (f"x{args.nz}" if args.geometry_dim == 3 else ""))
             print(
-                "Explicit continuation for quadratic, SAA, and alternating-HQP models: "
+                "Explicit continuation for quadratic and SAA models: "
                 + " -> ".join(f"{eps:.0e}" for eps in EXPLICIT_CVAR_CONTINUATION_LEVELS)
             )
             print(f"terminal log file: {log_path}")
@@ -1155,6 +1186,9 @@ def main():
             sys.stdout.flush()
 
         _, Vh, control_model, prior, penalty = setup_problem(args, comm_mesh)
+        if rank == 0:
+            save_parameter_sample_plots(prior, Vh, args.save_dir)
+            save_young_modulus_moment_plots(prior, Vh, args.save_dir)
         control0_np = zero_control_np(control_model)
         base_control_np = np.full_like(control0_np, 0.5)
         base_t = 0.5
@@ -1254,17 +1288,6 @@ def main():
                     args,
                     rank,
                     maxiter=args.maxiter_saa if is_saa_model(model_name) else args.maxiter,
-                )
-            elif is_alternating_hep_model(model_name):
-                res = optimize_alternating_hep_with_tracking(
-                    model_name,
-                    control_model,
-                    prior,
-                    penalty,
-                    x0_np,
-                    args,
-                    rank,
-                    maxiter=args.maxiter,
                 )
             else:
                 res = optimize_with_tracking(
@@ -1391,6 +1414,8 @@ def main():
             plot_curves(results, args.save_dir)
             save_optimal_field_plots(results, control_model, prior, Vh, args.save_dir)
             save_optimal_pde_solution_plot(results, control_model, prior, Vh, args.save_dir)
+            save_optimal_state_component_plots(results, control_model, prior, Vh, args.save_dir)
+            save_optimal_deformed_material_plots(results, control_model, prior, Vh, args.save_dir)
 
             with open(os.path.join(args.save_dir, "timing_comparison.csv"), "w", newline="") as f:
                 writer = csv.writer(f)

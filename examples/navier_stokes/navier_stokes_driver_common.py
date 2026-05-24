@@ -19,6 +19,14 @@ import hippylib as hp
 import soupy
 from soupy import MeanVarRiskMeasureSAA, RiskMeasureControlCostFunctional, meanVarRiskMeasureSAASettings, sample_superquantile
 
+LBFGSB_OPTIONS = {
+    "maxiter": None,
+    "disp": False,
+    "ftol": 1e-20,
+    "gtol": 1e-4,
+    "maxls": 50,
+}
+
 
 class TeeStream:
     def __init__(self, terminal_stream, file_stream):
@@ -82,6 +90,20 @@ def get_peak_rss_mb() -> float:
         return float("nan")
 
 
+def projected_gradient_inf_norm(x, grad, bounds):
+    if grad is None:
+        return float("nan")
+    x = np.asarray(x, dtype=float)
+    projected_grad = np.asarray(grad, dtype=float).copy()
+    if bounds is not None:
+        lb = np.asarray(bounds.lb, dtype=float)
+        ub = np.asarray(bounds.ub, dtype=float)
+        at_lb = np.isfinite(lb) & np.isclose(x, lb) & (projected_grad > 0.0)
+        at_ub = np.isfinite(ub) & np.isclose(x, ub) & (projected_grad < 0.0)
+        projected_grad[at_lb | at_ub] = 0.0
+    return float(np.linalg.norm(projected_grad, ord=np.inf))
+
+
 class ScipyObjectiveWithHistory:
     def __init__(self, cost_functional):
         self.cost_functional = cost_functional
@@ -89,6 +111,7 @@ class ScipyObjectiveWithHistory:
         self._g = cost_functional.generate_vector(soupy.CONTROL)
         self.latest_cost = np.nan
         self.latest_grad_norm = np.nan
+        self.latest_gradient = None
         self.latest_cost_rss_before_mb = np.nan
         self.latest_cost_rss_after_mb = np.nan
         self.latest_grad_rss_before_mb = np.nan
@@ -115,9 +138,10 @@ class ScipyObjectiveWithHistory:
             self.latest_grad_rss_before_mb = get_current_rss_mb()
             self.cost_functional.cost(self._z, order=1)
             self.latest_grad_norm = float(self.cost_functional.grad(self._g))
+            self.latest_gradient = np.array(self._g.get_local(), copy=True)
             self.latest_grad_rss_after_mb = get_current_rss_mb()
             self.n_grad += 1
-            return self._g.get_local()
+            return self.latest_gradient
 
         return g
 
@@ -170,7 +194,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
         iter_records: List[IterRecord] = []
         callback_last_time = None
 
-        def callback(_xk):
+        def callback(xk):
             nonlocal callback_last_time
             now = time.perf_counter()
             iter_time = np.nan if callback_last_time is None else now - callback_last_time
@@ -179,7 +203,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
                 IterRecord(
                     iteration=len(iter_records) + 1,
                     model_cost=float(wrapper.latest_cost),
-                    residual=float(wrapper.latest_grad_norm),
+                    residual=projected_gradient_inf_norm(xk, wrapper.latest_gradient, bounds),
                     iter_time_sec=iter_time,
                     rss_mb=get_current_rss_mb(),
                     peak_rss_mb=get_peak_rss_mb(),
@@ -198,7 +222,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
             jac=wrapper.jac(),
             callback=callback,
             bounds=bounds,
-            options={"maxiter": maxiter, "disp": False},
+            options={**LBFGSB_OPTIONS, "maxiter": maxiter},
         )
         total_time = time.perf_counter() - t0
         iter_count = len(iter_records) if iter_records else int(result.nit)
@@ -208,7 +232,7 @@ def optimize_with_tracking(model_name, approx_cost, args, rank, maxiter, bounds=
             if rank == 0 and r.iteration % args.print_every == 0:
                 print(
                     f"  [{model_name:20s}] iter {r.iteration:4d}: "
-                    f"J_model={r.model_cost:.6e}, ||g||={r.residual:.3e}, "
+                    f"J_model={r.model_cost:.6e}, ||proj g||_inf={r.residual:.3e}, "
                     f"RSS={r.rss_mb:.1f} MB, PeakRSS={r.peak_rss_mb:.1f} MB, "
                     f"cost_mem={r.cost_rss_before_mb:.1f}->{r.cost_rss_after_mb:.1f} MB, "
                     f"grad_mem={r.grad_rss_before_mb:.1f}->{r.grad_rss_after_mb:.1f} MB"
@@ -254,7 +278,7 @@ def save_iteration_csv(path, records: List[IterRecord]):
         writer.writerow([
             "iteration",
             "model_cost",
-            "residual",
+            "projected_grad_inf_norm",
             "iter_time_sec",
             "rss_mb",
             "peak_rss_mb",
@@ -330,8 +354,8 @@ def plot_curves(results, model_order, model_colors, save_dir):
         y = [max(r.residual, 1e-16) for r in rec]
         plt.semilogy(x, y, marker="o", linewidth=1.5, markersize=3, color=model_colors[model], label=model)
     plt.xlabel("Iteration")
-    plt.ylabel("Residual ||grad||")
-    plt.title("Residual per Iteration")
+    plt.ylabel("Projected Gradient Inf Norm")
+    plt.title("Projected Gradient Inf Norm per Iteration")
     plt.grid(True, which="both", alpha=0.3)
     plt.legend()
     plt.tight_layout()
