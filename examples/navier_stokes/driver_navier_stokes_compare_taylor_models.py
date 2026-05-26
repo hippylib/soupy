@@ -17,7 +17,7 @@ import scipy.optimize
 from mpi4py import MPI
 
 import soupy
-from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, save_optimal_state_component_plots, save_parameter_sample_plots, setup_problem
+from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, save_optimal_state_component_plots, save_saa_parameter_solution_sample_plots, save_solution_vs_linear_initial_plots, setup_problem
 from navier_stokes_driver_common import (
     TeeStream,
     evaluate_cost,
@@ -253,8 +253,7 @@ def main():
         control_model = problem["control_model"]
         prior = problem["prior"]
         penalty = problem["penalty"]
-        if rank == 0:
-            save_parameter_sample_plots(prior, Vh, args.save_dir)
+        control0_np = control_model.generate_vector(soupy.CONTROL).get_local()
         bounds = scipy.optimize.Bounds(lb=args.bound_lb, ub=args.bound_ub)
 
         results: Dict[str, Dict] = {}
@@ -345,6 +344,8 @@ def main():
             save_optimal_field_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
             save_optimal_pde_solution_plot(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
             save_optimal_state_component_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
+            save_saa_parameter_solution_sample_plots(results, "saa_100", control_model, prior, Vh, args.save_dir)
+            save_solution_vs_linear_initial_plots(results, MODEL_ORDER, control0_np, control_model, prior, Vh, args.save_dir)
 
             with open(os.path.join(args.save_dir, "timing_comparison.csv"), "w", newline="") as f:
                 writer = csv.writer(f)

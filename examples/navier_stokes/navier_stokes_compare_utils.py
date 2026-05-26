@@ -163,6 +163,128 @@ def plot_boundary_control_profiles(control_np, control_bases, axes, model_name=N
         ax.grid(True, alpha=0.3)
 
 
+
+
+def solve_state_at_parameter_control(control_model, parameter_vec, control_np):
+    x = control_model.generate_vector("ALL")
+    x[soupy.PARAMETER].zero()
+    x[soupy.PARAMETER].axpy(1.0, parameter_vec)
+    control_np = np.asarray(control_np)
+    expected_size = x[soupy.CONTROL].local_size()
+    if control_np.size != expected_size:
+        raise ValueError(
+            f"Expected a control vector with {expected_size} local entries, got {control_np.size}. "
+            "Pass result['control_opt_np'], not an augmented CVaR vector."
+        )
+    x[soupy.CONTROL].set_local(control_np)
+    x[soupy.CONTROL].apply("")
+    control_model.solveFwd(x[soupy.STATE], x)
+    qoi = float(control_model.cost(x))
+    return x[soupy.STATE].copy(), qoi
+
+
+def save_saa_parameter_solution_sample_plots(results, saa_model_name, control_model, prior, Vh, save_dir, sample_count=3, seed=11):
+    if saa_model_name not in results:
+        return
+    V_parameter = Vh[soupy.PARAMETER]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    control_np = optimal_control_np(results[saa_model_name])
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    fig, axes = plt.subplots(sample_count, 2, figsize=(9, 3.6 * sample_count))
+    axes = np.atleast_2d(axes)
+    for i in range(sample_count):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        state_vec, qoi = solve_state_at_parameter_control(control_model, m, control_np)
+        m_fun = scalarize_parameter_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        state_fun = state_velocity_magnitude(Vh[soupy.STATE], state_vec)
+        for ax, fun, title in zip(
+            axes[i],
+            [m_fun, state_fun],
+            [f"{saa_model_name} sample {i + 1} parameter", f"|v| at sample, QoI={qoi:.3e}"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, f"{saa_model_name}_parameter_solution_samples.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_solution_vs_linear_initial_plots(results, model_order, linear_initial_control_np, control_model, prior, Vh, save_dir):
+    _, init_state_vec = solve_state_at_control(control_model, prior, linear_initial_control_np)
+    init_v_x, init_v_y = velocity_components_for_plot(Vh[soupy.STATE], init_state_vec)
+
+    fig, axes = plt.subplots(len(model_order), 4, figsize=(17, 3.6 * len(model_order)))
+    axes = np.atleast_2d(axes)
+    for i, model_name in enumerate(model_order):
+        _, opt_state_vec = solve_state_at_control(control_model, prior, optimal_control_np(results[model_name]))
+        opt_v_x, opt_v_y = velocity_components_for_plot(Vh[soupy.STATE], opt_state_vec)
+        for ax, fun, title in zip(
+            axes[i],
+            [opt_v_x, opt_v_y, init_v_x, init_v_y],
+            [f"{model_name} v_x(z*)", f"{model_name} v_y(z*)", "linear initial v_x", "linear initial v_y"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_vs_linear_initial_solutions.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_cvar_tail_parameter_solution_plots(results, saa_model_name, control_model, prior, Vh, save_dir, sample_size, cvar_value, sample_count=3, seed=1):
+    if saa_model_name not in results:
+        return
+    V_parameter = Vh[soupy.PARAMETER]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    control_np = optimal_control_np(results[saa_model_name])
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+    tail_samples = []
+
+    for _ in range(int(sample_size)):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        state_vec, qoi = solve_state_at_parameter_control(control_model, m, control_np)
+        if qoi > cvar_value:
+            tail_samples.append((qoi, m.copy(), state_vec.copy()))
+            if len(tail_samples) >= sample_count:
+                break
+
+    if not tail_samples:
+        return
+
+    fig, axes = plt.subplots(len(tail_samples), 2, figsize=(9, 3.6 * len(tail_samples)))
+    axes = np.atleast_2d(axes)
+    for i, (qoi, m, state_vec) in enumerate(tail_samples):
+        m_fun = scalarize_parameter_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        state_fun = state_velocity_magnitude(Vh[soupy.STATE], state_vec)
+        for ax, fun, title in zip(
+            axes[i],
+            [m_fun, state_fun],
+            [f"tail sample {i + 1}: QoI={qoi:.3e} > CVaR={cvar_value:.3e}", "|v| at tail sample"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, f"{saa_model_name}_tail_parameter_solution_samples.png"), dpi=180)
+    plt.close(fig)
+
+
 def save_optimal_field_plots(results, model_order, control_model, prior, Vh, save_dir):
     overview_payload = []
     control_bases = control_model.problem.ns_residual.control_bases

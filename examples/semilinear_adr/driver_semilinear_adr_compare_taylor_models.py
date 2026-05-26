@@ -858,6 +858,82 @@ def solve_state_at_control(control_model, prior, z_np):
     return x[soupy.CONTROL].copy(), x[soupy.STATE].copy()
 
 
+
+
+def solve_state_at_parameter_control(control_model, parameter_vec, control_np):
+    x = control_model.generate_vector("ALL")
+    x[soupy.PARAMETER].zero()
+    x[soupy.PARAMETER].axpy(1.0, parameter_vec)
+    x[soupy.CONTROL].set_local(np.asarray(control_np))
+    x[soupy.CONTROL].apply("")
+    control_model.solveFwd(x[soupy.STATE], x)
+    qoi = float(control_model.cost(x))
+    return x[soupy.STATE].copy(), qoi
+
+
+def save_saa_parameter_solution_sample_plots(results, saa_model_name, control_model, prior, Vh, save_dir, sample_count=3, seed=11):
+    if saa_model_name not in results:
+        return
+    V_parameter = Vh[soupy.PARAMETER]
+    V_state = Vh[soupy.STATE]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
+    control_np = results[saa_model_name].get("control_opt_np", results[saa_model_name].get("z_opt_np"))
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    fig, axes = plt.subplots(sample_count, 2, figsize=(9, 3.6 * sample_count))
+    axes = np.atleast_2d(axes)
+    for i in range(sample_count):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        state_vec, qoi = solve_state_at_parameter_control(control_model, m, control_np)
+        m_fun = scalarize_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        state_fun = scalarize_for_plot(vector_to_function(V_state, state_vec), V_state_scalar)
+        for ax, fun, title in zip(
+            axes[i],
+            [m_fun, state_fun],
+            [f"{saa_model_name} sample {i + 1} parameter", f"solution at sample, QoI={qoi:.3e}"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, f"{saa_model_name}_parameter_solution_samples.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_solution_vs_linear_initial_plots(results, linear_initial_control_np, control_model, prior, Vh, save_dir):
+    V_state = Vh[soupy.STATE]
+    V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
+    _, init_state_vec = solve_state_at_control(control_model, prior, linear_initial_control_np)
+    init_state_fun = scalarize_for_plot(vector_to_function(V_state, init_state_vec), V_state_scalar)
+
+    fig, axes = plt.subplots(len(MODEL_ORDER), 2, figsize=(9, 3.6 * len(MODEL_ORDER)))
+    axes = np.atleast_2d(axes)
+    for i, model_name in enumerate(MODEL_ORDER):
+        control_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        _, opt_state_vec = solve_state_at_control(control_model, prior, control_np)
+        opt_state_fun = scalarize_for_plot(vector_to_function(V_state, opt_state_vec), V_state_scalar)
+        for ax, fun, title in zip(
+            axes[i],
+            [opt_state_fun, init_state_fun],
+            [f"{model_name} solution at z*", "linear Taylor initial solution"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_vs_linear_initial_solutions.png"), dpi=180)
+    plt.close(fig)
+
+
 def save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, save_dir):
     V_state = Vh[soupy.STATE]
     V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
@@ -1017,8 +1093,7 @@ def main():
         control_model = problem["control_model"]
         prior = problem["prior"]
         control_parameters = problem["control_parameters"]
-        if rank == 0:
-            save_parameter_sample_plots(prior, Vh, args.save_dir)
+        control0_np = control_model.generate_vector(soupy.CONTROL).get_local()
 
         results: Dict[str, Dict] = {}
         for model_name in MODEL_ORDER:
@@ -1170,6 +1245,8 @@ def main():
             plot_curves(results, args.save_dir)
             save_optimal_field_plots(results, control_model, prior, Vh, control_parameters, args.save_dir)
             save_optimal_pde_solution_plot(results, control_model, prior, Vh, args.save_dir)
+            save_saa_parameter_solution_sample_plots(results, "saa_10000", control_model, prior, Vh, args.save_dir)
+            save_solution_vs_linear_initial_plots(results, control0_np, control_model, prior, Vh, args.save_dir)
 
             timing_rows = []
             for model_name in MODEL_ORDER:

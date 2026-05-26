@@ -400,8 +400,12 @@ def is_saa_model(model_name: str) -> bool:
     return model_name.startswith("saa_")
 
 
-def should_use_linear_warm_start(model_name: str) -> bool:
-    return model_name != "linear" and not is_saa_model(model_name)
+def warm_start_source(model_name: str):
+    if model_name == "quadratic" or model_name.startswith("mixture_linear_"):
+        return "linear"
+    if model_name.startswith("mixture_quadratic_"):
+        return "quadratic"
+    return None
 
 
 def is_explicit_continuation_model(model_name: str) -> bool:
@@ -927,7 +931,7 @@ def save_parameter_sample_plots(prior, Vh, save_dir, sample_count=3, seed=11):
     plt.close(fig)
 
 
-def save_young_modulus_moment_plots(prior, Vh, save_dir, sample_count=10000, seed=23, E0=20.0, E1=200.0):
+def save_young_modulus_moment_plots(prior, Vh, save_dir, sample_count=10000, seed=23, E0=10.0, E1=100.0):
     V_parameter = Vh[soupy.PARAMETER]
     noise = dl.Vector(V_parameter.mesh().mpi_comm())
     prior.init_vector(noise, "noise")
@@ -980,6 +984,132 @@ def solve_state_at_control(control_model, prior, control_np):
     x[soupy.CONTROL].apply("")
     control_model.solveFwd(x[soupy.STATE], x)
     return x[soupy.CONTROL].copy(), x[soupy.STATE].copy()
+
+
+
+
+def solve_state_at_parameter_control(control_model, parameter_vec, control_np):
+    x = control_model.generate_vector("ALL")
+    x[soupy.PARAMETER].zero()
+    x[soupy.PARAMETER].axpy(1.0, parameter_vec)
+    x[soupy.CONTROL].set_local(np.asarray(control_np))
+    x[soupy.CONTROL].apply("")
+    control_model.solveFwd(x[soupy.STATE], x)
+    qoi = float(control_model.cost(x))
+    return x[soupy.STATE].copy(), qoi
+
+
+def optimal_control_np(result):
+    if "control_opt_np" in result:
+        return result["control_opt_np"]
+    return result["z_opt_np"]
+
+
+def save_saa_parameter_solution_sample_plots(results, saa_model_name, control_model, prior, Vh, save_dir, sample_count=3, seed=11):
+    if saa_model_name not in results:
+        return
+    V_parameter = Vh[soupy.PARAMETER]
+    V_state = Vh[soupy.STATE]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
+    control_np = optimal_control_np(results[saa_model_name])
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+
+    fig, axes = plt.subplots(sample_count, 2, figsize=(9, 3.6 * sample_count))
+    axes = np.atleast_2d(axes)
+    for i in range(sample_count):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        state_vec, qoi = solve_state_at_parameter_control(control_model, m, control_np)
+        m_fun = scalarize_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        state_fun = scalarize_for_plot(vector_to_function(V_state, state_vec), V_state_scalar)
+        for ax, fun, title in zip(
+            axes[i],
+            [m_fun, state_fun],
+            [f"{saa_model_name} sample {i + 1} parameter", f"|u| at sample, QoI={qoi:.3e}"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, f"{saa_model_name}_parameter_solution_samples.png"), dpi=180)
+    plt.close(fig)
+
+
+def save_solution_vs_linear_initial_plots(results, linear_initial_control_np, control_model, prior, Vh, save_dir):
+    _, init_state_vec = solve_state_at_control(control_model, prior, linear_initial_control_np)
+    init_u_x, init_u_y = state_components_for_plot(Vh[soupy.STATE], init_state_vec)
+
+    fig, axes = plt.subplots(len(MODEL_ORDER), 4, figsize=(17, 3.6 * len(MODEL_ORDER)))
+    axes = np.atleast_2d(axes)
+    for i, model_name in enumerate(MODEL_ORDER):
+        _, opt_state_vec = solve_state_at_control(control_model, prior, optimal_control_np(results[model_name]))
+        opt_u_x, opt_u_y = state_components_for_plot(Vh[soupy.STATE], opt_state_vec)
+        for ax, fun, title in zip(
+            axes[i],
+            [opt_u_x, opt_u_y, init_u_x, init_u_y],
+            [f"{model_name} u_x(z*)", f"{model_name} u_y(z*)", "linear initial u_x", "linear initial u_y"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "optimal_vs_linear_initial_solutions.png"), dpi=180)
+    plt.close(fig)
+
+
+
+def save_cvar_tail_parameter_solution_plots(results, saa_model_name, control_model, prior, Vh, save_dir, sample_size, cvar_value, sample_count=3, seed=1):
+    if saa_model_name not in results:
+        return
+    V_parameter = Vh[soupy.PARAMETER]
+    V_state = Vh[soupy.STATE]
+    V_parameter_scalar = dl.FunctionSpace(V_parameter.mesh(), "CG", 1)
+    V_state_scalar = dl.FunctionSpace(V_state.mesh(), "CG", 1)
+    control_np = optimal_control_np(results[saa_model_name])
+    noise = dl.Vector(V_parameter.mesh().mpi_comm())
+    prior.init_vector(noise, "noise")
+    rng = hp.Random(seed=seed)
+    tail_samples = []
+
+    for _ in range(int(sample_size)):
+        m = prior.mean.copy()
+        rng.normal(1.0, noise)
+        prior.sample(noise, m)
+        state_vec, qoi = solve_state_at_parameter_control(control_model, m, control_np)
+        if qoi > cvar_value:
+            tail_samples.append((qoi, m.copy(), state_vec.copy()))
+            if len(tail_samples) >= sample_count:
+                break
+
+    if not tail_samples:
+        return
+
+    fig, axes = plt.subplots(len(tail_samples), 2, figsize=(9, 3.6 * len(tail_samples)))
+    axes = np.atleast_2d(axes)
+    for i, (qoi, m, state_vec) in enumerate(tail_samples):
+        m_fun = scalarize_for_plot(vector_to_function(V_parameter, m), V_parameter_scalar)
+        state_fun = scalarize_for_plot(vector_to_function(V_state, state_vec), V_state_scalar)
+        for ax, fun, title in zip(
+            axes[i],
+            [m_fun, state_fun],
+            [f"tail sample {i + 1}: QoI={qoi:.3e} > CVaR={cvar_value:.3e}", "|u| at tail sample"],
+        ):
+            artist = plot_on_axes(fun, ax)
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            ax.set_title(title)
+            plt.colorbar(artist, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, f"{saa_model_name}_tail_parameter_solution_samples.png"), dpi=180)
+    plt.close(fig)
 
 
 def save_optimal_field_plots(results, control_model, prior, Vh, save_dir):
@@ -1035,7 +1165,7 @@ def state_components_for_plot(V_state, state_vector):
 def save_optimal_state_component_plots(results, control_model, prior, Vh, save_dir):
     payload = []
     for model_name in MODEL_ORDER:
-        z_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        z_np = optimal_control_np(results[model_name])
         _, state_vec = solve_state_at_control(control_model, prior, z_np)
         u_x, u_y = state_components_for_plot(Vh[soupy.STATE], state_vec)
         payload.append((model_name, u_x, u_y))
@@ -1060,7 +1190,7 @@ def save_optimal_deformed_material_plots(results, control_model, prior, Vh, save
 
     payload = []
     for model_name in MODEL_ORDER:
-        z_np = results[model_name].get("control_opt_np", results[model_name].get("z_opt_np"))
+        z_np = optimal_control_np(results[model_name])
         _, state_vec = solve_state_at_control(control_model, prior, z_np)
         state_fun = vector_to_function(Vh[soupy.STATE], state_vec)
         payload.append((model_name, state_fun))
@@ -1187,7 +1317,6 @@ def main():
 
         _, Vh, control_model, prior, penalty = setup_problem(args, comm_mesh)
         if rank == 0:
-            save_parameter_sample_plots(prior, Vh, args.save_dir)
             save_young_modulus_moment_plots(prior, Vh, args.save_dir)
         control0_np = zero_control_np(control_model)
         base_control_np = np.full_like(control0_np, 0.5)
@@ -1196,6 +1325,8 @@ def main():
         args.control_dim = len(control0_np)
         linear_init_control_np = np.array(control0_np, copy=True)
         linear_init_t = 0.0
+        quadratic_init_control_np = np.array(control0_np, copy=True)
+        quadratic_init_t = 0.0
 
         results: Dict[str, Dict] = {}
         for model_name in MODEL_ORDER:
@@ -1203,7 +1334,7 @@ def main():
             x0_np = None
             approx_init = None
             init_t = None
-            use_linear_warm_start = should_use_linear_warm_start(model_name)
+            source = warm_start_source(model_name)
             run_parallel_model = model_uses_world_parallel(model_name)
             epsilon_override = (
                 EXPLICIT_CVAR_CONTINUATION_LEVELS[0]
@@ -1215,11 +1346,16 @@ def main():
                 approx_cost = make_cvar_cost(
                     model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override
                 )
-                init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
+                if source == "linear":
+                    init_control_np = linear_init_control_np
+                    init_scalar = linear_init_t
+                elif source == "quadratic":
+                    init_control_np = quadratic_init_control_np
+                    init_scalar = quadratic_init_t
+                else:
+                    init_control_np = base_control_np
+                    init_scalar = linear_base_t if model_name == "linear" else base_t
                 init_control_np = MPI.COMM_WORLD.bcast(init_control_np if rank == 0 else None, root=0)
-                init_scalar = linear_init_t if use_linear_warm_start else (
-                    linear_base_t if model_name == "linear" else base_t
-                )
                 x0_np, approx_init, init_t = initial_model_point_at_control(
                     approx_cost,
                     init_control_np,
@@ -1229,10 +1365,15 @@ def main():
                 approx_cost = make_cvar_cost(
                     model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override
                 )
-                init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
-                init_scalar = linear_init_t if use_linear_warm_start else (
-                    linear_base_t if model_name == "linear" else base_t
-                )
+                if source == "linear":
+                    init_control_np = linear_init_control_np
+                    init_scalar = linear_init_t
+                elif source == "quadratic":
+                    init_control_np = quadratic_init_control_np
+                    init_scalar = quadratic_init_t
+                else:
+                    init_control_np = base_control_np
+                    init_scalar = linear_base_t if model_name == "linear" else base_t
                 x0_np, approx_init, init_t = initial_model_point_at_control(
                     approx_cost,
                     init_control_np,
@@ -1263,8 +1404,10 @@ def main():
 
             if rank == 0:
                 print(f"\nOptimizing {model_name} with L-BFGS-B ...")
-                if use_linear_warm_start:
+                if source == "linear":
                     print(f"  [{model_name:20s}] initial guess: linear optimum z* with t initialized from linear surrogate VaR")
+                elif source == "quadratic":
+                    print(f"  [{model_name:20s}] initial guess: quadratic optimum z* with t initialized from quadratic model t*")
                 elif model_name == "linear":
                     print(f"  [{model_name:20s}] initial guess: 0.5 control with t=0.0")
                 else:
@@ -1334,6 +1477,9 @@ def main():
                 linear_init_control_np = np.array(res["control_opt_np"], copy=True)
                 linear_var = get_model_var_warm_start(approx_cost)
                 linear_init_t = 0.0 if linear_var is None else float(linear_var)
+            if model_name == "quadratic":
+                quadratic_init_control_np = np.array(res["control_opt_np"], copy=True)
+                quadratic_init_t = 0.0 if res["t_opt"] is None else float(res["t_opt"])
 
             if approx_cost is not None:
                 del approx_cost
@@ -1416,6 +1562,12 @@ def main():
             save_optimal_pde_solution_plot(results, control_model, prior, Vh, args.save_dir)
             save_optimal_state_component_plots(results, control_model, prior, Vh, args.save_dir)
             save_optimal_deformed_material_plots(results, control_model, prior, Vh, args.save_dir)
+            save_saa_parameter_solution_sample_plots(results, "saa_10000", control_model, prior, Vh, args.save_dir)
+            save_solution_vs_linear_initial_plots(results, results["linear"].get("control_init_np", control0_np), control_model, prior, Vh, args.save_dir)
+            save_cvar_tail_parameter_solution_plots(
+                results, "saa_10000", control_model, prior, Vh, args.save_dir,
+                sample_size=10000, cvar_value=results["saa_10000"]["true_opt_cvar"], seed=args.saa_seed,
+            )
 
             with open(os.path.join(args.save_dir, "timing_comparison.csv"), "w", newline="") as f:
                 writer = csv.writer(f)

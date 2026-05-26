@@ -20,7 +20,7 @@ sys.path.append(os.environ.get("HIPPYLIB_PATH", ""))
 sys.path.append(_SOUPY_ROOT)
 
 import soupy
-from navier_stokes_compare_utils import save_optimal_field_plots, save_optimal_pde_solution_plot, save_optimal_state_component_plots, save_parameter_sample_plots, setup_problem
+from navier_stokes_compare_utils import save_cvar_tail_parameter_solution_plots, save_optimal_field_plots, save_optimal_pde_solution_plot, save_optimal_state_component_plots, save_saa_parameter_solution_sample_plots, save_solution_vs_linear_initial_plots, setup_problem
 from navier_stokes_driver_common import TeeStream, get_current_rss_mb, get_peak_rss_mb, relative_error
 from soupy import RiskMeasureControlCostFunctional, SuperquantileRiskMeasureSAA, superquantileRiskMeasureSAASettings
 from soupy.approximations.taylor import (
@@ -96,10 +96,12 @@ def print_driver_banner(args, log_path):
     sys.stdout.flush()
 
 
-def print_initial_summary(model_name, use_linear_warm_start, approx_init, true_init, true_init_mean, true_init_var, true_init_cvar, init_rel_err):
+def print_initial_summary(model_name, source, approx_init, true_init, true_init_mean, true_init_var, true_init_cvar, init_rel_err):
     print(f"\nOptimizing {model_name} with L-BFGS-B ...")
-    if use_linear_warm_start:
+    if source == "linear":
         print(f"  [{model_name:20s}] initial guess: linear optimum z* with t initialized from linear surrogate VaR")
+    elif source == "quadratic":
+        print(f"  [{model_name:20s}] initial guess: quadratic optimum z* with t initialized from quadratic model t*")
     else:
         print(f"  [{model_name:20s}] initial guess: zero control with t=0.0")
     print(
@@ -298,8 +300,12 @@ def is_saa_model(model_name: str) -> bool:
     return model_name.startswith("saa_")
 
 
-def should_use_linear_warm_start(model_name: str) -> bool:
-    return model_name != "linear" and not is_saa_model(model_name)
+def warm_start_source(model_name: str):
+    if model_name == "quadratic" or model_name.startswith("mixture_linear_"):
+        return "linear"
+    if model_name.startswith("mixture_quadratic_"):
+        return "quadratic"
+    return None
 
 
 def is_explicit_continuation_model(model_name: str) -> bool:
@@ -546,8 +552,6 @@ def main():
         control_model = problem["control_model"]
         prior = problem["prior"]
         penalty = problem["penalty"]
-        if rank == 0:
-            save_parameter_sample_plots(prior, Vh, args.save_dir)
         control0_np = zero_control_np(control_model)
         base_control_np = control0_np.copy()
         base_t = 0.0
@@ -555,6 +559,8 @@ def main():
         args.control_dim = len(control0_np)
         linear_init_control_np = control0_np.copy()
         linear_init_t = 0.0
+        quadratic_init_control_np = control0_np.copy()
+        quadratic_init_t = 0.0
 
         results: Dict[str, Dict] = {}
         for model_name in MODEL_ORDER:
@@ -562,20 +568,34 @@ def main():
             x0_np = None
             approx_init = None
             init_t = None
-            use_linear_warm_start = should_use_linear_warm_start(model_name)
+            source = warm_start_source(model_name)
             run_parallel_model = model_uses_world_parallel(model_name)
             epsilon_override = EXPLICIT_CVAR_CONTINUATION_LEVELS[0] if is_explicit_continuation_model(model_name) else None
 
             if run_parallel_model:
                 approx_cost = make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override)
-                init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
+                if source == "linear":
+                    init_control_np = linear_init_control_np
+                    init_scalar = linear_init_t
+                elif source == "quadratic":
+                    init_control_np = quadratic_init_control_np
+                    init_scalar = quadratic_init_t
+                else:
+                    init_control_np = base_control_np
+                    init_scalar = linear_base_t if model_name == "linear" else base_t
                 init_control_np = MPI.COMM_WORLD.bcast(init_control_np if rank == 0 else None, root=0)
-                init_scalar = linear_init_t if use_linear_warm_start else (linear_base_t if model_name == "linear" else base_t)
                 x0_np, approx_init, init_t = initial_model_point_at_control(approx_cost, init_control_np, scalar=init_scalar)
             elif rank == 0:
                 approx_cost = make_cvar_cost(model_name, control_model, prior, penalty, args, epsilon_override=epsilon_override)
-                init_control_np = linear_init_control_np if use_linear_warm_start else base_control_np
-                init_scalar = linear_init_t if use_linear_warm_start else (linear_base_t if model_name == "linear" else base_t)
+                if source == "linear":
+                    init_control_np = linear_init_control_np
+                    init_scalar = linear_init_t
+                elif source == "quadratic":
+                    init_control_np = quadratic_init_control_np
+                    init_scalar = quadratic_init_t
+                else:
+                    init_control_np = base_control_np
+                    init_scalar = linear_base_t if model_name == "linear" else base_t
                 x0_np, approx_init, init_t = initial_model_point_at_control(approx_cost, init_control_np, scalar=init_scalar)
             else:
                 init_control_np = None
@@ -591,7 +611,7 @@ def main():
             init_rel_err = relative_error(approx_init, true_init)
 
             if rank == 0:
-                print_initial_summary(model_name, use_linear_warm_start, approx_init, true_init, true_init_mean, true_init_var, true_init_cvar, init_rel_err)
+                print_initial_summary(model_name, source, approx_init, true_init, true_init_mean, true_init_var, true_init_cvar, init_rel_err)
 
             bounds = make_bounds(x0_np, args) if (run_parallel_model or rank == 0) else None
             if is_explicit_continuation_model(model_name):
@@ -624,6 +644,9 @@ def main():
                 linear_init_control_np = np.array(res["control_opt_np"], copy=True)
                 linear_var = get_model_var_warm_start(approx_cost)
                 linear_init_t = 0.0 if linear_var is None else float(linear_var)
+            if model_name == "quadratic":
+                quadratic_init_control_np = np.array(res["control_opt_np"], copy=True)
+                quadratic_init_t = 0.0 if res["t_opt"] is None else float(res["t_opt"])
             if approx_cost is not None:
                 del approx_cost
             if rank == 0:
@@ -643,6 +666,12 @@ def main():
             save_optimal_field_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
             save_optimal_pde_solution_plot(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
             save_optimal_state_component_plots(results, MODEL_ORDER, control_model, prior, Vh, args.save_dir)
+            save_saa_parameter_solution_sample_plots(results, "saa_100", control_model, prior, Vh, args.save_dir)
+            save_solution_vs_linear_initial_plots(results, MODEL_ORDER, results["linear"].get("control_init_np", control0_np), control_model, prior, Vh, args.save_dir)
+            save_cvar_tail_parameter_solution_plots(
+                results, "saa_100", control_model, prior, Vh, args.save_dir,
+                sample_size=100, cvar_value=results["saa_100"]["true_opt_cvar"], seed=args.saa_seed,
+            )
             print_final_summary(results, log_path, args.save_dir)
     finally:
         if rank == 0 and log_file is not None:
