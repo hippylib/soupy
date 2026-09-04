@@ -200,7 +200,7 @@ class BFGS:
                            "Maximum number of Iteration reached",      #0
                            "Norm of the gradient less than tolerance", #1
                            "Maximum number of backtracking reached",   #2
-                           "Norm of (g, da) less than tolerance"       #3
+                           "Norm of (g, dz) less than tolerance"       #3
                            ]
 
     def __init__(self, cost_functional, parameters=BFGS_ParameterList()):
@@ -281,11 +281,12 @@ class BFGS:
         gradnorms = [] 
         n_backtracks = [] 
 
-        if print_level >= 0:
-            print( "\n{0:3} {1:15} {2:15} {3:15} {4:15}".format(
-                  "It", "cost", "||g||L2", "||dz||L2", "alpha") )
-            print( "{0:3d} {1:15e}".format(
-                    self.it, cost_old))
+        if print_level >= 1:
+            header = "\n{:>4s} {:>15s} {:>15s} {:>15s} {:>15s} {:>12s}".format(
+                "It", "cost", "||g||", "||dz||", "(g,dz)", "alpha"
+            )
+            print(header)
+            print("{:4d} {:15.8e}".format(self.it, cost_old))
         
 
         while (self.it < max_iter) and (self.converged == False):
@@ -306,7 +307,8 @@ class BFGS:
             else:
                 gradnorm_ini = gradnorm
                 tol = max(abs_tol, gradnorm_ini*rel_tol)
-                print("Tolerance: ", tol)
+                if print_level >= 1:
+                    print("Tolerance: ", tol)
                 theta = 1.0
                 
             # check if solution is reached
@@ -325,6 +327,7 @@ class BFGS:
             n_backtrack = 0
             g_zhat = g.inner(zhat)
 
+            gdz = g_zhat
             while not descent and n_backtrack < max_backtracking_iter:
                 # Update the optimization variable 
                 z_star.zero()
@@ -340,7 +343,7 @@ class BFGS:
 
                 # compute the cost 
                 cost_new = self.cost_functional.cost(z_star, order=0)
-                if print_level >= 1:
+                if print_level >= 2:
                     print("\tBacktracking cost for step size %g: \t%g" %(alpha, cost_new))
                 
                 # Check if armijo conditions are satisfied
@@ -364,9 +367,12 @@ class BFGS:
             cost_old = self.cost_functional.cost(z, order=1)
             costs.append(cost_old)
 
-            if print_level >= 0:
-                print( "{:3d} {:15e} {:15e} {:14e} {:14e} {:14e}".format(
-                self.it, cost_old, dz_norm, gradnorm, alpha, theta))
+            if print_level >= 1:
+                print(
+                    "{:4d} {:15.8e} {:15.8e} {:15.8e} {:15.8e} {:12.4e}".format(
+                        self.it, cost_old, gradnorm, dz_norm, gdz, alpha
+                    )
+                )
 
             if n_backtrack == max_backtracking_iter:
                 self.converged = False
@@ -391,4 +397,3 @@ class BFGS:
         self.final_cost      = cost_old
 
         return z, result
-

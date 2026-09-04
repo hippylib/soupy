@@ -57,6 +57,7 @@ def InexactNewtonCG_ParameterList():
     parameters["GN_iter"]               = [5, "Number of Gauss Newton iterations before switching to Newton"]
     parameters["cg_coarse_tolerance"]   = [.5, "Coarsest tolerance for the CG method (Eisenstat-Walker)"]
     parameters["cg_max_iter"]           = [100, "Maximum CG iterations"]
+    parameters["cg_print_level"]        = [-1, "CG verbosity level (see CGSolverSteihaug)"]
     parameters["LS"]                    = [LS_ParameterList(), "Sublist containing LS globalization parameters"]
     parameters["TR"]                    = [TR_ParameterList(), "Sublist containing TR globalization parameters"]
     
@@ -202,7 +203,7 @@ class InexactNewtonCG:
             solver.parameters["rel_tolerance"] = tolcg
             solver.parameters["max_iter"] = cg_max_iter
             solver.parameters["zero_initial_guess"] = True
-            solver.parameters["print_level"] = print_level-1
+            solver.parameters["print_level"] = self.parameters["cg_print_level"]
 
             # Solve by CG  
             solver.solve(zhat, -mg)
@@ -237,11 +238,11 @@ class InexactNewtonCG:
                     alpha *= 0.5
                             
             if(print_level >= 0) and (self.it == 1):
-                print( "\n{0:3} {1:3} {2:15} {3:15} {4:15} {5:15}".format(
+                print( "\n{0:3} {1:6} {2:15} {3:15} {4:15} {5:12} {6:12}".format(
                       "It", "cg_it", "cost", "(g,dz)", "||g||L2", "alpha", "tolcg") )
                 
             if print_level >= 0:
-                print( "{0:3d} {1:3d} {2:15e} {3:15e} {4:15e} {5:15e} {6:15e}".format(
+                print( "{0:3d} {1:6d} {2:15e} {3:15e} {4:15e} {5:12.4e} {6:12.4e}".format(
                         self.it, cost_hessian.ncalls, cost_new, mg_zhat, gradnorm, alpha, tolcg) )
                 
             if self.callback:
@@ -323,7 +324,7 @@ class InexactNewtonCG:
             solver.parameters["rel_tolerance"] = tolcg
             self.parameters["max_iter"]        = cg_max_iter
             solver.parameters["zero_initial_guess"] = True
-            solver.parameters["print_level"] = print_level-1
+            solver.parameters["print_level"] = self.parameters["cg_print_level"]
             
             solver.solve(zhat, -mg)
             self.total_cg_iter += cost_hessian.ncalls
@@ -379,12 +380,12 @@ class InexactNewtonCG:
                 self.callback(self.it, z)
                 
             if(print_level >= 0) and (self.it == 1):
-                print( "\n{0:3} {1:3} {2:15} {3:15} {4:14} {5:14} {6:14} {7:11} {8:14}".format(
-                      "It", "cg_it", "cost", "(g,dz)", "||g||L2", "TR Radius", "rho_TR", "Accept Step","tolcg") )
+                print( "\n{0:3} {1:6} {2:15} {3:15} {4:14} {5:12} {6:10} {7:11} {8:12}".format(
+                      "It", "cg_it", "cost", "(g,dz)", "||g||L2", "TR Radius", "rho_TR", "Accept Step", "tolcg") )
                 
             if print_level >= 0:
-                print( "{0:3d} {1:3d} {2:15e} {3:15e} {4:14e} {5:14e} {6:14e} {7:11} {8:14e}".format(
-                        self.it, cost_hessian.ncalls, cost_old, mg_zhat, gradnorm, delta_TR, rho_TR, accept_step,tolcg) )
+                print( "{0:3d} {1:6d} {2:15e} {3:15e} {4:14e} {5:12.4e} {6:10.4e} {7:11} {8:12.4e}".format(
+                        self.it, cost_hessian.ncalls, cost_old, mg_zhat, gradnorm, delta_TR, rho_TR, accept_step, tolcg) )
 
             #TR radius can make this term arbitrarily small and prematurely exit.
             if -mg_zhat <= self.parameters["gdz_tolerance"]:
@@ -401,5 +402,3 @@ class InexactNewtonCG:
         result["final_grad_norm"] = gradnorm
 
         return z, result 
-
-
