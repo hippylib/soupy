@@ -39,6 +39,22 @@ class AugmentedVector:
     def copy(self):
         x = AugmentedVector(self.v, copy_vector=True)
         x.set_scalar(self.t)
+        return x
+
+    def mpi_comm(self):
+        return self.v.mpi_comm()
+
+    def local_range(self):
+        # This class currently supports only sample-parallelism (serial mesh),
+        # so the full augmented vector is local.
+        return (0, self.v_dim + 1)
+
+    def size(self):
+        return self.v_dim + 1
+
+    def gather_on_zero(self):
+        # Serial mesh only; root owns the full vector.
+        return self.get_local()
 
 
     def add_local(self, vt_array):
@@ -84,4 +100,3 @@ class AugmentedVector:
     
     def apply(self, method):
         self.v.apply(method)
-

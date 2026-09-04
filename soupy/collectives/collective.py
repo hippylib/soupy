@@ -154,7 +154,7 @@ class MultipleSamePartitioningPDEsCollective:
             return v
 
         else:
-            if is_serial_check:
+            if self.is_serial_check:
                 msg = "MultipleSerialPDEsCollective.bcast not implement for v of type {0}".format(type(v))
             else:
                 msg = "MultipleSamePartitioningPDEsCollective.bcast not implement for v of type {0}".format(type(v))

@@ -20,6 +20,7 @@ from .controlCostFunctional import ControlCostFunctional, DeterministicControlCo
 from .controlCostHessian import ControlCostHessian 
 
 from .controlModel import ControlModel
+from .reducedHessianSVD import ReducedHessianSVD
 
 from .controlModelHessian import ControlModelHessian
 
@@ -40,4 +41,3 @@ from .superquantileRiskMeasureSAA import SuperquantileRiskMeasureSAA, superquant
 from .transformedMeanRiskMeasureSAA import TransformedMeanRiskMeasureSAA, transformedMeanRiskMeasureSAASettings, IdentityFunction, FunctionWrapper
 
 from .variables import STATE, PARAMETER, ADJOINT, CONTROL
-

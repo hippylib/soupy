@@ -143,13 +143,13 @@ class ControlModel:
         """
         self.n_adj_solve = self.n_adj_solve + 1
         rhs = self.problem.generate_state()
-        self.qoi.grad(STATE, x, rhs)
+        self.qoi.grad(STATE, x, rhs) # Compute Q_u
         rhs *= -1.
         self.problem.solveAdj(out, x, rhs)
         # print("RHS", rhs.get_local()[:5])
         # print("ADJSOL", out.get_local()[:5])
 
-
+    # The following function computes the partial derivative of Lagrangian (Q + r) with respect to m and evalutes its norm.
     def evalGradientParameter(self,x, mg):
         """
         Evaluate the :math:`m` gradient action form at the point :math:`(u,m,p,z)`
@@ -165,12 +165,12 @@ class ControlModel:
         :return: the norm of the gradient in the correct inner product :math:`(g_m,g_m)_{M}^{1/2}`
         """ 
         tmp = self.generate_vector(PARAMETER)
-        self.problem.evalGradientParameter(x, mg)
-        self.qoi.grad(PARAMETER,x,tmp)
+        self.problem.evalGradientParameter(x, mg) # This part is \partial_m r
+        self.qoi.grad(PARAMETER,x,tmp) # This part is \partial_m Q, which is zero if QoI doesn't explicitly depend on m
         mg.axpy(1., tmp)
         return math.sqrt(mg.inner(mg))
 
-    
+    # The following function computes the partial derivative of Lagrangian (Q + r) with respect to z and evalutes its norm.
     def evalGradientControl(self,x, mg):
         """
         Evaluate the :math:`z` gradient action form at the point :math:`(u,m,p,z)`
@@ -186,9 +186,9 @@ class ControlModel:
         :return: the norm of the gradient in the correct inner product :math:`(g_z,g_z)_{Z}^{1/2}`
         """ 
         tmp = self.generate_vector(CONTROL)
-        self.problem.evalGradientControl(x, mg)
+        self.problem.evalGradientControl(x, mg) # This part is \partial_z r
         # print("PDE GRAD: ", mg.get_local())
-        self.qoi.grad(CONTROL,x,tmp)
+        self.qoi.grad(CONTROL,x,tmp) # This part is \partial_z Q, which is zero if QoI doesn't explicitly depend on z
         # print("MIDFIT GRAD: ", tmp.get_local())
         mg.axpy(1., tmp)
         # print("OVERALL GRAD: ", mg.get_local())
@@ -210,8 +210,8 @@ class ControlModel:
          2. partially precompute the block of the hessian (if feasible)
         """
         self.gauss_newton_approx = gauss_newton_approx
-        self.problem.setLinearizationPoint(x, self.gauss_newton_approx)
-        self.qoi.setLinearizationPoint(x, self.gauss_newton_approx)
+        self.problem.setLinearizationPoint(x, self.gauss_newton_approx) # Computes the partial derivatives of PDE residuals
+        self.qoi.setLinearizationPoint(x, self.gauss_newton_approx) # Computes the partial derivatives of QoI
         # if hasattr(self.prior, "setLinearizationPoint"):
         #     self.prior.setLinearizationPoint(x[PARAMETER], self.gauss_newton_approx)
 
@@ -241,7 +241,8 @@ class ControlModel:
         self.n_inc_solve = self.n_inc_solve + 1
         self.problem.solveIncremental(sol,rhs, True)
 
-    
+    # The following functions compute the partial derivatives. 
+    # In the following functions: C refers to PDE residual while W refers to the Lagrangian (including both QoI and PDE reisudal). 
     def applyC(self, dm, out):
         """
         Apply the :math:`C_{m}` block of the Hessian to a (incremental) parameter variable, i.e.
@@ -254,7 +255,7 @@ class ControlModel:
 
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
-        self.problem.apply_ij(ADJOINT,PARAMETER, dm, out)
+        self.problem.apply_ij(ADJOINT,PARAMETER, dm, out) # Take the derivative of PDE residual with respect to adjoint and parameter, with dm as the perturbation direction. 
 
     def applyCz(self, dz, out):
         """
@@ -268,7 +269,7 @@ class ControlModel:
             
         .. note:: This routine assumes that :code:`out` has the correct shape.
         """
-        self.problem.apply_ij(ADJOINT, CONTROL, dz, out)
+        self.problem.apply_ij(ADJOINT, CONTROL, dz, out) # Take derivative of PDE residual with respect to adjoint and control, with dz as the perturbation direction.
     
     def applyCt(self, dp, out):
         """
@@ -282,7 +283,7 @@ class ControlModel:
 
         ..note:: This routine assumes that :code:`out` has the correct shape.
         """
-        self.problem.apply_ij(PARAMETER,ADJOINT, dp, out)
+        self.problem.apply_ij(PARAMETER,ADJOINT, dp, out) # Take the derivative of PDE residualwith respect to parameter and adjoint, with dp as the perturbation direction. This is the transpose of the operation in applyC.
 
     def applyCzt(self, dp, out):
         """
@@ -399,7 +400,6 @@ class ControlModel:
             tmp = self.generate_vector(CONTROL)
             self.qoi.apply_ij(CONTROL, STATE, du, tmp)
             out.axpy(1., tmp)
-
     
     def applyWmm(self, dm, out):
         """
