@@ -48,80 +48,6 @@ class LocalDisplacementVarf:
         return dl.inner(u, u) * mollified_dirac * dl.dx  
 
 
-class LocalDisplacementQoI(soupy.ControlQoI):
-    """
-    Fast implementation of the localized displacement QoI
-
-        Q(u) = int_Omega |u|^2 * w(x) dx
-
-    where w(x) is the 1D Gaussian bump centered at obs_location.  This keeps
-    the same mathematical definition as LocalDisplacementVarf, but preassembles
-    the weighted mass matrix so repeated cost/gradient/Hessian evaluations do
-    not rebuild and reassemble generic UFL derivatives.
-    """
-
-    def __init__(self, Vh, obs_location, obs_width):
-        self.Vh = Vh
-        self.x = [
-            dl.Function(Vh[soupy.STATE]).vector(),
-            dl.Function(Vh[soupy.PARAMETER]).vector(),
-            dl.Function(Vh[soupy.ADJOINT]).vector(),
-            dl.Function(Vh[soupy.CONTROL]).vector(),
-        ]
-        self.x_test = [
-            dl.TestFunction(Vh[soupy.STATE]),
-            dl.TestFunction(Vh[soupy.PARAMETER]),
-            dl.TestFunction(Vh[soupy.ADJOINT]),
-            dl.TestFunction(Vh[soupy.CONTROL]),
-        ]
-
-        self.weight = dl.Expression(
-            "a*exp(-pow(x[0] - loc, 2)/(2*b*b))",
-            loc=obs_location,
-            a=1 / (np.sqrt(2 * np.pi) * obs_width),
-            b=obs_width,
-            degree=4,
-        )
-
-        u_trial = dl.TrialFunction(Vh[soupy.STATE])
-        u_test = dl.TestFunction(Vh[soupy.STATE])
-        self.M_local = dl.assemble(dl.inner(u_trial, u_test) * self.weight * dl.dx)
-        self.Mu = dl.Function(Vh[soupy.STATE]).vector()
-
-    def cost(self, x):
-        self.M_local.mult(x[soupy.STATE], self.Mu)
-        return x[soupy.STATE].inner(self.Mu)
-
-    def adj_rhs(self, x, rhs):
-        self.grad(soupy.STATE, x, rhs)
-        rhs *= -1
-
-    def grad(self, i, x, out):
-        out.zero()
-        if i == soupy.STATE:
-            self.M_local.mult(x[soupy.STATE], self.Mu)
-            out.axpy(2.0, self.Mu)
-
-    def apply_ij(self, i, j, dir, out):
-        out.zero()
-        if i == soupy.STATE and j == soupy.STATE:
-            self.M_local.mult(dir, self.Mu)
-            out.axpy(2.0, self.Mu)
-
-    def apply_ijk(self, i, j, k, dir1, dir2, out):
-        del i, j, k, dir1, dir2
-        out.zero()
-
-    def setLinearizationPoint(self, x, gauss_newton_approx=False):
-        del gauss_newton_approx
-        for i in range(len(x)):
-            self.x[i].zero()
-            self.x[i].axpy(1.0, x[i])
-
-    def form(self, u):
-        return dl.inner(u, u) * self.weight * dl.dx
-
-
 class Stiffnessvarf:
     """
     Variational form for the stiffness QoI (H1-seminorm)
@@ -130,33 +56,18 @@ class Stiffnessvarf:
         return dl.inner(dl.grad(u), dl.grad(u)) * dl.dx
 
 
-class VirtualWorkVarf:
-    """
-    Variational form for the nominal virtual work QoI on the loaded top boundary.
-    """
-
-    def __init__(self, hyperelasticity_varf):
-        self.hyperelasticity_varf = hyperelasticity_varf
-
-    def __call__(self, u, m, z):
-        del m, z
-        return dl.dot(self.hyperelasticity_varf.t_nominal, u) * self.hyperelasticity_varf.geometry.ds(
-            self.hyperelasticity_varf.geometry.TOP
-        )
-
-
 def hyperelasticity_problem_settings():
     """
     Defines the settings for the control problem
     """
     settings = dict()
-    settings["load"] = {"center" : 1.0, "width" : 0.2, "strength" : 1.0}
+    settings["load"] = {"center" : 1.0, "width" : 0.2, "strength" : 1}
     settings["obs"] = {"location" : 0.5, "width" : 0.1}
-    settings["qoi_type"] = "virtual_work"
+    settings["qoi_type"] = "stiffness"
     settings["geometry"] = {"lx" : 2.0, "ly" : 0.5, "lz" : 0.25, "dim" : 2}
-    settings["mesh"] = {"nx" : 64, "ny" : 16, "nz" : 8}
-    settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0], "verbose" : False}
-    settings["uncertainty"] = {"gamma" : 1.0, "delta" : 0.2, "robin_bc" : True}
+    settings["mesh"] = {"nx" : 96, "ny" : 24, "nz" : 12}
+    settings["solver"] = {"backtrack" : True, "load_steps" : [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 0.9375, 1.0]}
+    settings["uncertainty"] = {"gamma" : 0.2, "delta" : 1.0, "robin_bc" : True}
     return settings
 
 
@@ -172,7 +83,7 @@ def setup_prior(Vh, settings):
     return prior 
 
 
-def setup_qoi(mesh, Vh, settings, hyperelasticity_varf=None):
+def setup_qoi(mesh, Vh, settings):
     """
     Setup the optimization QoI
     """
@@ -182,13 +93,9 @@ def setup_qoi(mesh, Vh, settings, hyperelasticity_varf=None):
     elif settings["qoi_type"] == "stiffness":
         stiffness = Stiffnessvarf()
         qoi = soupy.VariationalControlQoI(Vh, stiffness)
-    elif settings["qoi_type"] == "virtual_work":
-        if hyperelasticity_varf is None:
-            raise ValueError("virtual_work QoI requires hyperelasticity_varf")
-        virtual_work = VirtualWorkVarf(hyperelasticity_varf)
-        qoi = soupy.VariationalControlQoI(Vh, virtual_work)
     elif settings["qoi_type"] == "point":
-        qoi = LocalDisplacementQoI(Vh, settings["obs"]["location"], settings["obs"]["width"])
+        local_displacement = LocalDisplacementVarf(settings["obs"]["location"], settings["obs"]["width"])
+        qoi = soupy.VariationalControlQoI(Vh, local_displacement)
     else:
         raise ValueError("Settings qoi type not available")
 
@@ -252,13 +159,13 @@ def setup_hyperelasticity_problem(settings, comm_mesh=MPI.COMM_WORLD):
     hyperelasticity_varf = HyperelasticityVarfHandler(Vh, geometry, T_nominal, 
             spatial_dim=settings["geometry"]["dim"])
 
-    verbose = settings["solver"].get("verbose", False)
-    pde = HyperelasticityControlPDE(Vh, hyperelasticity_varf, bcs, bcs,
-        load_steps=settings["solver"]["load_steps"], backtrack=settings['solver']['backtrack'],
-        verbose=verbose)
+    pde = HyperelasticityControlPDE(Vh, hyperelasticity_varf, bcs, bcs, 
+        load_steps=settings["solver"]["load_steps"], backtrack=settings['solver']['backtrack'])
 
     prior = setup_prior(Vh, settings)
-    qoi = setup_qoi(mesh, Vh, settings, hyperelasticity_varf=hyperelasticity_varf)
+    qoi = setup_qoi(mesh, Vh, settings)
     control_model = soupy.ControlModel(pde, qoi)
 
     return mesh, Vh, hyperelasticity_varf, control_model, prior 
+
+

@@ -1,0 +1,19 @@
+==========================================================================================
+Semilinear ADR CVaR Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep
+  mixture_quadratic_kle / mixture_quadratic_hep
+  saa_1 / saa_10 / saa_39 / saa_100 / saa_200 / saa_500 / saa_1000 / saa_2000 / saa_5000 / saa_10000
+  serial: linear / quadratic / saa_1 / saa_10
+  parallel on all ranks: mixture_* / saa_39 / saa_100 / saa_200 / saa_500 / saa_1000 / saa_2000 / saa_5000 / saa_10000
+==========================================================================================
+Ground-truth exact-CVaR sample count: 100000
+cvar_beta=0.95, n_tr=50, n_mix=11, quadratic_cvar_n_mc=10000
+penalty=0
+box constraint on control: -4.0 <= z <= 4.0
+control source term: rhs = sum_i z_i psi_i (no known source f)
+initial control: zero well coefficients
+Explicit continuation for quadratic and SAA models: 1e-04
+terminal log file: results_semilinear_adr_compare_cvar_model/terminal_output.txt
+==========================================================================================
+/work2/wenbo/soupy/examples/gaussian_mixture_ouu_examples/semilinear_adr/semilinear_adr_problem.py:307: hIPPYlibExperimentalWarning: WARNING: VariationalQoi  is an experimental function in v3.0.0. Still need to work on handling Dirichlet boundary conditions for x[STATE]
+  return hp.VariationalQoi(Vh, qoi_varf)

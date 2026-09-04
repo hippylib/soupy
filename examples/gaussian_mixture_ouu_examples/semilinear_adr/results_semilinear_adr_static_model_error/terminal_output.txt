@@ -1,0 +1,85 @@
+/work/Wenbo/soupy/examples/semilinear_adr/semilinear_adr_problem.py:307: hIPPYlibExperimentalWarning: WARNING: VariationalQoi  is an experimental function in v3.0.0. Still need to work on handling Dirichlet boundary conditions for x[STATE]
+  return hp.VariationalQoi(Vh, qoi_varf)
+==========================================================================================
+Semilinear ADR Static Approximation Error Comparison (mismatch QoI, z = target)
+==========================================================================================
+save_dir=results_semilinear_adr_static_model_error
+mesh=(64, 64), cvar_beta=0.95, n_tr=50, quadratic_cvar_n_mc=10000
+newton_max_it=50, newton_rtol=1.0e-08, newton_atol=1.0e-10, error_on_nonconvergence=True
+mixture_sizes=[1, 3, 5, 7, 9, 15, 21, 27, 33, 39]
+mc_samples=[1, 2, 5, 10, 20, 50, 100, 200, 500, 1000], mc_trials=20
+ground_truth_samples=100000, sample_seed=1
+==========================================================================================
+[Ground truth             ] N=100000 | mean=1.186894e-01 | std=1.657272e-02 | cvar=1.505319e-01 | time=16790.99s
+[MC (200 trial)        ] mc_samples=     1 | mean=1.172121e-01 (rel=1.162e-01) | std=0.000000e+00 (rel=1.000e+00) | cvar=1.172121e-01 (rel=2.394e-01) | time=4.12s
+[MC (single trial)     ] mc_samples=     1 | mean=1.109809e-01 (rel=6.495e-02) | std=0.000000e+00 (rel=1.000e+00) | cvar=1.109809e-01 (rel=2.627e-01) | time=4.12s
+[MC (200 trial)        ] mc_samples=     2 | mean=1.196322e-01 (rel=7.098e-02) | std=1.097916e-02 (rel=5.436e-01) | cvar=1.404926e-01 (rel=1.235e-01) | time=8.20s
+[MC (single trial)     ] mc_samples=     2 | mean=1.197848e-01 (rel=9.229e-03) | std=1.677504e-02 (rel=1.221e-02) | cvar=1.516574e-01 (rel=7.477e-03) | time=8.20s
+[MC (200 trial)        ] mc_samples=     5 | mean=1.198429e-01 (rel=7.000e-02) | std=1.326475e-02 (rel=3.071e-01) | cvar=1.434289e-01 (rel=8.920e-02) | time=20.18s
+[MC (single trial)     ] mc_samples=     5 | mean=1.286605e-01 (rel=8.401e-02) | std=1.554248e-02 (rel=6.216e-02) | cvar=1.531639e-01 (rel=1.748e-02) | time=20.18s
+[MC (200 trial)        ] mc_samples=    10 | mean=1.190264e-01 (rel=4.394e-02) | std=1.372297e-02 (rel=2.592e-01) | cvar=1.447958e-01 (rel=6.618e-02) | time=40.16s
+[MC (single trial)     ] mc_samples=    10 | mean=1.170292e-01 (rel=1.399e-02) | std=1.499764e-02 (rel=9.504e-02) | cvar=1.663016e-01 (rel=1.048e-01) | time=40.16s
+[MC (200 trial)        ] mc_samples=    20 | mean=1.188758e-01 (rel=3.519e-02) | std=1.527797e-02 (rel=1.878e-01) | cvar=1.454175e-01 (rel=6.507e-02) | time=74.22s
+[MC (single trial)     ] mc_samples=    20 | mean=1.128921e-01 (rel=4.884e-02) | std=1.835183e-02 (rel=1.074e-01) | cvar=1.436069e-01 (rel=4.600e-02) | time=74.22s
+[MC (200 trial)        ] mc_samples=    50 | mean=1.180072e-01 (rel=1.261e-02) | std=1.728238e-02 (rel=1.127e-01) | cvar=1.516540e-01 (rel=3.373e-02) | time=199.61s
+[MC (single trial)     ] mc_samples=    50 | mean=1.198085e-01 (rel=9.429e-03) | std=1.990088e-02 (rel=2.008e-01) | cvar=1.569266e-01 (rel=4.248e-02) | time=199.61s
+[MC (200 trial)        ] mc_samples=   100 | mean=1.178547e-01 (rel=1.590e-02) | std=1.652466e-02 (rel=8.220e-02) | cvar=1.490580e-01 (rel=1.723e-02) | time=394.13s
+[MC (single trial)     ] mc_samples=   100 | mean=1.170467e-01 (rel=1.384e-02) | std=1.768302e-02 (rel=6.700e-02) | cvar=1.508578e-01 (rel=2.165e-03) | time=394.13s
+[MC (200 trial)        ] mc_samples=   200 | mean=1.185469e-01 (rel=1.190e-02) | std=1.664866e-02 (rel=4.933e-02) | cvar=1.502586e-01 (rel=1.579e-02) | time=778.45s
+[MC (single trial)     ] mc_samples=   200 | mean=1.178215e-01 (rel=7.312e-03) | std=1.728332e-02 (rel=4.288e-02) | cvar=1.469262e-01 (rel=2.395e-02) | time=778.45s
+[MC (200 trial)        ] mc_samples=   500 | mean=1.187105e-01 (rel=3.399e-03) | std=1.670419e-02 (rel=3.152e-02) | cvar=1.505398e-01 (rel=7.473e-03) | time=1946.32s
+[MC (single trial)     ] mc_samples=   500 | mean=1.182784e-01 (rel=3.463e-03) | std=1.690107e-02 (rel=1.981e-02) | cvar=1.506964e-01 (rel=1.093e-03) | time=1946.32s
+[MC (200 trial)        ] mc_samples=  1000 | mean=1.186445e-01 (rel=5.528e-03) | std=1.663660e-02 (rel=2.300e-02) | cvar=1.505153e-01 (rel=8.583e-03) | time=3884.45s
+[MC (single trial)     ] mc_samples=  1000 | mean=1.191511e-01 (rel=3.890e-03) | std=1.586651e-02 (rel=4.261e-02) | cvar=1.498856e-01 (rel=4.293e-03) | time=3884.45s
+[Mixture linear KLE    ] n_mix=     1 | mean=1.191679e-01 (rel=4.031e-03) | std=1.701774e-02 (rel=2.685e-02) | cvar=1.542706e-01 (rel=2.484e-02) | time=4.21s
+[Mixture linear HEP    ] n_mix=     1 | mean=1.191679e-01 (rel=4.031e-03) | std=1.701774e-02 (rel=2.685e-02) | cvar=1.542706e-01 (rel=2.484e-02) | time=6.09s
+[Mixture quadratic KLE ] n_mix=     1 | mean=1.184406e-01 (rel=2.097e-03) | std=1.707275e-02 (rel=3.017e-02) | cvar=1.511034e-01 (rel=3.796e-03) | time=157.38s
+[Mixture quadratic HEP ] n_mix=     1 | mean=1.184406e-01 (rel=2.097e-03) | std=1.707275e-02 (rel=3.017e-02) | cvar=1.511034e-01 (rel=3.796e-03) | time=156.75s
+[Mixture linear KLE    ] n_mix=     3 | mean=1.187666e-01 (rel=6.506e-04) | std=1.617036e-02 (rel=2.428e-02) | cvar=1.492803e-01 (rel=8.314e-03) | time=6.91s
+[Mixture linear HEP    ] n_mix=     3 | mean=1.187731e-01 (rel=7.051e-04) | std=1.620032e-02 (rel=2.247e-02) | cvar=1.491636e-01 (rel=9.090e-03) | time=9.59s
+[Mixture quadratic KLE ] n_mix=     3 | mean=1.185683e-01 (rel=1.021e-03) | std=1.599385e-02 (rel=3.493e-02) | cvar=1.482497e-01 (rel=1.516e-02) | time=266.02s
+[Mixture quadratic HEP ] n_mix=     3 | mean=1.185592e-01 (rel=1.097e-03) | std=1.609348e-02 (rel=2.892e-02) | cvar=1.486644e-01 (rel=1.241e-02) | time=264.45s
+[Mixture linear KLE    ] n_mix=     5 | mean=1.186412e-01 (rel=4.065e-04) | std=1.658196e-02 (rel=5.578e-04) | cvar=1.500769e-01 (rel=3.022e-03) | time=9.28s
+[Mixture linear HEP    ] n_mix=     5 | mean=1.186495e-01 (rel=3.364e-04) | std=1.659850e-02 (rel=1.555e-03) | cvar=1.500213e-01 (rel=3.392e-03) | time=11.58s
+[Mixture quadratic KLE ] n_mix=     5 | mean=1.185514e-01 (rel=1.163e-03) | std=1.634366e-02 (rel=1.382e-02) | cvar=1.494311e-01 (rel=7.313e-03) | time=371.93s
+[Mixture quadratic HEP ] n_mix=     5 | mean=1.185442e-01 (rel=1.223e-03) | std=1.641095e-02 (rel=9.761e-03) | cvar=1.495845e-01 (rel=6.293e-03) | time=369.25s
+[Mixture linear KLE    ] n_mix=     7 | mean=1.185870e-01 (rel=8.631e-04) | std=1.676732e-02 (rel=1.174e-02) | cvar=1.505260e-01 (rel=3.893e-05) | time=11.98s
+[Mixture linear HEP    ] n_mix=     7 | mean=1.185960e-01 (rel=7.867e-04) | std=1.677805e-02 (rel=1.239e-02) | cvar=1.504857e-01 (rel=3.065e-04) | time=13.86s
+[Mixture quadratic KLE ] n_mix=     7 | mean=1.185430e-01 (rel=1.233e-03) | std=1.650378e-02 (rel=4.160e-03) | cvar=1.499647e-01 (rel=3.768e-03) | time=479.65s
+[Mixture quadratic HEP ] n_mix=     7 | mean=1.185364e-01 (rel=1.289e-03) | std=1.655619e-02 (rel=9.975e-04) | cvar=1.500389e-01 (rel=3.275e-03) | time=461.22s
+[Mixture linear KLE    ] n_mix=     9 | mean=1.185581e-01 (rel=1.106e-03) | std=1.685641e-02 (rel=1.712e-02) | cvar=1.507243e-01 (rel=1.279e-03) | time=10.61s
+[Mixture linear HEP    ] n_mix=     9 | mean=1.185675e-01 (rel=1.027e-03) | std=1.686446e-02 (rel=1.760e-02) | cvar=1.506902e-01 (rel=1.052e-03) | time=12.31s
+[Mixture quadratic KLE ] n_mix=     9 | mean=1.185390e-01 (rel=1.267e-03) | std=1.658036e-02 (rel=4.610e-04) | cvar=1.502038e-01 (rel=2.179e-03) | time=591.75s
+[Mixture quadratic HEP ] n_mix=     9 | mean=1.185322e-01 (rel=1.325e-03) | std=1.662530e-02 (rel=3.173e-03) | cvar=1.502513e-01 (rel=1.864e-03) | time=486.02s
+[Mixture linear KLE    ] n_mix=    15 | mean=1.185210e-01 (rel=1.419e-03) | std=1.694144e-02 (rel=2.225e-02) | cvar=1.509026e-01 (rel=2.463e-03) | time=22.68s
+[Mixture linear HEP    ] n_mix=    15 | mean=1.185309e-01 (rel=1.335e-03) | std=1.694706e-02 (rel=2.259e-02) | cvar=1.508763e-01 (rel=2.288e-03) | time=32.51s
+[Mixture quadratic KLE ] n_mix=    15 | mean=1.185363e-01 (rel=1.290e-03) | std=1.664779e-02 (rel=4.530e-03) | cvar=1.504400e-01 (rel=6.104e-04) | time=981.52s
+[Mixture quadratic HEP ] n_mix=    15 | mean=1.185302e-01 (rel=1.341e-03) | std=1.668671e-02 (rel=6.878e-03) | cvar=1.504575e-01 (rel=4.942e-04) | time=967.46s
+[Mixture linear KLE    ] n_mix=    21 | mean=1.185067e-01 (rel=1.539e-03) | std=1.695767e-02 (rel=2.323e-02) | cvar=1.509246e-01 (rel=2.609e-03) | time=36.71s
+[Mixture linear HEP    ] n_mix=    21 | mean=1.185168e-01 (rel=1.454e-03) | std=1.696289e-02 (rel=2.354e-02) | cvar=1.509007e-01 (rel=2.450e-03) | time=33.24s
+[Mixture quadratic KLE ] n_mix=    21 | mean=1.185370e-01 (rel=1.284e-03) | std=1.665783e-02 (rel=5.135e-03) | cvar=1.504858e-01 (rel=3.062e-04) | time=1295.51s
+[Mixture quadratic HEP ] n_mix=    21 | mean=1.185304e-01 (rel=1.339e-03) | std=1.669617e-02 (rel=7.449e-03) | cvar=1.504974e-01 (rel=2.288e-04) | time=1230.56s
+[Mixture linear KLE    ] n_mix=    27 | mean=1.184992e-01 (rel=1.602e-03) | std=1.696136e-02 (rel=2.345e-02) | cvar=1.509235e-01 (rel=2.602e-03) | time=40.60s
+[Mixture linear HEP    ] n_mix=    27 | mean=1.185094e-01 (rel=1.516e-03) | std=1.696652e-02 (rel=2.376e-02) | cvar=1.509008e-01 (rel=2.451e-03) | time=37.77s
+[Mixture quadratic KLE ] n_mix=    27 | mean=1.185378e-01 (rel=1.278e-03) | std=1.665840e-02 (rel=5.170e-03) | cvar=1.504962e-01 (rel=2.371e-04) | time=1635.35s
+[Mixture quadratic HEP ] n_mix=    27 | mean=1.185313e-01 (rel=1.332e-03) | std=1.669649e-02 (rel=7.468e-03) | cvar=1.505064e-01 (rel=1.694e-04) | time=1585.66s
+[Mixture linear KLE    ] n_mix=    33 | mean=1.184945e-01 (rel=1.642e-03) | std=1.696216e-02 (rel=2.350e-02) | cvar=1.509193e-01 (rel=2.574e-03) | time=45.26s
+[Mixture linear HEP    ] n_mix=    33 | mean=1.185049e-01 (rel=1.555e-03) | std=1.696733e-02 (rel=2.381e-02) | cvar=1.508973e-01 (rel=2.428e-03) | time=48.58s
+[Mixture quadratic KLE ] n_mix=    33 | mean=1.185384e-01 (rel=1.272e-03) | std=1.665720e-02 (rel=5.098e-03) | cvar=1.504996e-01 (rel=2.142e-04) | time=1920.11s
+[Mixture quadratic HEP ] n_mix=    33 | mean=1.185315e-01 (rel=1.331e-03) | std=1.669517e-02 (rel=7.389e-03) | cvar=1.505061e-01 (rel=1.713e-04) | time=1723.36s
+[Mixture linear KLE    ] n_mix=    39 | mean=1.184914e-01 (rel=1.668e-03) | std=1.696221e-02 (rel=2.350e-02) | cvar=1.509153e-01 (rel=2.547e-03) | time=39.30s
+[Mixture linear HEP    ] n_mix=    39 | mean=1.185017e-01 (rel=1.581e-03) | std=1.696740e-02 (rel=2.382e-02) | cvar=1.508939e-01 (rel=2.405e-03) | time=40.94s
+[Mixture quadratic KLE ] n_mix=    39 | mean=1.185389e-01 (rel=1.268e-03) | std=1.665588e-02 (rel=5.018e-03) | cvar=1.505003e-01 (rel=2.095e-04) | time=1880.13s
+[Mixture quadratic HEP ] n_mix=    39 | mean=1.185317e-01 (rel=1.329e-03) | std=1.669431e-02 (rel=7.337e-03) | cvar=1.505064e-01 (rel=1.689e-04) | time=1870.01s
+
+------------------------------------------------------------------------------------------
+Minimum relative errors over tested resolutions
+------------------------------------------------------------------------------------------
+MC (single trial)      min mean rel=3.463e-03, min std rel=1.221e-02, min cvar rel=1.093e-03
+MC (200 trial)         min mean rel=3.399e-03, min std rel=2.300e-02, min cvar rel=7.473e-03
+Mixture linear KLE     min mean rel=4.065e-04, min std rel=5.578e-04, min cvar rel=3.893e-05
+Mixture linear HEP     min mean rel=3.364e-04, min std rel=1.555e-03, min cvar rel=3.065e-04
+Mixture quadratic KLE  min mean rel=1.021e-03, min std rel=4.610e-04, min cvar rel=2.095e-04
+Mixture quadratic HEP  min mean rel=1.097e-03, min std rel=9.975e-04, min cvar rel=1.689e-04
+------------------------------------------------------------------------------------------
+Outputs written to: results_semilinear_adr_static_model_error

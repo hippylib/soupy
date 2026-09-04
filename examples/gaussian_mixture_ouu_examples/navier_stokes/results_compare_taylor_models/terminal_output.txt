@@ -1,0 +1,13 @@
+==============================================================================
+Navier-Stokes Taylor Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep / mixture_quadratic_kle / mixture_quadratic_hep
+  saa_10 / saa_20 / saa_50 / saa_100 / saa_200 / saa_500
+  serial: linear / quadratic / saa_10
+  parallel on all ranks: mixture_* / saa_20 / saa_50 / saa_100 / saa_200 / saa_500
+==============================================================================
+Ground-truth SAA sample count: 5000
+beta=1.0, n_tr=50, n_mix=11, penalty=1.0
+mesh_resolution=medium, mesh_format=xdmf, nu=0.005, gamma=1.0, delta=5.0, mean_velocity=1.0
+continuation=True, stabilization=False, nitche=True
+terminal log file: results_compare_taylor_models/terminal_output.txt
+==============================================================================

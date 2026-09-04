@@ -1,2 +1,0 @@
-iteration,model_cost,projected_grad_inf_norm,epsilon,iter_time_sec,rss_mb,peak_rss_mb,cost_rss_before_mb,cost_rss_after_mb,grad_rss_before_mb,grad_rss_after_mb
-1,0.2487792447394068,0.05199454267092951,0.0001,nan,260.08203125,252.0,259.6015625,260.0703125,260.0703125,260.08203125

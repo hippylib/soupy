@@ -1,0 +1,14 @@
+==============================================================================
+Navier-Stokes CVaR Model Comparison:
+  linear / quadratic / mixture_linear_kle / mixture_linear_hep / mixture_quadratic_kle / mixture_quadratic_hep
+  saa_1 / saa_10 / saa_20 / saa_50 / saa_100 / saa_200 / saa_500
+  serial: linear / quadratic / saa_1 / saa_10
+  parallel on all ranks: mixture_* / saa_20 / saa_50 / saa_100 / saa_200 / saa_500
+==============================================================================
+Ground-truth exact-CVaR sample count: 5000
+cvar_beta=0.95, n_tr=50, n_mix=11, quadratic_cvar_n_mc=5000, penalty=1.0
+mesh_resolution=medium, mesh_format=xdmf, nu=0.005, gamma=1.0, delta=5.0, mean_velocity=1.0
+continuation=True, stabilization=False, nitche=True
+Explicit continuation for quadratic and SAA models: 1e-04
+terminal log file: results_compare_cvar_models/terminal_output.txt
+==============================================================================

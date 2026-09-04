@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-07-15T21:22:02.646480",
+  "config": {
+    "mixture_sizes": [
+      1,
+      3,
+      5,
+      7,
+      9,
+      15,
+      21,
+      27,
+      33,
+      39
+    ],
+    "mc_samples": [
+      1,
+      2,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500,
+      1000
+    ],
+    "mc_trials": 20,
+    "ground_truth_samples": 100000,
+    "sample_seed": 1,
+    "cvar_beta": 0.95,
+    "n_tr": 50,
+    "quadratic_cvar_n_mc": 10000,
+    "nx": 64,
+    "ny": 64,
+    "newton_max_it": 50,
+    "newton_rtol": 1e-08,
+    "newton_atol": 1e-10,
+    "save_dir": "results_semilinear_adr_static_model_error",
+    "replot": false,
+    "verbose": false,
+    "current_n_mix": null
+  },
+  "ground_truth": {
+    "mean": 0.11868939950206711,
+    "std": 0.016572719881362056,
+    "cvar": 0.15053186619620412
+  },
+  "ground_truth_runtime_sec": 16790.993079662323
+}

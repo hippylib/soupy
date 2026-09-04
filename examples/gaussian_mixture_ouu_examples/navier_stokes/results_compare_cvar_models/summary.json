@@ -1,0 +1,58 @@
+{
+  "config": {
+    "cvar_beta": 0.95,
+    "n_tr": 50,
+    "n_mix": 11,
+    "quadratic_cvar_n_mc": 5000,
+    "truth_saa_samples": 5000,
+    "saa_seed": 1,
+    "qoi_type": "velocity_tracking",
+    "penalty": 1.0,
+    "maxiter": 600,
+    "maxiter_saa": 600,
+    "mesh_base_directory": "./",
+    "mesh_resolution": "medium",
+    "mesh_format": "xdmf",
+    "nu": 0.005,
+    "gamma": 1.0,
+    "delta": 5.0,
+    "mean_velocity": 1.0,
+    "continuation": true,
+    "stabilization": false,
+    "nitche": true,
+    "print_every": 1,
+    "save_dir": "results_compare_cvar_models",
+    "log_file": "terminal_output.txt",
+    "bound_lb": -2.0,
+    "bound_ub": 2.0,
+    "verbose": false,
+    "control_dim": 18
+  },
+  "problem_settings": {
+    "nu": 0.005,
+    "continuation": true,
+    "stabilization": false,
+    "nitche": true,
+    "gamma": 1.0,
+    "delta": 5.0,
+    "mean_velocity": 1.0,
+    "control_sd": 1.0,
+    "control_max": 2.0,
+    "control_min": -2.0,
+    "mesh_base_directory": "./",
+    "mesh_resolution": "medium",
+    "mesh_format": "xdmf",
+    "qoi_type": "velocity_tracking",
+    "penalty_alpha": 1.0,
+    "tracking_region": {
+      "x_min": 0.6,
+      "x_max": 2.0,
+      "y_min": 0.0,
+      "y_max": 1.0
+    },
+    "target_velocity": [
+      1.0,
+      0.0
+    ]
+  }
+}
